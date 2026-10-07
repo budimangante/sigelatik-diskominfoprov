@@ -41,6 +41,28 @@ class AppServiceProvider extends ServiceProvider
                                 'role_bkd' => 'teknisi',
                             ]
                         ], 200);
+                    } 
+                    if (($body['nip'] ?? '') === '198504102010012003' && ($body['password'] ?? '') === 'secret456') {
+                        return Http::response([
+                            'status' => 'success',
+                            'data'   => [
+                                'nip'      => '198504102010012003',
+                                'nama'     => 'Siti Pegawai BKD',
+                                'instansi' => 'Badan Kepegawaian Daerah',
+                                'role_bkd' => 'bidang',
+                            ]
+                        ], 200);
+                    }
+                    if (($body['nip'] ?? '') === '198801152015031002' && ($body['password'] ?? '') === 'secret789') {
+                        return Http::response([
+                            'status' => 'success',
+                            'data'   => [
+                                'nip'      => '198801152015031002',
+                                'nama'     => 'Ahmad Fauzi, S.Kom',
+                                'instansi' => 'Bidang TIK Diskominfo',
+                                'role_bkd' => 'dinas',
+                            ]
+                        ], 200);
                     }
 
                     // Kredensial salah

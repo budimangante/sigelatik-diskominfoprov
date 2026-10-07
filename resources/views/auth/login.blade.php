@@ -109,10 +109,10 @@
                 const routes = {
                     'super_admin': '/superadmin',
                     'admin_default': '/admin',
-                    'helpdesk_utama': '/opd/dashboard',
-                    'helpdesk_bidang': '/teknis/dashboard',
-                    'helpdesk_teknisi': '/teknis/dashboard',
-                    'masyarakat': '/layanan/dashboard'
+                    'helpdesk_utama': '/dinas',
+                    'helpdesk_bidang': '/bidang/',
+                    'helpdesk_teknisi': '/teknisi',
+                    'masyarakat': '/user'
                 };
 
                 window.location.href = routes[data.user.role] || '/dashboard';
