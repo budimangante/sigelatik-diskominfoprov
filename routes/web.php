@@ -35,6 +35,79 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', function () {
             return view('superadmin.index'); // resources/views/superadmin/dashboard.blade.php
         })->name('superadmin.index');
+
+        Route::get('/profil/tentang-kami', function () {
+            return view('superadmin.profil-tentang');
+        })->name('profil.tentang');
+
+        Route::get('/profil/sub-layanan', function () {
+            return view('superadmin.profil-sub');
+        })->name('profil.sub');
+
+        Route::get('/profil/team-infrastruktur', function () {
+            return view('superadmin.profil-team');
+        })->name('profil.team');
+
+        Route::get('/profil/link-layanan', function () {
+            return view('superadmin.profil-link');
+        })->name('profil.link');
+
+        Route::get('/data/VPS', function () {
+            return view('superadmin.data-vps');
+        })->name('data.vps');
+
+        Route::get('/data/WHM', function () {
+            return view('superadmin.data-whm');
+        })->name('data.whm');
+
+        Route::get('/metro/jaringan', function () {
+            return view('superadmin.metro-jaringan');
+        })->name('metro.jaringan');
+
+        Route::get('/device/software', function () {
+            return view('superadmin.device-software');
+        })->name('device.software');
+
+        Route::get('/device/hardware', function () {
+            return view('superadmin.device-hardware');
+        })->name('device.hardware');
+
+        Route::get('/serangan', function () {
+            return view('superadmin.serangan');
+        })->name('serangan');
+
+        Route::get('/gangguan', function () {
+            return view('superadmin.gangguan');
+        })->name('gangguan');
+
+        Route::get('/kategori-ticket', function () {
+            return view('superadmin.kategori-ticket');
+        })->name('kategori.ticket');
+
+        Route::get('/prioritas-ticket', function () {
+            return view('superadmin.prioritas-ticket');
+        })->name('prioritas.ticket');
+
+        Route::get('/daftar-ticket', function () {
+            return view('superadmin.daftar-ticket');
+        })->name('daftar.ticket');
+
+        Route::get('/perangkat', function () {
+            return view('superadmin.perangkat');
+        })->name('perangkat');
+
+        Route::get('/bidang', function () {
+            return view('superadmin.bidang');
+        })->name('bidang');
+
+        Route::get('/notifikasi', function () {
+            return view('superadmin.notifikasi');
+        })->name('notifikasi');
+
+        Route::get('/pengguna', function () {
+            return view('superadmin.pengguna');
+        })->name('pengguna');
+
     });
 
     Route::middleware('role:admin_default')->prefix('admin')->group(function () {
@@ -45,23 +118,23 @@ Route::middleware(['auth'])->group(function () {
 
     // DASHBOARD KHUSUS TEKNISI & BIDANG (PEGAWAI BKD)
     Route::middleware('role:helpdesk_bidang,helpdesk_teknisi')->prefix('teknis')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('teknis.dashboard'); // resources/views/teknis/dashboard.blade.php
-        })->name('teknis.dashboard');
+        Route::get('/teknisi', function () {
+            return view('teknis.index'); // resources/views/teknis/teknisi.blade.php
+        })->name('teknis.index');
     });
 
     // DASHBOARD KHUSUS OPD / HELPDESK UTAMA
-    Route::middleware('role:helpdesk_utama')->prefix('opd')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('opd.dashboard'); // resources/views/opd/dashboard.blade.php
-        })->name('opd.dashboard');
+    Route::middleware('role:helpdesk_utama')->prefix('dinas')->group(function () {
+        Route::get('/dinas', function () {
+            return view('dinas.index'); // resources/views/dinas/dinas.blade.php
+        })->name('dinas.index');
     });
 
     // DASHBOARD KHUSUS MASYARAKAT UMUM
-    Route::middleware('role:masyarakat')->prefix('layanan')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('layanan.dashboard'); // resources/views/layanan/dashboard.blade.php
-        })->name('layanan.dashboard');
+    Route::middleware('role:masyarakat')->prefix('user')->group(function () {
+        Route::get('/user', function () {
+            return view('user.index'); // resources/views/user/index.blade.php
+        })->name('user.index');
     });
 
 });

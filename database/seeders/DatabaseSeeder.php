@@ -13,23 +13,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::updateOrCreate(
-            ['username' => 'admin'],
-            [
-                'name'         => 'Admin Pemprov Default',
-                'password'     => Hash::make('@dMinPemprov'),
-                'role'         => 'admin_default',
-                'organization' => 'Pemerintah Provinsi',
-            ]
-        );
-        User::updateOrCreate(
-            ['username' => 'superadmin'],
-            [
-                'name'         => 'Super Admin',
-                'password'     => Hash::make('@dMinPemprov'),
-                'role'         => 'super_admin',
-                'organization' => 'Pemerintah Provinsi',
-            ]
-        );
+        $this->call([UserSeeder::class,]);
     }
 }
