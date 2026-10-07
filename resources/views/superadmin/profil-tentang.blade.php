@@ -1,7 +1,7 @@
 @extends('superadmin.b-master')
 
 @section('title', 'Tentang Kami')
-@section('subtitle', 'Informasi mengenai profil SIGELATIK')
+@section('subtitle', 'Konten profil instansi pada halaman publik.')
 
 @section('content')
     <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
