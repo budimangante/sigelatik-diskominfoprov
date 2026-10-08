@@ -28,6 +28,15 @@ Route::get('/login', function () {
 
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
+// === TAMBAHKAN ROUTE REGISTRASI DI SINI ===
+Route::get('/registrasi', function () {
+    // Sesuaikan 'auth.register' jika kamu menaruh filenya di resources/views/auth/register.blade.php
+    return view('auth.registrasi'); 
+})->name('registrasi');
+
+Route::post('/registrasi', [AuthController::class, 'registrasi'])->name('registrasi.post');
+// ==========================================
+
 Route::middleware(['auth'])->group(function () {
 
     //DASHBOARD KHUSUS ADMINISTRATOR
