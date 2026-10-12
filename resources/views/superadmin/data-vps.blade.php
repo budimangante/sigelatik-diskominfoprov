@@ -1,4 +1,4 @@
-@extends('superadmin.b-master')
+@extends('components.b-master')
 
 @section('title', 'Virtual Private Server')
 @section('subtitle', 'Virtual Private Server SIGELATIK')

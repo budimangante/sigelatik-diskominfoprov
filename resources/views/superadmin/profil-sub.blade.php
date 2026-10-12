@@ -1,4 +1,4 @@
-@extends('superadmin.b-master')
+@extends('components.b-master')
 
 @section('title', 'Sub Layanan')
 @section('subtitle', 'Daftar sub layanan SIGELATIK')

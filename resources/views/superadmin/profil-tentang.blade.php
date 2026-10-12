@@ -1,4 +1,4 @@
-@extends('superadmin.b-master')
+@extends('components.b-master')
 
 @section('title', 'Tentang Kami')
 @section('subtitle', 'Konten profil instansi pada halaman publik.')

@@ -1,6 +1,22 @@
-@extends('superadmin.b-master')
-
+@extends('components.b-master')
 @section('content')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<div class="mb-8">
+        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <span>SUPER ADMIN</span>
+            <span class="text-gray-300">•</span>
+            <span>DISKOMINFO</span>
+        </div>
+        <h1 class="text-3xl font-bold text-[#1a3668] mb-2">Dashboard</h1>
+        <p class="text-gray-500">Selamat datang di panel administrasi SIGELATIK.</p>
+    </div>
 <!-- Top Cards -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <!-- div ini diganti jadi a href dan ditambahin class block sama animasi di ujungnya -->
@@ -135,4 +151,5 @@
         </div>
     </div>
 </div>
+</body>
 @endsection
