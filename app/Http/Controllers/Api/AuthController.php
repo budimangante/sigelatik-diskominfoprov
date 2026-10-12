@@ -103,7 +103,7 @@ class AuthController extends Controller
 
         $roleMap = [
             'superadmin'  => 'super_admin',
-            'opd'         => 'helpdesk_utama',
+            'dinas'       => 'helpdesk_utama',
             'bidang'      => 'helpdesk_bidang',
             'teknisi'     => 'helpdesk_teknisi',
         ];

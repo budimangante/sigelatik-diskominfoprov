@@ -2,9 +2,9 @@
         <div class="overflow-y-auto h-full pb-4 [scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:#9ca3af_transparent] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">        <div class="h-16 flex items-center justify-between px-6 border-b border-gray-100">
             <div class="flex items-center gap-2">
                 <!-- logonya udah disesuaikan yang pakai gambar ya ma -->
-                <img src="{{ asset('img/logo-kaltim.png') }}" alt="Logo" class="w-8 h-8 object-contain">
+                <img src="{{ asset('img/logofavicon.png') }}" alt="Logo" class="w-10 h-10 object-contain">
                 <div>
-                    <h1 class="text-sm font-bold text-[#1e3a8a] leading-tight">SIGELATIK</h1>
+                    <h1 class="text-[16px] font-bold text-[#1e3a8a] leading-tight">SIGELATIK</h1>
                     <p class="text-[10px] text-gray-500 leading-tight">Sistem Informasi Gangguan<br>Layanan TIK</p>
                 </div>
             </div>
@@ -102,7 +102,7 @@
 
             <!-- Management Insiden -->
             <p class="pt-5 pb-2 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Management Insiden</p>
-            <a href="{{ route('serangan') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('serangan') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
+            <a href="{{ route('serangan') }}" wire:navigate class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('serangan') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
                 <div class="flex items-center gap-3">
                     <i class="far fa-eye w-5"></i> Serangan Keamanan
                 </div>
@@ -189,23 +189,36 @@
     <!-- AREA PROFIL ADMIN (DI LUAR SCROLL) -->
     <div class="border-t border-gray-200 p-4">
         <!-- Ganti isian href dengan link tujuan kamu -->
-        <a href="{{ route('login') }}" class="w-full flex items-center justify-between group">
-            <div class="flex items-center gap-3">
-                <!-- Inisial Profil -->
-                <div class="w-10 h-10 rounded-full bg-[#0d9488] flex items-center justify-center text-white font-bold text-sm">
-                    AS
+        <a href="{{ route('profil.tentang') }}" class="w-full flex items-center justify-between group">
+            <div class="flex items-center gap-3 px-2 pt-2">
+                <!-- Inisial Profil Dinamis -->
+                <div class="w-10 h-10 rounded-full bg-[#0d9488] flex items-center justify-center text-white font-bold text-sm uppercase shrink-0">
+                    {{ auth()->check() ? substr(auth()->user()->name, 0, 2) : '' }}
                 </div>
                 
-                <div class="text-left">
-                    <!-- Nama Admin -->
-                    <p class="text-sm font-bold text-[#1e3a8a] leading-none mb-1 group-hover:text-red-500 transition-colors">Admin Sistem</p>
-                    <!-- Role -->
-                    <p class="text-xs text-gray-500 leading-none">Super Admin</p>
+                <div class="text-left overflow-hidden">
+                    <!-- Nama Admin Dinamis -->
+                    <p class="text-sm font-bold text-[#1e3a8a] leading-none mb-1 truncate">
+                        {{ auth()->check() ? auth()->user()->name : '' }}
+                    </p>
+                    <!-- Role Dinamis -->
+                    <p class="text-xs text-[#64748b] leading-none truncate capitalize">
+                        {{ auth()->check() ? str_replace('_', ' ', auth()->user()->role) : '' }}
+                    </p>
                 </div>
             </div>
             
             <!-- Icon Logout (Muncul saat di-hover) -->
-            <i class="fas fa-sign-out-alt text-gray-400 group-hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"></i>
+            <!-- Bagian Logout (Posisikan di bawah div profil Anda) -->
+            <a href="/login" class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200 text-gray-500 hover:text-red-500 transition-colors group cursor-pointer">
+                
+                <!-- Ikon bawaan Anda (saya hilangkan opacity-0 agar selalu terlihat, namun tetap berubah warna saat di-hover) -->
+                <i class="fas fa-sign-out-alt text-gray-400 group-hover:text-red-500 transition-colors"></i> 
+                
+                <!-- Tambahan tulisan Log out -->
+                <span class="text-sm font-medium group-hover:text-red-500 transition-colors">Log out</span>
+
+            </a>
         </a>
     </div>
 </aside>

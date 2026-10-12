@@ -49,7 +49,7 @@ class AppServiceProvider extends ServiceProvider
                                 'nip'      => '198504102010012003',
                                 'nama'     => 'Siti Pegawai BKD',
                                 'instansi' => 'Badan Kepegawaian Daerah',
-                                'role_bkd' => 'bidang',
+                                'role_bkd' => 'dinas',
                             ]
                         ], 200);
                     }
@@ -60,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
                                 'nip'      => '198801152015031002',
                                 'nama'     => 'Ahmad Fauzi, S.Kom',
                                 'instansi' => 'Bidang TIK Diskominfo',
-                                'role_bkd' => 'dinas',
+                                'role_bkd' => 'bidang',
                             ]
                         ], 200);
                     }

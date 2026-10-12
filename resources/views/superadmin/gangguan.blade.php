@@ -1,4 +1,4 @@
-@extends('superadmin.b-master')
+@extends('components.b-master')
 
 @section('title', 'Gangguan Layanan')
 @section('subtitle', 'Informasi mengenai gangguan layanan')

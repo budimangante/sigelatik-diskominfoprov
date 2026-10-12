@@ -1,4 +1,4 @@
-@extends('superadmin.b-master')
+@extends('components.b-master')
 
 @section('title', 'Software Perangkat')
 @section('subtitle', 'Software Perangkat SIGELATIK')

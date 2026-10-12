@@ -1,4 +1,4 @@
-@extends('superadmin.b-master')
+@extends('components.b-master')
 
 @section('title', 'Notifikasi')
 @section('subtitle', 'Informasi mengenai notifikasi SIGELATIK')

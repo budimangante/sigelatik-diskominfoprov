@@ -1,4 +1,4 @@
-@extends('superadmin.b-master')
+@extends('components.b-master')
 
 @section('title', 'WHM / C-Panel')
 @section('subtitle', 'WHM / C-Panel SIGELATIK')

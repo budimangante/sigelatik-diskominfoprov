@@ -18,10 +18,67 @@
         
         <!-- BAGIAN KIRI: Informasi & Teks -->
         <div class="w-full md:w-1/2 p-8 lg:p-12 flex flex-col justify-center border-r border-gray-100">
-            
-            <h1 class="text-3xl lg:text-4xl font-extrabold tracking-[0.15em] mb-4 whitespace-nowrap">
+
+            <!-- Beri ID pada h1 agar mudah ditangkap JS, sisakan teks aslinya di sini -->
+            <h1 id="teksAnimasi" class="text-3xl lg:text-4xl font-bold mb-4 whitespace-nowrap">
                 S I G E L A <span class="text-red-600">T I K</span>
             </h1>
+
+            <!-- CSS Animasi -->
+            <style>
+                .huruf-putar {
+                    display: inline-block;
+                    animation: putarHuruf 4s ease-in-out infinite;
+                }
+                
+                @keyframes putarHuruf {
+                    0%, 15% { transform: rotateY(0deg); }
+                    50% { transform: rotateY(360deg); }
+                    70%, 100% { transform: rotateY(360deg); }
+                }
+            </style>
+
+            <!-- SCRIPT ANIMASI (Jeda Diperbesar) -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const kontainer = document.getElementById('teksAnimasi');
+                    
+                    const kataHitam = "SIGELA";
+                    const kataMerah = "TIK";
+                    
+                    kontainer.innerHTML = '';
+                    
+                    let counterIndeks = 0;
+
+                    function buatSpanAnimasi(huruf) {
+                        const span = document.createElement('span');
+                        
+                        // Hapus spasi manual, cukup hurufnya saja
+                        span.innerText = huruf; 
+                        
+                        // Tambahkan mr-2 (margin-right) agar ada jarak fisik antar huruf yang konsisten
+                        span.className = 'huruf-putar mr-2 md:mr-3'; 
+                        
+                        span.style.animationDelay = `${counterIndeks * 0.3}s`;
+                        counterIndeks++;
+                        
+                        return span;
+                    }
+
+                    kataHitam.split('').forEach(huruf => {
+                        kontainer.appendChild(buatSpanAnimasi(huruf));
+                    });
+
+                    const spanMerah = document.createElement('span');
+                    spanMerah.className = 'text-red-600';
+                    
+                    kataMerah.split('').forEach(huruf => {
+                        spanMerah.appendChild(buatSpanAnimasi(huruf));
+                    });
+
+                    kontainer.appendChild(spanMerah);
+                });
+            </script>
             
             <p class="text-sm text-gray-500 leading-relaxed mb-8 max-w-md">
                 <strong class="text-gray-700">(Sistem Informasi Gangguan Layanan TIK)</strong>, Laporkan apabila terjadi gangguan terhadap Layanan TIK yang ada di Lingkup Pemerintah Provinsi Kalimantan Timur
@@ -46,7 +103,7 @@
         <!-- BAGIAN KANAN: Form Login -->
         <div class="w-full md:w-1/2 p-8 lg:p-12 flex flex-col justify-center items-center">
             
-            <img src="{{ asset('img/logo-kaltim.png') }}" alt="Logo Diskominfo" class="h-16 mb-6 object-contain">
+            <img src="{{ asset('img/logo-diskominfo.png') }}" alt="Logo Diskominfo" class="h-16 mb-6 object-contain">
             
             <h2 class="text-2xl text-gray-800 mb-8 font-normal">Login ke Akun Anda</h2>
             
@@ -83,7 +140,7 @@
             <div class="text-center mt-8 text-sm text-gray-500">
                 <p class="mb-1">OPD Belum Mempunyai Akun ?</p>
                 <p>Daftar <a href="{{ route('registrasi') }}" class="text-gray-800 font-bold hover:underline">Registrasi</a></p>
-                <a href="/" class="block mt-6 text-[#4c2a95] font-semibold text-sm hover:underline">
+                <a href="/beranda" class="block mt-6 text-[#4c2a95] font-semibold text-sm hover:underline">
                     &lt; Kembali ke beranda
                 </a>
             </div>
@@ -134,7 +191,7 @@
                     'super_admin': '/superadmin',
                     'admin_default': '/admin',
                     'helpdesk_utama': '/dinas',
-                    'helpdesk_bidang': '/bidang/',
+                    'helpdesk_bidang': '/bidang',
                     'helpdesk_teknisi': '/teknisi',
                     'masyarakat': '/user'
                 };

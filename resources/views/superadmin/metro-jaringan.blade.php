@@ -1,4 +1,4 @@
-@extends('superadmin.b-master')
+@extends('components.b-master')
 
 @section('title', 'Jaringan Internet')
 @section('subtitle', 'Jaringan Internet SIGELATIK')
