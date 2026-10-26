@@ -17,7 +17,7 @@
             <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Management Ticketing</p>
                 <a href="{{ route('teknisi.index') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('teknisi.index') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-ticket w-5"></i> Buat Tiket
+                        <i class="fas fa-ticket w-5"></i> Task Ticket
                     </div>
                     @if(request()->routeIs('teknisi.index'))
                         <i class="fas fa-circle text-[6px]"></i>
@@ -59,11 +59,13 @@
             </div>
             
             <!-- Tombol Keluar (Logout) -->
-            <a href="/login" class="flex items-center gap-4 pt-3 border-t border-gray-200 text-gray-500 hover:text-red-500 transition-colors group cursor-pointer">
-                <i class="fas fa-sign-out-alt text-gray-400 group-hover:text-red-500 transition-colors"></i> 
-                <!-- Tambahan tulisan Log out -->
-                <span class="text-sm font-medium group-hover:text-red-500 transition-colors">Log out</span>
-            </a>
+            <form action="{{ route('logout') }}" method="POST" class="m-0 p-0 border-t border-gray-200 pt-3">
+                @csrf
+                <button type="submit" class="w-full flex items-center gap-4 text-gray-500 hover:text-red-500 transition-colors group cursor-pointer bg-transparent border-0 p-0">
+                    <i class="fas fa-sign-out-alt text-gray-400 group-hover:text-red-500 transition-colors"></i> 
+                    <span class="text-sm font-medium group-hover:text-red-500 transition-colors">Log out</span>
+                </button>
+            </form>
             
         </div>
     </div>

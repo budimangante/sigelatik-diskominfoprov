@@ -11,7 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::create('service_activities', function(Blueprint $table)
+        {
+            $table->id();
+            $table->foreignId('service_id')->references('id')->on('services')->cascadeOnDelete();
+            $table->string('name');
+            $table->integer('targer_minutes');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -19,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('service_acivities');
     }
 };

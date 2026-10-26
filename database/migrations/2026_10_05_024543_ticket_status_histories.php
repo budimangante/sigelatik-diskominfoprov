@@ -11,7 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::create('ticket_status_histories', function(Blueprint $table){
+            $table->id();
+            $table->foreignId('ticket_id')->references('id')->on('tickets')->cascadeOnDelete();
+            $table->foreignId('ticket_task_id')->nullable()->references('id')->on('tickets_task')->nullOnDelete();
+            $table->foreignId('ticket_status_id')->references('id')->on('ticket_statuses')->cascadeOnDelete();
+            $table->foreignId('pending_reasons_id')->nullable()->constrained('pending_reasons')->nullOnDelete();
+            $table->string('note')->nullable();
+            $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();
+        });
     }
 
     /**
@@ -19,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('ticket_status_histories');
     }
 };

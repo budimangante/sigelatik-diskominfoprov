@@ -106,6 +106,15 @@
             <h2 class="text-xl text-gray-800 mb-8 font-normal">Registrasi Akun OPD</h2>
             
             <!-- Form Registrasi -->
+            @if ($errors->any())
+                <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             <form action="{{ route('registrasi.post') }}" method="POST" class="w-full max-w-sm space-y-4">
                 @csrf
                 

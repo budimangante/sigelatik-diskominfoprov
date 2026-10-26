@@ -11,7 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+        Schema::create('ticket_files', function (Blueprint $table)
+        {
+            $table->foreignId('ticket_id')->references('id')->on('tickets')->cascadeOnDelete();
+            $table->foreignId('file_id')->constrained()->cascadeOnDelete();
+            $table->primary(['ticket_id', 'file_id']);
+        });
     }
 
     /**
@@ -19,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('ticket_files');
     }
 };

@@ -68,11 +68,13 @@
             </div>
             
             <!-- Tombol Keluar (Logout) -->
-            <a href="/login" class="flex items-center gap-4 pt-3 border-t border-gray-200 text-gray-500 hover:text-red-500 transition-colors group cursor-pointer">
-                <i class="fas fa-sign-out-alt text-gray-400 group-hover:text-red-500 transition-colors"></i> 
-                <!-- Tambahan tulisan Log out -->
-                <span class="text-sm font-medium group-hover:text-red-500 transition-colors">Log out</span>
-            </a>
+            <form action="{{ route('logout') }}" method="POST" class="m-0 p-0 border-t border-gray-200 pt-3">
+                @csrf
+                <button type="submit" class="w-full flex items-center gap-4 text-gray-500 hover:text-red-500 transition-colors group cursor-pointer bg-transparent border-0 p-0">
+                    <i class="fas fa-sign-out-alt text-gray-400 group-hover:text-red-500 transition-colors"></i> 
+                    <span class="text-sm font-medium group-hover:text-red-500 transition-colors">Log out</span>
+                </button>
+            </form>
             
         </div>
     </div>

@@ -12,15 +12,13 @@ class CheckRole
     {
         $user = $request->user();
 
-        if (!$user) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
-        }
+        if (! $user || ! $user->hasRole($roles)) {
 
-        if (!in_array($user->role, $roles)) {
-            return response()->json([
-                'message'   => 'Akses ditolak. Peran Anda tidak memiliki izin.',
-                'user_role' => $user->role,
-            ], 403);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Anda tidak memiliki hak akses ke resource ini.'], 403);
+            }
+
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
         return $next($request);

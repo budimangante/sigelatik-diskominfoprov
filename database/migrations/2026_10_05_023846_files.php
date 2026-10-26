@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    protected $primaryKey = 'file_id';
+    public $incrementing = false;
+    protected $keyType = 'int';
     /**
      * Run the migrations.
      */
@@ -13,12 +16,19 @@ return new class extends Migration
     {
         Schema::create('files', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('disk');
             $table->string('path');
-            $table->string('type');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->unsignedBigInteger('size');
-            $table->timestamps();
+            $table->string('original_name');
+            $table->string('mime_type');
+            $table->unsignedBigInteger('size_bytes');
+            $table->char('checksum_sha256', 64)->nullable();
+        
+            $table->foreignId('uploaded_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+                
+            $table->timestamp('created_at')->nullable();
         });
     }
 

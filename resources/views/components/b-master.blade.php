@@ -11,37 +11,32 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
     </style>
+    @vite(['resources/js/app.ts'])
 </head>
 <body class="bg-[#f8f9fa] flex h-screen overflow-hidden text-gray-700">
 
-    {{-- LOGIKA PEMANGGILAN SIDEBAR DINAMIS YANG AMAN --}}
+    {{-- Penentuan sidebar dinamis berdasarkan relasi role --}}
     @php
-        // 1. Tentukan file default jika belum login atau role tidak dikenali
-        $sidebarFile = 'components.b-sidebar-user'; 
-        
-        // 2. Cek apakah ada yang login
+        $sidebarFile = 'components.b-sidebar-user'; // Default pelapor / umum
+
         if (auth()->check()) {
-            $role = auth()->user()->role; // Ambil role dari database
-            
-            // 3. Cocokkan role dengan nama file persis seperti di gambar Anda
-            if ($role === 'super_admin' || $role === 'superadmin') {
+            $user = auth()->user();
+
+            if ($user->hasRole('super_admin')) {
                 $sidebarFile = 'components.b-sidebar-superadmin';
-            } elseif ($role === 'helpdesk_utama' || $role === 'dinas') {
-                $sidebarFile = 'components.b-sidebar-dinas';
-            } elseif ($role === 'helpdesk_bidang' || $role === 'bidang') {
-                $sidebarFile = 'components.b-sidebar-bidang';
-            } elseif ($role === 'admin_default' || $role === 'admin_pemprov' || $role === 'admin') {
+            } elseif ($user->hasRole('admin_pemprov')) {
                 $sidebarFile = 'components.b-sidebar-admin';
-            } elseif ($role === 'helpdesk_teknisi' || $role === 'teknisi') {
+            } elseif ($user->hasRole('helpdesk_utama')) {
+                $sidebarFile = 'components.b-sidebar-dinas';
+            } elseif ($user->hasRole('helpdesk_bidang')) {
+                $sidebarFile = 'components.b-sidebar-bidang';
+            } elseif ($user->hasRole('teknisi')) {
                 $sidebarFile = 'components.b-sidebar-teknisi';
-            } else {
-                // Jika rolenya user atau lainnya
-                $sidebarFile = 'components.b-sidebar-user';
             }
         }
     @endphp
 
-    {{-- 4. Panggil file yang sudah dipastikan aman di atas --}}
+    {{-- Render 1 sidebar saja sesuai role --}}
     @include($sidebarFile)
 
     <!-- AREA KONTEN UTAMA -->
@@ -58,5 +53,24 @@
     </div>
 
     @include('components.b-js')
+    <script>
+    @if (session('welcome') || session('success') || session('error'))
+        (function showDashboardToast() {
+            // Cek apakah fungsi showModernToast dari app.ts sudah siap
+            if (typeof window.showModernToast === 'function') {
+                @if (session('welcome'))
+                    window.showModernToast("{{ session('welcome') }}", 'success');
+                @elseif (session('success'))
+                    window.showModernToast("{{ session('success') }}", 'success');
+                @elseif (session('error'))
+                    window.showModernToast("{{ session('error') }}", 'error');
+                @endif
+            } else {
+                // Tunggu 100ms jika modul Vite app.ts masih proses load
+                setTimeout(showDashboardToast, 100);
+            }
+        })();
+    </script>
+    @endif
 </body>
 </html>

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Middleware\CheckRole; // <-- Tambahkan import ini
+use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetTeamUrlDefaults;
@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Redirect jika user sudah login tapi mengakses halaman guest/login
+        $middleware->redirectUsersTo(fn () => '/');
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
