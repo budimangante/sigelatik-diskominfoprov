@@ -13,8 +13,14 @@ return new class extends Migration
     {
         Schema::create('holidays', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('perangkat_daerah_id')
+                  ->nullable()
+                  ->references('id')
+                  ->on('perangkat_daerah')
+                  ->nullOnDelete();
+
             $table->string('name');
-            $table->date('date');
+            $table->date('holiday_date');
             $table->timestamps();
         });
     }

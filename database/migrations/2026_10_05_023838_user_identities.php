@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('user_identities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('provider');
+            $table->string('provider_user_id');
+            $table->timestamp('last_login_at')->nullable();
             $table->timestamps();
+            $table->unique(['provider', 'provider_user_id']);
         });
     }
 

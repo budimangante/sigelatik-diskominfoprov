@@ -14,12 +14,20 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('username')->nullable()->unique(); 
-            $table->string('email')->nullable()->unique();    
-            $table->string('nip')->nullable()->unique();      
-            $table->string('organization')->nullable();       
-            $table->string('password')->nullable();           
-            $table->string('role')->default('masyarakat');   
+            $table->string('username')->nullable();
+            $table->string('email')->nullable();
+            $table->string('nip')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('user_type')->default('masyarakat');
+            $table->string('organization')->nullable(); // atau organization_name
+            $table->string('password')->nullable();
+            
+            // Hapus ->after(...) cukup letakkan barisnya di sini
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('last_login_at')->nullable();
+
+            $table->string('role')->default('masyarakat');
+            $table->bigInteger('created_by')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

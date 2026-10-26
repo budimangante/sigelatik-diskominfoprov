@@ -4,196 +4,124 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
+use App\Models\Roles;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Validation\ValidationException;
-use Throwable;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
-
-    public function register(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name'         => 'required|string|max:255',
-            'email'        => 'required|email|unique:users,email',
-            'organization' => 'nullable|string|max:255',
-            'password'     => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name'         => $validated['name'],
-            'email'        => $validated['email'],
-            'organization' => $validated['organization'] ?? 'Masyarakat Umum',
-            'password'     => Hash::make($validated['password']),
-            'role'         => 'masyarakat',
-        ]);
-
-        Auth::login($user);
-
-        $token = $user->createToken('auth_token', ['role:masyarakat'])->plainTextToken;
-
-        return response()->json([
-            'message'      => 'Registrasi berhasil',
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'user'         => $user,
-        ], 201);
-    }
-
+    /**
+     * Login API untuk semua aktor (NIP untuk ASN/Teknisi, Email untuk Pelapor/Admin).
+     */
     public function login(Request $request): JsonResponse
     {
-        $identifier = $request->input('identifier') 
+        // Mendukung input berupa key 'login', 'nip', atau 'email'
+        $loginInput = $request->input('login') 
             ?? $request->input('nip') 
-            ?? $request->input('email') 
-            ?? $request->input('username');
+            ?? $request->input('email');
 
-        if (!$identifier || !$request->filled('password')) {
+        $password = $request->input('password');
+
+        if (! $loginInput || ! $password) {
             return response()->json([
-                'message' => 'NIP, Email, atau Username beserta Password wajib disertakan.'
+                'message' => 'Kredensial login dan password wajib diisi.'
             ], 422);
         }
 
-        $identifier = trim((string) $identifier);
-        $password   = (string) $request->input('password');
+        // Otomatis deteksi apakah input berupa format email atau NIP/username
+        $fieldType = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'nip';
 
-        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
-            return $this->loginEmail($identifier, $password);
+        $user = User::where($fieldType, $loginInput)->first();
+
+        // Jika tidak ditemukan via NIP, coba cari via username
+        if (! $user && $fieldType === 'nip') {
+            $user = User::where('username', $loginInput)->first();
         }
 
-        if (ctype_digit($identifier)) {
-            return $this->loginSsoBKD($identifier, $password);
-        }
-        return $this->loginAdmin($identifier, $password);
-    }
-    /**
-     * Logika SSO ke Server Dinas BKD.
-     * DI SINI tempat kode SSO dan try-catch berada.
-     */
-    private function loginSsoBKD(string $nip, string $password): JsonResponse
-    {
-        // Ambil URL SSO dari config atau fallback ke default
-        $ssoApiUrl = config('services.bkd.sso_url', 'https://sso.bkd.go.id/api/login');
-
-        try {
-            // Tembak API SSO eksternal
-            $response = Http::withHeaders([
-                'Accept'    => 'application/json',
-                'X-API-KEY' => config('services.bkd.client_key'),
-            ])->timeout(10)->post($ssoApiUrl, [
-                'nip'      => $nip,
-                'password' => $password,
-            ]);
-        } catch (Throwable $th) {
+        // Cek kecocokan password
+        if (! $user || ! Hash::check($password, $user->password)) {
             return response()->json([
-                'message' => 'Server SSO Dinas sedang tidak dapat dihubungi. Silakan coba beberapa saat lagi.',
-            ], 503);
+                'message' => 'NIP/Email atau password salah.'
+            ], 401);
         }
 
-        if ($response->failed()) {
-            throw ValidationException::withMessages([
-                'nip' => ['NIP atau password SSO tidak valid.'],
-            ]);
+        // Cek status keaktifan akun
+        if (! $user->is_active) {
+            return response()->json([
+                'message' => 'Akun Anda sedang dinonaktifkan. Hubungi administrator.'
+            ], 403);
         }
 
-        $ssoData = $response->json('data') ?? $response->json();
+        // Buat Access Token via Laravel Passport
+        $token = $user->createToken('SigelatikApiToken')->accessToken;
 
-        $roleMap = [
-            'superadmin'  => 'super_admin',
-            'dinas'       => 'helpdesk_utama',
-            'bidang'      => 'helpdesk_bidang',
-            'teknisi'     => 'helpdesk_teknisi',
-        ];
-
-        $bkdRole     = $ssoData['role_bkd'] ?? $ssoData['role'] ?? '';
-        $resolvedRole = $roleMap[$bkdRole] ?? 'helpdesk_teknisi';
-
-        $user = User::updateOrCreate(
-            ['nip' => $nip],
-            [
-                'name'         => $ssoData['nama'] ?? $ssoData['name'] ?? 'Pegawai BKD',
-                'organization' => $ssoData['instansi'] ?? $ssoData['opd'] ?? 'Perangkat Daerah',
-                'role'         => $resolvedRole,
-                'password'     => null, // Password dikelola SSO, tidak disimpan lokal
-            ]
-        );
-        Auth::login($user);
-        $token = $user->createToken('sso_token', ["role:{$user->role}"])->plainTextToken;
-
-        return response()->json([
-            'message'      => 'Login SSO berhasil',
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'user'         => $user,
-        ]);
-    }
-
-    private function loginEmail(string $email, string $password): JsonResponse
-    {
-        $user = User::where('email', $email)->where('role', 'masyarakat')->first();
-
-        if (!$user || !Hash::check($password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Email atau password salah.'],
-            ]);
-        }
-        Auth::login($user);
-        $token = $user->createToken('auth_token', ['role:masyarakat'])->plainTextToken;
+        $user->update(['last_login_at' => now()]);
 
         return response()->json([
             'message'      => 'Login berhasil',
             'access_token' => $token,
             'token_type'   => 'Bearer',
-            'user'         => $user,
-        ]);
+            'user'         => $user->load('roles'),
+        ], 200);
     }
-    
-    private function loginAdmin(string $username, string $password): JsonResponse
+
+    /**
+     * Registrasi Pelapor / Masyarakat via API.
+     */
+    public function register(Request $request): JsonResponse
     {
-        $user = User::where('username', $username)
-            ->whereIn('role', ['admin_default', 'super_admin'])
-            ->first();
+        $validated = $request->validate([
+            'name'              => 'required|string|max:255',
+            'email'             => 'required|string|email|max:255|unique:users,email',
+            'password'          => 'required|string|min:8|confirmed',
+            'phone'             => 'nullable|string|max:20',
+            'user_type'         => 'required|in:asn,pppk,pegawai_internal,unit_kerja_lain,masyarakat',
+            'organization_name' => 'nullable|string|max:255',
+            'nip'               => 'nullable|string|unique:users,nip',
+        ]);
 
-        if (!$user || !Hash::check($password, $user->password)) {
-            throw ValidationException::withMessages([
-                'username' => ['Username atau password admin salah.'],
+        $user = DB::transaction(function () use ($validated) {
+            $newUser = User::create([
+                'name'         => $validated['name'],
+                'email'        => $validated['email'],
+                'nip'          => $validated['nip'] ?? null,
+                'password'     => Hash::make($validated['password']),
+                'phone'        => $validated['phone'] ?? null,
+                'user_type'    => $validated['user_type'],
+                'organization' => $validated['organization_name'] ?? 'Masyarakat Umum',
+                'is_active'    => true,
             ]);
-        }
-        Auth::login($user);
 
-        $isSuperAdmin = $user->role === 'super_admin';
-        $tokenName    = $isSuperAdmin ? 'superadmin_token' : 'admin_token';
-        $message      = $isSuperAdmin ? 'Login super admin berhasil' : 'Login admin berhasil';
+            $pelaporRole = Roles::where('name', 'pelapor')->first();
+            if ($pelaporRole) {
+                $newUser->roles()->attach($pelaporRole->id);
+            }
 
-        $token = $user->createToken($tokenName, ["role:{$user->role}"])->plainTextToken;
+            return $newUser;
+        });
+
+        $token = $user->createToken('SigelatikApiToken')->accessToken;
 
         return response()->json([
-            'message'      => $message,
+            'message'      => 'Registrasi berhasil',
             'access_token' => $token,
             'token_type'   => 'Bearer',
-            'user'         => $user,
-        ]);
+            'user'         => $user->load('roles'),
+        ], 201);
     }
 
+    /**
+     * Logout API (Mencabut/Revoke token Passport yang sedang aktif).
+     */
     public function logout(Request $request): JsonResponse
     {
-        // $request->user()->currentAccessToken()->delete();
-        if ($request->user() && $request->user()->currentAccessToken()) {
-            $request->user()->currentAccessToken()->delete();
-        }
-
-        Auth::guard('web')->logout();
-
-        if ($request->hasSession()) {
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-        }
+        $token = $request->user()->token();
+        $token->revoke();
 
         return response()->json([
-            'message' => 'Logout berhasil',
-        ]);
+            'message' => 'Logout berhasil. Token telah dicabut.'
+        ], 200);
     }
 }

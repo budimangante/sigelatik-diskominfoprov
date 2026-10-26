@@ -13,8 +13,26 @@ return new class extends Migration
     {
         Schema::create('employments', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // nama/alasan pending
-            $table->text('description')->nullable(); // deskripsi tambahan jika perlu
+
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('perangkat_daerah_id')
+                  ->references('id')
+                  ->on('perangkat_daerah')
+                  ->cascadeOnDelete();
+
+            $table->foreignId('bidang_id')
+                ->references('id')
+                ->on('bidang')
+                ->cascadeOnDelete();
+            $table->string('name');
+            $table->string('position_title');
+            $table->date('started_at');
+            $table->date('ended_at')->nullable();
+            $table->string('end_reason')->nullable();
+            $table->enum('source', ['internal', 'external'])->nullable();
+            $table->smallInteger('current_flag')->default(0);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

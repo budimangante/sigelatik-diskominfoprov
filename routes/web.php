@@ -1,205 +1,156 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\LacakTicketController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Web\TicketMessageController;
+use App\Http\Controllers\Web\TeknisiController;
+use App\Http\Controllers\Web\ForwardController;
+use App\Http\Controllers\Web\BidangController;
 
-//Route::inertia('/', 'Welcome')->name('home');
-Route::get('/beranda', function () {
-    return view('beranda.index-beranda'); 
-})->name('beranda');
+// Rute Publik
+Route::get('/{section?}', function ($section = null) {
+    return view('beranda.index-beranda', ['activeSection' => $section]);
+})->where('section', 'tentang|statistik|layanan')->name('beranda');
 
-Route::prefix('{current_team}')
-    ->middleware(['auth', 'verified', EnsureTeamMembership::class])
-    ->group(function () {
-        Route::get('dashboard', DashboardController::class)->name('dashboard');
-    });
+Route::match(['get', 'post'], '/lacak-tiket', [LacakTicketController::class, 'track'])->name('ticket.track');
 
-Route::middleware(['auth'])->group(function () {
-    Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
-    Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');
+// Alias untuk kebutuhan Wayfinder & komponen Vue Starter Kit
+Route::get('/home', fn () => redirect()->route('beranda'))->name('home');
+// Rute cerdas Dashboard: Mengarahkan otomatis ke dashboard role yang sedang aktif
+Route::get('/dashboard', function () {
+    if (! Auth::guard()->check()) {
+        return redirect()->route('login');
+    }
+
+    /** @var \App\Models\User $user */
+    $user = Auth::guard()->user();
+    $user->loadMissing('roles');
+
+    $roleMap = [
+        'super_admin'     => 'superadmin.index',
+        'admin_pemprov'   => 'admin.index',
+        'helpdesk_utama'  => 'dinas.index',
+        'helpdesk_bidang' => 'bidang.index',
+        'teknisi'         => 'teknisi.index',
+        'pelapor'         => 'user.index',
+    ];
+
+    foreach ($roleMap as $role => $routeName) {
+        if ($user->hasRole($role)) {
+            return redirect()->route($routeName);
+        }
+    }
+
+    return redirect()->route('beranda');
+})->name('dashboard');
+
+// Tamu (Belum Login)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+
+    Route::get('/registrasi', [AuthController::class, 'showRegisterForm'])->name('registrasi');
+    Route::post('/registrasi', [AuthController::class, 'register'])->name('registrasi.post');
 });
 
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
-// Route::get('/admin', function () {
-    //     return view('admin.index');
-    // })->name('admin.index');
-
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-
-// === TAMBAHKAN ROUTE REGISTRASI DI SINI ===
-Route::get('/registrasi', function () {
-    // Sesuaikan 'auth.register' jika kamu menaruh filenya di resources/views/auth/register.blade.php
-    return view('auth.registrasi'); 
-})->name('registrasi');
-
-Route::post('/registrasi', [AuthController::class, 'registrasi'])->name('registrasi.post');
-// ==========================================
-
+// Terautentikasi
 Route::middleware(['auth'])->group(function () {
 
-    //DASHBOARD KHUSUS ADMINISTRATOR
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // DASHBOARD SUPER ADMIN 
     Route::middleware('role:super_admin')->prefix('superadmin')->group(function () {
-        Route::get('/', function () {
-            return view('superadmin.index'); // resources/views/superadmin/dashboard.blade.php
-        })->name('superadmin.index');
-
-        Route::get('/profil/tentang-kami', function () {
-            return view('superadmin.profil-tentang');
-        })->name('profil.tentang');
-
-        Route::get('/profil/sub-layanan', function () {
-            return view('superadmin.profil-sub');
-        })->name('profil.sub');
-
-        Route::get('/profil/team-infrastruktur', function () {
-            return view('superadmin.profil-team');
-        })->name('profil.team');
-
-        Route::get('/profil/link-layanan', function () {
-            return view('superadmin.profil-link');
-        })->name('profil.link');
-
-        Route::get('/data/VPS', function () {
-            return view('superadmin.data-vps');
-        })->name('data.vps');
-
-        Route::get('/data/WHM', function () {
-            return view('superadmin.data-whm');
-        })->name('data.whm');
-
-        Route::get('/metro/jaringan', function () {
-            return view('superadmin.metro-jaringan');
-        })->name('metro.jaringan');
-
-        Route::get('/device/software', function () {
-            return view('superadmin.device-software');
-        })->name('device.software');
-
-        Route::get('/device/hardware', function () {
-            return view('superadmin.device-hardware');
-        })->name('device.hardware');
-
-        Route::get('/serangan', function () {
-            return view('superadmin.serangan');
-        })->name('serangan');
-
-        Route::get('/gangguan', function () {
-            return view('superadmin.gangguan');
-        })->name('gangguan');
-
-        Route::get('/kategori-ticket', function () {
-            return view('superadmin.kategori-ticket');
-        })->name('kategori.ticket');
-
-        Route::get('/prioritas-ticket', function () {
-            return view('superadmin.prioritas-ticket');
-        })->name('prioritas.ticket');
-
-        Route::get('/daftar-ticket', function () {
-            return view('superadmin.daftar-ticket');
-        })->name('daftar.ticket');
-
-        Route::get('/perangkat', function () {
-            return view('superadmin.perangkat');
-        })->name('perangkat');
-
-        Route::get('/bidang', function () {
-            return view('superadmin.bidang');
-        })->name('bidang');
-
-        Route::get('/notifikasi', function () {
-            return view('superadmin.notifikasi');
-        })->name('notifikasi');
-
-        Route::get('/pengguna', function () {
-            return view('superadmin.pengguna');
-        })->name('pengguna');
-
+        Route::view('/', 'superadmin.index')->name('superadmin.index');
+        Route::view('/profil/tentang-kami', 'superadmin.profil-tentang')->name('profil.tentang');
+        Route::view('/profil/sub-layanan', 'superadmin.profil-sub')->name('profil.sub');
+        Route::view('/profil/team-infrastruktur', 'superadmin.profil-team')->name('profil.team');
+        Route::view('/profil/link-layanan', 'superadmin.profil-link')->name('profil.link');
+        Route::view('/data/VPS', 'superadmin.data-vps')->name('data.vps');
+        Route::view('/data/WHM', 'superadmin.data-whm')->name('data.whm');
+        Route::view('/metro/jaringan', 'superadmin.metro-jaringan')->name('metro.jaringan');
+        Route::view('/device/software', 'superadmin.device-software')->name('device.software');
+        Route::view('/device/hardware', 'superadmin.device-hardware')->name('device.hardware');
+        Route::view('/serangan', 'superadmin.serangan')->name('serangan');
+        Route::view('/gangguan', 'superadmin.gangguan')->name('gangguan');
+        Route::view('/kategori-ticket', 'superadmin.kategori-ticket')->name('kategori.ticket');
+        Route::view('/prioritas-ticket', 'superadmin.prioritas-ticket')->name('prioritas.ticket');
+        Route::view('/daftar-ticket', 'superadmin.daftar-ticket')->name('daftar.ticket');
+        Route::view('/perangkat', 'superadmin.perangkat')->name('perangkat');
+        Route::view('/bidang', 'superadmin.bidang')->name('bidang');
+        Route::view('/notifikasi', 'superadmin.notifikasi')->name('notifikasi');
+        Route::view('/pengguna', 'superadmin.pengguna')->name('pengguna');
     });
 
-    Route::middleware('role:admin_default')->prefix('admin')->group(function () {
-        Route::get('/', function () {
-            return view('admin.index');
-        })->name('admin.index');
-
-        Route::get('/monitoring', function () {
-            return view('admin.monitoring');
-        })->name('admin.monitoring');
-
-        Route::get('/kinerja', function () {
-            return view('admin.kinerja');
-        })->name('admin.kinerja');
-
-        Route::get('/laporan', function () {
-            return view('admin.laporan');
-        })->name('admin.laporan');
+    // DASHBOARD ADMIN PEMPROV (MONITORING & REPORTING)
+    Route::middleware('role:admin_pemprov')->prefix('admin')->name('admin.')->group(function () {
+        Route::view('/', 'admin.index')->name('index');
+        Route::view('/monitoring', 'admin.monitoring')->name('monitoring');
+        Route::view('/kinerja', 'admin.kinerja')->name('kinerja');
+        Route::view('/laporan', 'admin.laporan')->name('laporan');
     });
 
-    // DASHBOARD KHUSUS TEKNISI & BIDANG (PEGAWAI BKD)
-    Route::middleware('role:helpdesk_teknisi')->prefix('teknisi')->group(function () {
-        Route::get('/', function () {
-            return view('teknisi.index'); // resources/views/teknisi/teknisi.blade.php
-        })->name('teknisi.index');
-
-        Route::get('/history-teknisi', function () {
-            return view('teknisi.history-teknisi'); // resources/views/teknisi/history-teknisi.blade.php
-        })->name('teknisi.history');
+    // DASHBOARD HELPDESK UTAMA PERANGKAT DAERAH 
+    Route::middleware('role:helpdesk_utama')->prefix('dinas')->name('dinas.')->group(function () {
+        Route::view('/', 'dinas.index')->name('index');
+        Route::view('/triage', 'dinas.triage')->name('triage');
+        Route::view('/sop', 'dinas.sop')->name('sop');
     });
 
-    // DASHBOARD KHUSUS BIDANG (PEGAWAI BIDANG TIK)
-    Route::middleware('role:helpdesk_bidang')->prefix('bidang')->group(function () {
-        Route::get('/', function () {
-            return view('bidang.index'); // resources/views/bidang/bidang.blade.php
-        })->name('bidang.index');
 
-        Route::get('/forward', function () {
-            return view('bidang.forward');
-        })->name('bidang.forward');
+    // DASHBOARD HELPDESK BIDANG 
+    Route::middleware(['auth', 'role:helpdesk_bidang'])->prefix('bidang')->name('bidang.')->group(function () {
+        // Tiket & Penugasan Teknisi
+        Route::get('/', [BidangController::class, 'index'])->name('index');
+        Route::post('/tickets/{ticket}/assign', [BidangController::class, 'assignTeknisi'])->name('tickets.assign');
 
-        Route::get('/history', function () {
-            return view('bidang.history-ticket');
-        })->name('bidang.history');
+        // Manajemen Kategori, Layanan, SLA, dan Aktivitas
+        Route::get('/kategori', [BidangController::class, 'kategori'])->name('kategori');
+        Route::post('/kategori/category', [BidangController::class, 'storeCategory'])->name('kategori.category.store');
+        Route::post('/kategori/service', [BidangController::class, 'storeService'])->name('kategori.service.store');
+        Route::post('/kategori/services/{service}/sla', [BidangController::class, 'updateSla'])->name('kategori.updateSla');
+        Route::post('/kategori/services/{service}/activity', [BidangController::class, 'storeActivity'])->name('kategori.storeActivity');
 
-        Route::get('/kategori', function () {
-            return view('bidang.kategori');
-        })->name('bidang.kategori');
+        // Forward & Riwayat
+        Route::get('/forward', [ForwardController::class, 'index'])->name('forward');
+        Route::post('/forward', [ForwardController::class, 'store'])->name('forward.store');
+        Route::get('/history', [ForwardController::class, 'history'])->name('history');
     });
 
-    // DASHBOARD KHUSUS OPD / HELPDESK UTAMA
-    Route::middleware('role:helpdesk_utama')->prefix('dinas')->group(function () {
-        Route::get('/', function () {
-            return view('dinas.index'); // resources/views/dinas/dinas.blade.php
-        })->name('dinas.index');
-
-        Route::get('/triage', function () {
-            return view('dinas.triage');
-        })->name('dinas.triage');
-
-        Route::get('/sop', function () {
-            return view('dinas.sop');
-        })->name('dinas.sop');
+    // DASHBOARD PETUGAS HELPDESK / TEKNISI 
+    Route::middleware('role:teknisi')->prefix('teknisi')->name('teknisi.')->group(function () {
+        Route::view('/', 'teknisi.index')->name('index');
+        Route::view('/history-teknisi', 'teknisi.history-teknisi')->name('history');
     });
 
-    // DASHBOARD KHUSUS MASYARAKAT UMUM
-    Route::middleware('role:masyarakat')->prefix('user')->group(function () {
-        Route::get('/', function () {
-            return view('user.index'); // resources/views/user/index.blade.php
-        })->name('user.index');
-        
-        Route::get('/tiket', function () {
-            return view('user.tiket');
-        })->name('user.tiket');
-
-        Route::get('/chat', function () {
-            return view('user.chat');
-        })->name('user.chat');
+    // DASHBOARD USER / PELAPOR
+    Route::middleware('role:pelapor')->prefix('user')->name('user.')->group(function () {
+        Route::view('/', 'user.index')->name('index');
+        Route::view('/tiket', 'user.tiket')->name('tiket');
+        Route::view('/chat', 'user.chat')->name('chat');
     });
 
+    Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
+    Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');
+    //chat
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/tickets/{ticket}/messages', [TicketMessageController::class, 'index'])->name('tickets.messages.index');
+        Route::post('/tickets/{ticket}/messages', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
+    });
+    //ticket
+    Route::middleware(['auth', 'role:teknisi'])->prefix('teknisi')->name('teknisi.')->group(function () {
+        Route::get('/', [TeknisiController::class, 'index'])->name('index');
+        Route::get('/tickets/{ticket}', [TeknisiController::class, 'show'])->name('tickets.show');
+        Route::post('/tickets/{ticket}/progress', [TeknisiController::class, 'updateProgress'])->name('tickets.progress');
+
+        // Riwayat
+        Route::get('/history-teknisi', [TeknisiController::class, 'historyIndex'])->name('history');
+        Route::get('/history-teknisi/{ticket}', [TeknisiController::class, 'historyShow'])->name('history.show');
+    });
 });
 
 require __DIR__.'/settings.php';

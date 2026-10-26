@@ -1,23 +1,31 @@
 <?php
+
 namespace App\Models;
-use Illuminate\Database\Eloquent\Model;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\HasApiTokens;
 
-class User extends Authenticatable{
+class User extends Authenticatable
+{
     use HasApiTokens, HasFactory, Notifiable;
-    //untuk openapi
+
+    protected $table = 'users';
+
     protected $fillable = [
         'name',
         'username',
         'email',
         'nip',
-        'organization',
+        'phone',
+        'user_type',
+        'organization_name',
         'password',
-        'role',
+        'is_active',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -29,13 +37,50 @@ class User extends Authenticatable{
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'last_login_at'     => 'datetime',
+            'password'          => 'hashed',
+            'is_active'         => 'boolean',
         ];
     }
-    
-    public function identity() : HasMany
+
+    public function roles(): BelongsToMany
     {
-        return $this->hasMany(UserIdentity::class);
+        return $this->belongsToMany(
+            Roles::class, 
+            'user_roles', 
+            'user_id', 
+            'role_id'
+        );
     }
 
+    public function userIdentities(): HasMany
+    {
+        return $this->hasMany(UserIdentities::class, 'user_id');
+    }
+
+    public function employments(): HasMany
+    {
+        return $this->hasMany(Employments::class, 'user_id');
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Tickets::class, 'user_id');
+    }
+
+    public function ticketMessages(): HasMany
+    {
+        return $this->hasMany(TicketMessage::class, 'user_id');
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLogs::class, 'user_id');
+    }
+
+    public function hasRole(string|array $roles): bool
+    {
+        $roles = (array) $roles;
+        return $this->roles->pluck('name')->intersect($roles)->isNotEmpty();
+    }
 }

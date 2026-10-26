@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,22 +36,20 @@
             
             <!-- Bagian Tengah: Menu Link -->
             <nav class="hidden md:flex gap-8 text-sm font-semibold text-gray-600">
-                <a href="#" class="text-[#1a3668]">Beranda</a>
-                <a href="#" class="hover:text-[#1a3668] transition-colors">Tentang</a>
-                <a href="#" class="hover:text-[#1a3668] transition-colors">Statistik</a>
-                <a href="#" class="hover:text-[#1a3668] transition-colors">Layanan</a>
+                <a href="{{ url('/') }}" class="text-[#1a3668]">Beranda</a>
+                <a href="{{ url('/tentang') }}" class="hover:text-[#1a3668] transition-colors">Tentang</a>
+                <a href="{{ url('/statistik') }}" class="hover:text-[#1a3668] transition-colors">Statistik</a>
+                <a href="{{ url('/layanan') }}" class="hover:text-[#1a3668] transition-colors">Layanan</a>
             </nav>
 
             <!-- Bagian Kanan: Tombol Login -->
             <div>
                 @auth
-                    <!-- Tombol ini muncul jika user SUDAH login -->
-                    <a href="{{ route('login') }}" class="px-5 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-blue-150 flex items-center gap-2 transition-colors">
+                    <a href="{{ route('dashboard') }}" class="px-5 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors">
                         <i class="far fa-user"></i> Dashboard
                     </a>
                 @else
-                    <!-- Tombol ini muncul jika user BELUM login -->
-                    <a href="{{ route('login') }}" class="px-5 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-blue-100 flex items-center gap-2 transition-colors">
+                    <a href="{{ route('login') }}" class="px-5 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-2 transition-colors">
                         <i class="far fa-user"></i> Login
                     </a>
                 @endauth
@@ -62,7 +60,7 @@
     <!-- ========================================== -->
     <!-- 2. HERO SECTION & LACAK TIKET -->
     <!-- ========================================== -->
-    <section class="grid-bg pt-32 pb-16 px-6 md:px-16 flex flex-col items-center">
+    <section id="beranda" class="grid-bg pt-32 pb-16 px-6 md:px-16 flex flex-col items-center">
         <div class="max-w-6xl w-full flex flex-col lg:flex-row items-center gap-12">
             
             <!-- Kiri: Teks -->
@@ -80,7 +78,7 @@
                 </p>
                 
                 <div class="flex flex-col sm:flex-row gap-4 pt-2">
-                    <a href="#" class="bg-[#1a3668] text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-[#112445] transition-colors flex items-center justify-center gap-2">
+                    <a href="{{ route('login') }}" class="bg-[#1a3668] text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-[#112445] transition-colors flex items-center justify-center gap-2">
                         <i class="fas fa-ticket-alt"></i> Buat Permohonan Tiket <i class="fas fa-arrow-right ml-1"></i>
                     </a>
                     <a href="#" class="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 shadow-sm">
@@ -144,13 +142,22 @@
                 </div>
             </div>
             <div class="w-full md:w-2/3 flex flex-col sm:flex-row gap-3">
+                <form action="{{ route('ticket.track') }}" method="POST" class="w-full md:w-2/3 flex flex-col sm:flex-row gap-3">
+                @csrf
                 <div class="relative flex-1">
                     <i class="fas fa-ticket-alt absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" placeholder="Nomor tiket, mis. HD-2610-0142" class="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                    <input
+                        type="text" 
+                        name="ticket_number" 
+                        value="{{ old('ticket_number') }}"
+                        placeholder="Nomor tiket, mis. HD-2610-0142" 
+                        required
+                        class="w-full bg-gray-50 border border-gray-200 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                 </div>
                 <button class="bg-[#1a3668] text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-[#112445] transition-colors shrink-0">
                     Cari Tiket
                 </button>
+                </form>
             </div>
         </div>
     </section>
@@ -158,7 +165,7 @@
     <!-- ========================================== -->
     <!-- 3. PENJELASAN 3 LANGKAH -->
     <!-- ========================================== -->
-    <section class="py-16 px-6 md:px-16 bg-white flex justify-center">
+    <section id="tentang" class="scroll-mt-20 py-16 px-6 md:px-16 bg-white flex justify-center">
         <div class="max-w-6xl w-full flex flex-col lg:flex-row gap-12 items-center">
             
             <!-- Teks Kiri -->
@@ -166,9 +173,11 @@
                 <h2 class="text-3xl md:text-4xl font-bold text-[#1a3668] leading-tight mb-4">
                     Satu Sistem untuk Setiap Gangguan Layanan TIK
                 </h2>
+                
                 <p class="text-gray-500 text-sm mb-8 leading-relaxed">
                     SIGELATIK (Sistem Informasi Gangguan Layanan TIK) menerima laporan gangguan dari perangkat daerah di lingkup Pemerintah Provinsi Kalimantan Timur, lalu memantaunya hingga selesai dalam tiga langkah.
                 </p>
+                
                 <a href="{{ route('login') }}" class="bg-[#1a3668] text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-[#112445] transition-colors inline-flex items-center gap-2">
                     Mulai Buat Tiket <i class="fas fa-arrow-right"></i>
                 </a>
@@ -210,7 +219,7 @@
     <!-- ========================================== -->
     <!-- 4. STATISTIK LAYANAN -->
     <!-- ========================================== -->
-    <section class="py-16 px-6 md:px-16 bg-[#f8fbff] flex justify-center">
+    <section id="statistik" class="scroll-mt-20 py-16 px-6 md:px-16 bg-[#f8fbff] flex justify-center">
         <div class="max-w-6xl w-full">
             <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
                 <div>
@@ -306,7 +315,7 @@
     <!-- ========================================== -->
     <!-- 5. DIREKTORI LAYANAN -->
     <!-- ========================================== -->
-    <section class="py-16 px-6 md:px-16 bg-white flex flex-col items-center">
+    <section id="layanan" class="scroll-mt-20 py-16 px-6 md:px-16 bg-white flex flex-col items-center">
         <div class="text-center mb-10 max-w-xl">
             <div class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2">DIREKTORI LAYANAN</div>
             <h2 class="text-3xl font-bold text-[#1a3668] mb-4">Temukan Layanan yang Anda Butuhkan</h2>
@@ -495,5 +504,15 @@
             });
         });
     </script>
+    @if(isset($activeSection) && $activeSection)
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const target = document.getElementById("{{ $activeSection }}");
+            if (target) {
+                target.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+    </script>
+    @endif
 </body>
 </html>

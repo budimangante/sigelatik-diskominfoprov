@@ -5,10 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class UserIdentity extends Model
+class WorkHours extends Model
 {
-    public function user(): BelongsTo
+    public function workhours(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Services::class, 'service_id');
     }
 }

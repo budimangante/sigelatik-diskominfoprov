@@ -11,7 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        //
+    Schema::create('task_report_files', function(Blueprint $table){
+        $table->foreignId('task_reports_id')->references('id')->on('task_reports')->cascadeOnDelete();
+        $table->foreignId('file_id')->constrained()->cascadeOnDelete();
+        $table->primary(['task_reports_id', 'file_id']);
+
+    });
     }
 
     /**
@@ -20,5 +25,6 @@ return new class extends Migration
     public function down(): void
     {
         //
+        Schema::dropIfExists('task_report_files');
     }
 };
