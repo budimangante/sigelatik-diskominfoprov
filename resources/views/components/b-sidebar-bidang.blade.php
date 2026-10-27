@@ -18,7 +18,7 @@
             <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Utama</p>
             <a href="{{ route('bidang.index') }}" class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-semibold {{ request()->routeIs('bidang.index') ? 'bg-[#f4f7fb] text-[#1a3668]' : 'text-[#4b5563] hover:bg-gray-50' }}">
                 <div class="flex items-center gap-3">
-                    <i class="fas fa-inbox w-5"></i> Tiket Bidang
+                    <i class="fas fa-inbox w-5"></i> Overview
                 </div>
                 @if(request()->routeIs('bidang.index'))
                     <i class="fas fa-circle text-[6px]"></i>
@@ -44,16 +44,35 @@
             </a>
 
             <!-- Kategori MANAGEMENT TICKETING -->
-            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Kategori & SLA</p>
+            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Kategori Layanan</p>
             <a href="{{ route('bidang.kategori') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('bidang.kategori') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
                 <div class="flex items-center gap-3">
-                    <i class="fas fa-tag w-5"></i> Kategori & SLA
+                    <i class="fas fa-tag w-5"></i> Kategori Layanan
                 </div>
                 @if(request()->routeIs('bidang.kategori'))
                     <i class="fas fa-circle text-[6px]"></i>
                 @endif
             </a>
 
+            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Management Ticketing</p>
+            <a href="{{ route('bidang.triage') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('bidang.triage') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-exchange-alt w-5"></i> Triage Ticket
+                </div>
+                @if(request()->routeIs('bidang.triage'))
+                    <i class="fas fa-circle text-[6px]"></i>
+                @endif
+            </a>
+
+            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Management Layanan</p>
+            <a href="{{ route('bidang.sop') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('bidang.sop') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
+                <div class="flex items-center gap-3">
+                    <i class="far fa-file-alt w-5"></i> Manajemen SOP
+                </div>
+                @if(request()->routeIs('bidang.sop'))
+                    <i class="fas fa-circle text-[6px]"></i>
+                @endif
+            </a>
         </nav>
     </div>
 

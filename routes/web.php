@@ -97,28 +97,36 @@ Route::middleware(['auth'])->group(function () {
     // DASHBOARD HELPDESK UTAMA PERANGKAT DAERAH 
     Route::middleware('role:helpdesk_utama')->prefix('dinas')->name('dinas.')->group(function () {
         Route::view('/', 'dinas.index')->name('index');
-        Route::view('/triage', 'dinas.triage')->name('triage');
-        Route::view('/sop', 'dinas.sop')->name('sop');
     });
 
 
     // DASHBOARD HELPDESK BIDANG 
     Route::middleware(['auth', 'role:helpdesk_bidang'])->prefix('bidang')->name('bidang.')->group(function () {
-        // Tiket & Penugasan Teknisi
         Route::get('/', [BidangController::class, 'index'])->name('index');
         Route::post('/tickets/{ticket}/assign', [BidangController::class, 'assignTeknisi'])->name('tickets.assign');
-
-        // Manajemen Kategori, Layanan, SLA, dan Aktivitas
+        
         Route::get('/kategori', [BidangController::class, 'kategori'])->name('kategori');
-        Route::post('/kategori/category', [BidangController::class, 'storeCategory'])->name('kategori.category.store');
-        Route::post('/kategori/service', [BidangController::class, 'storeService'])->name('kategori.service.store');
-        Route::post('/kategori/services/{service}/sla', [BidangController::class, 'updateSla'])->name('kategori.updateSla');
-        Route::post('/kategori/services/{service}/activity', [BidangController::class, 'storeActivity'])->name('kategori.storeActivity');
-
-        // Forward & Riwayat
+        Route::post('/kategori', [BidangController::class, 'storeCategory'])->name('kategori.store');
+        Route::post('/layanan', [BidangController::class, 'storeService'])->name('service.store');
+        Route::patch('/layanan/{service}/sla', [BidangController::class, 'updateSla'])->name('service.updateSla');
+        
         Route::get('/forward', [ForwardController::class, 'index'])->name('forward');
         Route::post('/forward', [ForwardController::class, 'store'])->name('forward.store');
         Route::get('/history', [ForwardController::class, 'history'])->name('history');
+        
+
+        Route::get('/sop', [BidangController::class, 'sopIndex'])->name('sop');
+        Route::post('/sop', [BidangController::class, 'storeSop'])->name('sop.store');
+        Route::post('/sop/{id}/update', [BidangController::class, 'updateSop'])->name('sop.update');
+        Route::post('/sop/{id}/step', [BidangController::class, 'storeSopStep'])->name('sop.step');
+        Route::get('/sop/{slug}/view', [BidangController::class, 'viewPdf'])->name('sop.view');
+        Route::post('/sop/step/{stepId}/update', [BidangController::class, 'updateSopStep'])->name('sop.step.update');
+        Route::delete('/sop/step/{stepId}', [BidangController::class, 'destroySopStep'])->name('sop.step.destroy');
+        
+        Route::get('/triage', [BidangController::class, 'triageIndex'])->name('triage');
+        Route::post('/triage/{ticket}/process', [BidangController::class, 'processTriage'])->name('triage.process');
+        Route::post('/triage/{ticket}/pending', [BidangController::class, 'pendingTriage'])->name('triage.pending');
+        Route::post('/triage/{ticket}/reassign', [BidangController::class, 'reassignTeknisi'])->name('triage.reassign');
     });
 
     // DASHBOARD PETUGAS HELPDESK / TEKNISI 

@@ -24,29 +24,6 @@
                     <i class="fas fa-circle text-[6px]"></i>
                 @endif
             </a>
-
-            <!-- Kategori MANAGEMENT TICKETING -->
-            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Management Ticketing</p>
-            <a href="{{ route('dinas.triage') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('dinas.triage') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-exchange-alt w-5"></i> Triage & Reassign
-                </div>
-                @if(request()->routeIs('dinas.triage'))
-                    <i class="fas fa-circle text-[6px]"></i>
-                @endif
-            </a>
-
-            <!-- Kategori MANAGEMENT LAYANAN -->
-            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Management Layanan</p>
-            <a href="{{ route('dinas.sop') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('dinas.sop') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
-                <div class="flex items-center gap-3">
-                    <i class="far fa-file-alt w-5"></i> Manajemen SOP
-                </div>
-                @if(request()->routeIs('dinas.sop'))
-                    <i class="fas fa-circle text-[6px]"></i>
-                @endif
-            </a>
-
         </nav>
     </div>
 
