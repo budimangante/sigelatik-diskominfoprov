@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('file_id')->constrained()->cascadeOnDelete();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->string('title');
+            $table->string('slug')->nullable()->unique();
             $table->integer('version');
             $table->timestamps();
         });

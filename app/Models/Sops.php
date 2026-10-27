@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sops extends Model
 {
+    protected $guarded = ['id'];
+
     public function file(): BelongsTo
     {
         return $this->belongsTo(Files::class, 'file_id');
@@ -18,8 +20,13 @@ class Sops extends Model
         return $this->belongsTo(Services::class, 'service_id');
     }
 
-    public function sopsStep(): HasMany
+    public function creator(): BelongsTo
     {
-        return $this->hasMany(Sops::class, 'sop_id');
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function steps(): HasMany
+    {
+        return $this->hasMany(SopsStep::class, 'sop_id');
     }
 }
