@@ -7,21 +7,20 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\LacakTicketController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
+use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\TicketMessageController;
 use App\Http\Controllers\Web\TeknisiController;
 use App\Http\Controllers\Web\ForwardController;
 use App\Http\Controllers\Web\BidangController;
 
-// Rute Publik
+
 Route::get('/{section?}', function ($section = null) {
     return view('beranda.index-beranda', ['activeSection' => $section]);
 })->where('section', 'tentang|statistik|layanan')->name('beranda');
 
 Route::match(['get', 'post'], '/lacak-tiket', [LacakTicketController::class, 'track'])->name('ticket.track');
 
-// Alias untuk kebutuhan Wayfinder & komponen Vue Starter Kit
 Route::get('/home', fn () => redirect()->route('beranda'))->name('home');
-// Rute cerdas Dashboard: Mengarahkan otomatis ke dashboard role yang sedang aktif
 Route::get('/dashboard', function () {
     if (! Auth::guard()->check()) {
         return redirect()->route('login');
@@ -62,8 +61,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-    // DASHBOARD SUPER ADMIN 
+ 
     Route::middleware('role:super_admin')->prefix('superadmin')->group(function () {
         Route::view('/', 'superadmin.index')->name('superadmin.index');
         Route::view('/profil/tentang-kami', 'superadmin.profil-tentang')->name('profil.tentang');
@@ -86,21 +84,18 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/pengguna', 'superadmin.pengguna')->name('pengguna');
     });
 
-    // DASHBOARD ADMIN PEMPROV (MONITORING & REPORTING)
     Route::middleware('role:admin_pemprov')->prefix('admin')->name('admin.')->group(function () {
         Route::view('/', 'admin.index')->name('index');
         Route::view('/monitoring', 'admin.monitoring')->name('monitoring');
         Route::view('/kinerja', 'admin.kinerja')->name('kinerja');
         Route::view('/laporan', 'admin.laporan')->name('laporan');
     });
-
-    // DASHBOARD HELPDESK UTAMA PERANGKAT DAERAH 
+ 
     Route::middleware('role:helpdesk_utama')->prefix('dinas')->name('dinas.')->group(function () {
         Route::view('/', 'dinas.index')->name('index');
     });
 
 
-    // DASHBOARD HELPDESK BIDANG 
     Route::middleware(['auth', 'role:helpdesk_bidang'])->prefix('bidang')->name('bidang.')->group(function () {
         Route::get('/', [BidangController::class, 'index'])->name('index');
         Route::post('/tickets/{ticket}/assign', [BidangController::class, 'assignTeknisi'])->name('tickets.assign');
@@ -129,18 +124,20 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/triage/{ticket}/reassign', [BidangController::class, 'reassignTeknisi'])->name('triage.reassign');
     });
 
-    // DASHBOARD PETUGAS HELPDESK / TEKNISI 
     Route::middleware('role:teknisi')->prefix('teknisi')->name('teknisi.')->group(function () {
         Route::view('/', 'teknisi.index')->name('index');
         Route::view('/history-teknisi', 'teknisi.history-teknisi')->name('history');
         Route::post('/tickets/{ticket}/start', [TeknisiController::class, 'startWork'])->name('tickets.start');
     });
 
-    // DASHBOARD USER / PELAPOR
-    Route::middleware('role:pelapor')->prefix('user')->name('user.')->group(function () {
+
+    Route::middleware(['auth', 'role:pelapor'])->prefix('user')->name('user.')->group(function () {
         Route::view('/', 'user.index')->name('index');
-        Route::view('/tiket', 'user.tiket')->name('tiket');
-        Route::view('/chat', 'user.chat')->name('chat');
+        Route::get('/tiket', [UserController::class, 'myTickets'])->name('tiket');
+        Route::get('/tickets', [UserController::class, 'myTickets'])->name('tickets.index');
+        Route::get('/tiket/buat', [UserController::class, 'createTicket'])->name('tickets.create');
+        Route::post('/tiket/simpan', [UserController::class, 'storeTicket'])->name('tickets.store');
+        Route::get('/chat', [UserController::class, 'chat'])->name('chat');
     });
 
     Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
