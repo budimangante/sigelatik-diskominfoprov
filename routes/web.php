@@ -133,6 +133,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:teknisi')->prefix('teknisi')->name('teknisi.')->group(function () {
         Route::view('/', 'teknisi.index')->name('index');
         Route::view('/history-teknisi', 'teknisi.history-teknisi')->name('history');
+        Route::post('/tickets/{ticket}/start', [TeknisiController::class, 'startWork'])->name('tickets.start');
     });
 
     // DASHBOARD USER / PELAPOR

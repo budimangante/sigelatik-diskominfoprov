@@ -19,6 +19,19 @@
         <p class="text-gray-500 text-sm mt-1">Daftar tiket aktif yang ditugaskan kepada Anda beserta sisa waktu SLA.</p>
     </div>
 
+    <!-- Alert Notifikasi -->
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-2xs">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+    @endif
+
     <!-- Filter & Pencarian Live -->
     <div class="mb-8 space-y-4">
         <div class="relative">
@@ -61,7 +74,7 @@
                 <select id="liveOrgFilter" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1e3a8a] appearance-none shadow-sm cursor-pointer">
                     <option value="">Semua Instansi / Dinas</option>
                     @php
-                        $uniqueOrgs =$tickets->pluck('user.organization')->filter()->unique();
+                        $uniqueOrgs = $tickets->pluck('user.organization')->filter()->unique();
                     @endphp
                     @foreach ($uniqueOrgs as $org)
                         <option value="{{ strtolower($org) }}">{{ $org }}</option>
@@ -88,29 +101,23 @@
             @foreach ($tickets as $ticket)
                 @php
                     $ticketCode = $ticket->ticket_number ?? ('HD-2610-00' . $ticket->id);
-                    $reporterName =$ticket->user->name ?? 'Pelapor';
-                    $reporterOrg =$ticket->user->organization ?? 'Dinas Terkait';
+                    $reporterName = $ticket->user->name ?? 'Pelapor';
+                    $reporterOrg = $ticket->user->organization ?? 'Dinas Terkait';
                     $ticketSubject = $ticket->title ?? $ticket->subject ?? 'Keluhan Tiket';
-                    $unread =$ticket->unread_messages_count ?? 0;
+                    $unread = $ticket->unread_messages_count ?? 0;
 
-                    // Pengaturan badge status
                     $statusRaw = strtolower($ticket->status->name ?? 'new');
-                    if (str_contains($statusRaw, 'process') || str_contains($statusRaw, 'proses')) {$badgeBg = 'bg-amber-50 text-amber-700 border-amber-200';
-                        $dotBg = 'bg-amber-500'; } elseif (str_contains($statusRaw, 'pending')) {
-                        $badgeBg = 'bg-purple-50 text-purple-700 border-purple-200';$dotBg = 'bg-purple-500';
+                    if (str_contains($statusRaw, 'process') || str_contains($statusRaw, 'proses')) {
+                        $badgeBg = 'bg-amber-50 text-amber-700 border-amber-200';
+                        $dotBg = 'bg-amber-500';
+                    } elseif (str_contains($statusRaw, 'pending')) {
+                        $badgeBg = 'bg-purple-50 text-purple-700 border-purple-200';
+                        $dotBg = 'bg-purple-500';
                     } else {
-                        $badgeBg = 'bg-blue-50 text-blue-700 border-blue-200';$dotBg = 'bg-blue-600';
+                        $badgeBg = 'bg-blue-50 text-blue-700 border-blue-200';
+                        $dotBg = 'bg-blue-600';
                     }
 
-                    // SLA target 4 jam
-                    $slaHours = 4;
-                    $createdAt =$ticket->created_at;
-                    $elapsedMinutes = $createdAt ? max(0, $createdAt->diffInMinutes(now())) : 0;
-                    $totalMinutes =$slaHours * 60;
-                    $slaPercent = min(100, round(($elapsedMinutes / $totalMinutes) * 100));
-                    $isSlaOverdue =$createdAt ? now()->greaterThan($createdAt->copy()->addHours($slaHours)) : false;
-
-                    // Metadata untuk live search
                     $searchData = strtolower("{$ticketCode} {$ticketSubject} {$reporterName} {$reporterOrg}");
                 @endphp
 
@@ -127,7 +134,7 @@
                             <a href="{{ route('teknisi.tickets.show', $ticket) }}" class="text-base md:text-lg font-bold text-slate-900 hover:text-blue-600 transition-colors leading-snug block">
                                 {{ $ticketSubject }}
                             </a>
-                            <p class="text-xs text-gray-500 mt-1">{{ $reporterOrg }} • {{$reporterName }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $reporterOrg }} • {{ $reporterName }}</p>
                         </div>
                         
                         <div class="{{ $badgeBg }} border px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-wider shrink-0 shadow-sm">
@@ -136,24 +143,92 @@
                         </div>
                     </div>
 
-                    <!-- SLA Progress Bar -->
+                    <!-- SLA Progress Bar (Sinkron dengan Bidang) -->
                     <div class="mt-6 pt-4 border-t border-slate-100">
-                        <div class="flex justify-between items-center mb-1.5 text-xs">
-                            <span class="font-bold {{ $isSlaOverdue ? 'text-rose-600' : 'text-[#1e3a8a]' }}">
-                                <i class="far fa-clock mr-1"></i> {{ $isSlaOverdue ? 'SLA Terlewati' : 'Sedang Berjalan' }}
-                            </span>
-                            <span class="text-[11px] text-gray-400">target 4 jam ({{ $slaPercent }}%)</span>
-                        </div>
-                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full rounded-full transition-all duration-500 {{ $isSlaOverdue ? 'bg-rose-500' : 'bg-[#1e3a8a]' }}" 
-                                 style="width: {{ $slaPercent }}%;"></div>
-                        </div>
+                        @if(($ticket->sla_status ?? 'not_started') === 'not_started')
+                            <!-- 1. Kondisi: Belum Berjalan -->
+                            <div class="flex justify-between items-center mb-1.5 text-xs">
+                                <span class="font-bold text-slate-400 flex items-center gap-1.5">
+                                    <i class="far fa-clock"></i> Belum berjalan
+                                </span>
+                                <span class="text-[11px] text-gray-400 font-mono">
+                                    target {{ $ticket->target_sla_label ?? '4 jam' }} (0%)
+                                </span>
+                            </div>
+                            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full bg-slate-300" style="width: 0%;"></div>
+                            </div>
+
+                        @elseif(($ticket->sla_status ?? '') === 'paused')
+                            <!-- 2. Kondisi: Dijeda (Pending) -->
+                            <div class="flex justify-between items-center mb-1.5 text-xs">
+                                <span class="font-bold text-amber-600 flex items-center gap-1.5">
+                                    <i class="fas fa-pause-circle"></i> Dijeda ({{ $ticket->sla_progress }}%)
+                                </span>
+                                <span class="text-[11px] text-amber-700 font-mono font-semibold">
+                                    target {{ $ticket->target_sla_label ?? '4 jam' }}
+                                </span>
+                            </div>
+                            <div class="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full bg-amber-500 transition-all duration-500" style="width: {{ $ticket->sla_progress }}%;"></div>
+                            </div>
+
+                        @elseif(!empty($ticket->is_overdue) || ($ticket->sla_status ?? '') === 'overdue')
+                            <!-- 3. Kondisi: SLA Terlewati -->
+                            <div class="flex justify-between items-center mb-1.5 text-xs">
+                                <span class="font-bold text-rose-600 flex items-center gap-1.5">
+                                    <i class="fas fa-exclamation-circle"></i> SLA Terlewati (100%)
+                                </span>
+                                <span class="text-[11px] text-rose-600 font-mono font-semibold">
+                                    target {{ $ticket->target_sla_label ?? '4 jam' }}
+                                </span>
+                            </div>
+                            <div class="w-full h-2 bg-rose-100 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full bg-rose-500" style="width: 100%;"></div>
+                            </div>
+
+                        @else
+                            <!-- 4. Kondisi: Sedang Berjalan -->
+                            <div class="flex justify-between items-center mb-1.5 text-xs">
+                                <span class="font-bold text-[#1e3a8a] flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                                    Sedang Berjalan ({{ $ticket->sla_progress }}%)
+                                </span>
+                                <span class="text-[11px] text-gray-400 font-mono">
+                                    target {{ $ticket->target_sla_label ?? '4 jam' }}
+                                </span>
+                            </div>
+                            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full bg-[#1e3a8a] transition-all duration-500" style="width: {{ $ticket->sla_progress }}%;"></div>
+                            </div>
+                        @endif
                     </div>
 
-                    <!-- Tombol Chat Pelapor -->
-                    <div class="mt-4 flex justify-end">
+                    <!-- Tombol Aksi di Kartu -->
+                    <div class="mt-4 flex items-center justify-between">
+                        <div>
+                            @if(!$ticket->is_started)
+                                <!-- Quick Action: Mulai Kerjakan Langsung dari Index -->
+                                <form action="{{ route('teknisi.tickets.start', $ticket->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="bg-[#1a3668] hover:bg-[#122548] text-white px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5">
+                                        <i class="fas fa-play text-[10px]"></i>
+                                        <span>Mulai Kerjakan</span>
+                                    </button>
+                                </form>
+                            @else
+                                <a href="{{ route('teknisi.tickets.show', $ticket) }}" 
+                                   class="text-xs font-bold text-[#1a3668] hover:underline flex items-center gap-1">
+                                    <span>Buka Lembar Kerja</span>
+                                    <i class="fas fa-arrow-right text-[10px]"></i>
+                                </a>
+                            @endif
+                        </div>
+
+                        <!-- Tombol Chat Pelapor -->
                         <button type="button" 
-                                onclick="openQuickChat({{ $ticket->id }}, '{{$ticketCode }}', '{{ addslashes($ticketSubject) }}', '{{ addslashes($reporterName) }}')"
+                                onclick="openQuickChat({{ $ticket->id }}, '{{ $ticketCode }}', '{{ addslashes($ticketSubject) }}', '{{ addslashes($reporterName) }}')"
                                 class="relative px-3.5 py-1.5 rounded-xl bg-blue-50 text-[#1e3a8a] hover:bg-blue-100 text-xs font-semibold flex items-center gap-2 transition shadow-sm border border-blue-100">
                             <i class="fas fa-comment-dots text-xs"></i>
                             <span>Chat Pelapor</span>
@@ -182,7 +257,6 @@
         </div>
 
         @if ($tickets->count() === 0)
-            <!-- State Kosong Awal -->
             <div class="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center">
                 <div class="w-16 h-16 rounded-full bg-blue-50 text-[#1e3a8a] flex items-center justify-center mx-auto mb-4 text-2xl">
                     <i class="fas fa-clipboard-check"></i>
@@ -198,7 +272,6 @@
 <div id="quickChatModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg h-[600px] flex flex-col overflow-hidden border border-slate-100">
         
-        <!-- Header Chat -->
         <div class="bg-[#1e3a8a] text-white p-4 flex items-center justify-between shadow-sm">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0">
@@ -214,12 +287,10 @@
             </button>
         </div>
 
-        <!-- Box Pesan (Chat Feed) -->
         <div id="chatMessagesContainer" class="flex-1 p-4 overflow-y-auto space-y-3 bg-[#f8fafc]">
             <div class="text-center py-6 text-xs text-gray-400">Memuat obrolan...</div>
         </div>
 
-        <!-- Form Input Pesan -->
         <form id="quickChatForm" onsubmit="sendQuickChatMessage(event)" class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
             <input type="hidden" id="activeChatTicketId" value="">
             <input type="text" 
@@ -235,9 +306,8 @@
     </div>
 </div>
 
-<!-- ================= JAVASCRIPT: LIVE FILTER & WEBSOCKET ================= -->
+<!-- ================= JAVASCRIPT ================= -->
 <script>
-    // ================= 1. LOGIKA LIVE SEARCH & FILTER INSTAN =================
     const liveSearchInput = document.getElementById('liveSearchInput');
     const liveStatusFilter = document.getElementById('liveStatusFilter');
     const liveOrgFilter = document.getElementById('liveOrgFilter');
@@ -251,7 +321,6 @@
         const selectedStatus = liveStatusFilter.value;
         const selectedOrg = liveOrgFilter.value.toLowerCase().trim();
 
-        // Tampilkan/sembunyikan tombol clear search (x)
         if (query.length > 0) {
             btnClearSearch.classList.remove('hidden');
         } else {
@@ -277,7 +346,6 @@
             }
         });
 
-        // Toggle tampilan "tidak ada tiket cocok"
         if (noMatchState) {
             if (visibleCount === 0 && ticketCards.length > 0) {
                 noMatchState.classList.remove('hidden');
@@ -286,7 +354,6 @@
             }
         }
 
-        // Perbarui badge jumlah tiket aktif secara live
         if (countBadge) {
             countBadge.textContent = `${visibleCount} Tiket Aktif`;
         }
@@ -300,12 +367,10 @@
         liveSearchInput.focus();
     }
 
-    // Jalankan filter pada setiap ketukan keyboard dan perubahan select
     liveSearchInput.addEventListener('input', applyLiveFilter);
     liveStatusFilter.addEventListener('change', applyLiveFilter);
     liveOrgFilter.addEventListener('change', applyLiveFilter);
 
-    // ================= 2. LOGIKA QUICK CHAT & WEBSOCKET =================
     let activeTicketId = null;
     const currentUserId = {{ auth()->id() ?? 'null' }};
 

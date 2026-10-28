@@ -8,8 +8,8 @@ use App\Models\Files;
 use App\Models\TicketStatusHistory;
 use App\Models\TicketStatuses;
 use Carbon\Carbon;
-use App\Events\TicketStatusUpdated;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -39,20 +39,19 @@ class TeknisiController extends Controller
 
     /**
      * Halaman Daftar Tugas Tiket Teknisi
-     * Hanya menampilkan tiket berstatus aktif (1, 2, 3) yang DITUGASKAN ke teknisi login
      */
     public function index(Request $request): View
     {
         $userId = Auth::id();
 
-        // 1. Ambil ID tiket yang ditugaskan khusus ke teknisi yang sedang login
+        // 1. Ambil ID tiket yang ditugaskan khusus ke teknisi yang login
         $assignedTicketIds = DB::table('ticket_task_assignees')
             ->join('tickets_task', 'tickets_task.id', '=', 'ticket_task_assignees.ticket_task_id')
             ->where('ticket_task_assignees.user_id', $userId)
             ->pluck('tickets_task.ticket_id')
             ->toArray();
 
-        // 2. Filter tiket hanya yang menjadi tanggung jawab teknisi ini
+        // 2. Filter tiket aktif teknisi (Status: 1, 2, 3)
         $query = Tickets::with(['user', 'status', 'service'])
             ->whereIn('id', $assignedTicketIds)
             ->whereIn('ticket_status_id', [1, 2, 3]);
@@ -78,24 +77,36 @@ class TeknisiController extends Controller
             ->get()
             ->map(function ($ticket) use ($now) {
                 $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
-                $targetSla = (int) ($ticket->service?->sla_minutes ?? 240);
-                $ticket->target_sla_label = $this->formatMinutes($targetSla);
 
-                // Perhitungan SLA Penanganan Teknisi:
-                if (!$task || empty($task->started_at)) {
-                    // Belum dimulai teknisi
+                // Ambil target SLA Penanganan riil dari snapshot aktivitas penanganan
+                $taskMinutes = 0;
+                if ($task) {
+                    $taskMinutes = (int) DB::table('ticket_task_activities')
+                        ->where('ticket_task_id', $task->id)
+                        ->sum('target_minutes_snapshot');
+                }
+
+                $targetSla = $taskMinutes > 0 
+                    ? $taskMinutes 
+                    : (int) ($ticket->service?->sla_minutes ?? 240);
+
+                $ticket->target_sla_minutes = $targetSla;
+                $ticket->target_sla_label = $this->formatMinutes($targetSla);
+                $ticket->is_started = !empty($task?->started_at);
+                $ticket->task_started_at = $task?->started_at;
+
+                // Hitung SLA Penanganan Teknisi
+                if (!$ticket->is_started) {
                     $ticket->sla_progress = 0;
                     $ticket->is_overdue = false;
                     $ticket->sla_status = 'not_started';
                 } elseif ($ticket->ticket_status_id == 3) {
-                    // Sedang pending/dijeda -> freeze timer
                     $freezeTime = $ticket->updated_at ? Carbon::parse($ticket->updated_at) : $now;
                     $elapsed = max(0, (int) Carbon::parse($task->started_at)->diffInMinutes($freezeTime));
                     $ticket->sla_progress = min(100, (int) round(($elapsed / max(1, $targetSla)) * 100));
                     $ticket->is_overdue = $elapsed >= $targetSla;
                     $ticket->sla_status = 'paused';
                 } else {
-                    // Sedang berjalan (Status 2)
                     $elapsed = max(0, (int) Carbon::parse($task->started_at)->diffInMinutes($now));
                     $ticket->sla_progress = min(100, (int) round(($elapsed / max(1, $targetSla)) * 100));
                     $ticket->is_overdue = $elapsed >= $targetSla;
@@ -113,29 +124,129 @@ class TeknisiController extends Controller
     /**
      * Halaman Workspace Detail Pengerjaan Tiket & Form Penanganan
      */
+   /**
+     * Halaman Workspace Detail Pengerjaan Tiket & Form Penanganan
+     */
     public function show(Tickets $ticket): View
     {
-        $ticket->loadMissing(['user', 'status', 'service']);
+        // 1. Eager load SEMUA relasi sekaligus untuk mematikan query N+1
+        $ticket->loadMissing([
+            'user', 
+            'status', 
+            'service', 
+            'statusHistories.user',
+            'messages.user'
+        ]);
 
-        $statuses = TicketStatuses::orderBy('sort_order', 'asc')->get();
+        $task = DB::table('tickets_task')->where('ticket_id',$ticket->id)->first();
 
-        return view('teknisi.show', compact('ticket', 'statuses'));
+        // 2. Ambil target durasi penanganan
+        $taskMinutes = 0;
+        if ($task) {$taskMinutes = (int) DB::table('ticket_task_activities')
+                ->where('ticket_task_id', $task->id)
+                ->sum('target_minutes_snapshot');
+        }
+
+        $targetSla =$taskMinutes > 0 
+            ? $taskMinutes 
+            : (int) ($ticket->service?->sla_minutes ?? 240);
+
+        $slaHours = round($targetSla / 60, 1);$targetLabel = $this->formatMinutes($targetSla);
+        $isStarted = !empty($task?->started_at);
+
+        // Ambil ID Status secara dinamis
+        $statusProsesId  = DB::table('ticket_statuses')->where('name', 'like', '%proses%')->orWhere('code', 'process')->value('id') ?? 2;
+        $statusPendingId = DB::table('ticket_statuses')->where('name', 'like', '%pending%')->orWhere('code', 'pending')->value('id') ?? 3;
+        $statusSelesaiId = DB::table('ticket_statuses')->where('name', 'like', '%selesai%')->orWhere('code', 'solved')->value('id') ?? 4;
+
+        $currentStatusId = (int)$ticket->ticket_status_id;
+        $isPaused = ($currentStatusId === (int)$statusPendingId);
+
+        $dueAt = null;
+        $remainingSeconds = 0;
+        $isOverdue = false;
+
+        if ($isStarted) {$startTime = Carbon::parse($task->started_at);$dueAt = $startTime->copy()->addMinutes($targetSla);
+
+            if ($isPaused) {
+                $freezeTime =$ticket->updated_at ? Carbon::parse($ticket->updated_at) : now();$elapsed = (int) $startTime->diffInMinutes($freezeTime);
+                $remainingSeconds = max(0, ($targetSla - $elapsed) * 60);$isOverdue = $elapsed >=$targetSla;
+            } else {
+                $diffSecs = (int) now()->diffInSeconds($dueAt, false);
+                $isOverdue =$diffSecs <= 0;
+                $remainingSeconds = max(0,$diffSecs);
+            }
+        }
+
+        return view('teknisi.show', compact(
+            'ticket',
+            'task',
+            'isStarted',
+            'isPaused',
+            'targetSla',
+            'slaHours',         
+            'targetLabel',
+            'dueAt',
+            'remainingSeconds',
+            'isOverdue',
+            'statusProsesId',
+            'statusPendingId',
+            'statusSelesaiId'
+        ));
+    }
+
+    /**
+     * Aksi Tombol: Mulai Kerjakan Tiket
+     */
+    public function startWork(Tickets $ticket): RedirectResponse
+    {
+        DB::transaction(function () use ($ticket) {
+            $now = now();
+            $taskId = DB::table('tickets_task')->where('ticket_id', $ticket->id)->value('id');
+
+            if ($taskId) {
+                DB::table('tickets_task')->where('id', $taskId)->update([
+                    'started_at'       => $now,
+                    'ticket_status_id' => 2,
+                    'updated_at'       => $now,
+                ]);
+            }
+
+            $ticket->update([
+                'ticket_status_id' => 2,
+            ]);
+
+            TicketStatusHistory::create([
+                'ticket_id'        => $ticket->id,
+                'ticket_task_id'   => $taskId,
+                'ticket_status_id' => 2,
+                'changed_by'       => Auth::id() ?? 1,
+                'note'             => 'Teknisi mengonfirmasi penugasan dan mulai menangani tiket.',
+            ]);
+        });
+
+        return back()->with('success', 'Penanganan tiket dimulai. Timer SLA penanganan sedang berjalan.');
     }
 
     /**
      * Simpan Laporan & Update Status Tiket
-     * Memulai timer SLA saat teknisi mengubah status ke 'Proses' (Status 2)
      */
     public function updateProgress(Request $request, Tickets $ticket): JsonResponse
     {
         $request->validate([
-            'ticket_status_id'   => 'nullable|required_without:teruskan_ke_bidang|exists:ticket_statuses,id',
+            'ticket_status_id'   => 'required|exists:ticket_statuses,id',
             'notes'              => 'nullable|string|max:5000',
+            'pending_reason'     => 'nullable|string|max:255',
             'teruskan_ke_bidang' => 'nullable|boolean',
             'document'           => 'nullable|file|mimes:pdf,jpg,png,docx|max:10240',
         ]);
 
         $isForwarded = $request->boolean('teruskan_ke_bidang');
+        $statusId = $isForwarded ? 4 : (int) $request->ticket_status_id;
+
+        // Status 4 = Selesai, Status 3 = Pending, Status 2 = Diproses
+        $isFinal = in_array($statusId, [4, 5]);
+        $isPending = ($statusId === 3);
 
         // 1. Simpan dokumen lampiran jika ada
         if ($request->hasFile('document')) {
@@ -155,21 +266,10 @@ class TeknisiController extends Controller
             $ticket->ticketFiles()->attach($fileRecord->id);
         }
 
-        // 2. Tentukan status
-        if ($isForwarded) {
-            $statusId = 4; // Otomatis Solved jika diteruskan ke bidang
-        } else {
-            $statusId = (int) $request->ticket_status_id;
-        }
-
-        $isFinal = in_array($statusId, [4, 5]);
-
-        if ($statusId === 4) {
+        // 2. Timestamp Tiket
+        if ($isFinal) {
             $ticket->solved_at = now();
             $ticket->cancelled_at = null;
-        } elseif ($statusId === 5) {
-            $ticket->cancelled_at = now();
-            $ticket->solved_at = null;
         } else {
             $ticket->solved_at = null;
             $ticket->cancelled_at = null;
@@ -178,88 +278,52 @@ class TeknisiController extends Controller
         $ticket->ticket_status_id = $statusId;
         $ticket->save();
 
-        // 3. Update tickets_task & Trigger Timer SLA
+        // 3. Update Status Task
         if (Schema::hasTable('tickets_task')) {
             $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
             if ($task) {
-                $taskCols = Schema::getColumnListing('tickets_task');
-                $taskUpdate = [];
+                $taskUpdate = [
+                    'ticket_status_id' => $statusId,
+                    'updated_at'       => now(),
+                ];
 
-                if (in_array('ticket_status_id', $taskCols)) {
-                    $taskUpdate['ticket_status_id'] = $statusId;
-                }
-                if (in_array('updated_at', $taskCols)) {
-                    $taskUpdate['updated_at'] = now();
-                }
-
-                // AKTIFKAN TIMER SLA: Jika status berubah ke 2 (Proses) dan started_at masih null
-                if ($statusId === 2 && empty($task->started_at) && in_array('started_at', $taskCols)) {
-                    $taskUpdate['started_at'] = now();
-                }
-
-                if ($isFinal && in_array('completed_at', $taskCols)) {
+                if ($isFinal && Schema::hasColumn('tickets_task', 'completed_at')) {
                     $taskUpdate['completed_at'] = now();
                 }
 
-                if (!empty($taskUpdate)) {
-                    DB::table('tickets_task')->where('id', $task->id)->update($taskUpdate);
-                }
+                DB::table('tickets_task')->where('id', $task->id)->update($taskUpdate);
             }
         }
 
-        // 4. Catat riwayat penanganan ke ticket_status_histories
+        // 4. Catat Riwayat & Alasan
         try {
             if (Schema::hasTable('ticket_status_histories')) {
                 $historiesColumns = Schema::getColumnListing('ticket_status_histories');
+                $userNotes = trim($request->notes ?? '');
 
                 if ($isForwarded) {
-                    $userNotes = trim($request->notes ?? '');
                     $noteText = 'Tiket diteruskan ke Helpdesk Bidang dan diselesaikan.' . ($userNotes !== '' ? ' Catatan: ' . $userNotes : '');
+                } elseif ($isPending) {
+                    $reason = $request->pending_reason ?? 'Di luar jam operasional / Dilanjutkan besok';
+                    $noteText = "[PAUSED_TEKNISI] Pengerjaan dijeda. Alasan: {$reason}." . ($userNotes !== '' ? ' Catatan: ' . $userNotes : '');
+                } elseif ($isFinal) {
+                    $noteText = 'Penanganan tiket telah selesai.' . ($userNotes !== '' ? ' Catatan: ' . $userNotes : '');
                 } else {
-                    $noteText = $request->filled('notes') ? $request->notes : 'Pembaruan tindakan teknisi.';
+                    $noteText = $userNotes !== '' ? $userNotes : 'Pembaruan tindakan teknisi.';
                 }
 
-                $ticketTaskId = null;
-                if (Schema::hasTable('tickets_task')) {
-                    $ticketTaskId = DB::table('tickets_task')->where('ticket_id', $ticket->id)->value('id');
-                }
-
-                $pendingReasonId = $request->pending_reasons_id ?? null;
-                if (!$pendingReasonId && Schema::hasTable('pending_reasons')) {
-                    $pendingReasonId = DB::table('pending_reasons')->value('id');
-                }
+                $ticketTaskId = DB::table('tickets_task')->where('ticket_id', $ticket->id)->value('id');
 
                 $historyData = [
                     'ticket_id'        => $ticket->id,
                     'ticket_status_id' => $statusId,
                 ];
 
-                if (in_array('ticket_task_id', $historiesColumns) && $ticketTaskId) {
-                    $historyData['ticket_task_id'] = $ticketTaskId;
-                }
-
-                if (in_array('pending_reasons_id', $historiesColumns) && $pendingReasonId) {
-                    $historyData['pending_reasons_id'] = $pendingReasonId;
-                }
-
-                if (in_array('changed_by', $historiesColumns)) {
-                    $historyData['changed_by'] = Auth::id() ?? 1;
-                } elseif (in_array('user_id', $historiesColumns)) {
-                    $historyData['user_id'] = Auth::id() ?? 1;
-                }
-
-                if (in_array('note', $historiesColumns)) {
-                    $historyData['note'] = $noteText;
-                } elseif (in_array('notes', $historiesColumns)) {
-                    $historyData['notes'] = $noteText;
-                }
-
-                if (in_array('created_at', $historiesColumns)) {
-                    $historyData['created_at'] = now();
-                }
-                if (in_array('updated_at', $historiesColumns)) {
-                    $historyData['updated_at'] = now();
-                }
+                if (in_array('ticket_task_id', $historiesColumns) && $ticketTaskId) $historyData['ticket_task_id'] = $ticketTaskId;
+                if (in_array('changed_by', $historiesColumns)) $historyData['changed_by'] = Auth::id() ?? 1;
+                if (in_array('note', $historiesColumns)) $historyData['note'] = $noteText;
+                if (in_array('created_at', $historiesColumns)) $historyData['created_at'] = now();
+                if (in_array('updated_at', $historiesColumns)) $historyData['updated_at'] = now();
 
                 DB::table('ticket_status_histories')->insert($historyData);
             }
@@ -270,19 +334,18 @@ class TeknisiController extends Controller
         $ticket->load('status');
         $statusName = $ticket->status->name ?? 'Status Diperbarui';
 
-        if (class_exists(TicketStatusUpdated::class)) {
-            broadcast(new TicketStatusUpdated($ticket, $statusName))->toOthers();
-        }
+        $title = $isFinal ? 'Tiket Telah Selesai' : ($isPending ? 'Tiket Dijeda (Pending)' : 'Laporan Disimpan');
+        $message = $isFinal 
+            ? "Tiket telah berstatus {$statusName} dan dialihkan ke Riwayat Tiket."
+            : ($isPending 
+                ? "SLA penanganan dibekukan sementara. Anda dapat melanjutkannya esok hari." 
+                : "Status tiket berhasil diubah menjadi {$statusName}.");
 
         return response()->json([
             'success'      => true,
             'is_solved'    => $isFinal,
-            'title'        => $isFinal ? 'Tiket Telah Selesai' : 'Laporan Disimpan',
-            'message'      => $isFinal 
-                ? ($isForwarded 
-                    ? "Tiket telah diteruskan ke Helpdesk Bidang dan dialihkan ke Riwayat Tiket." 
-                    : "Tiket telah berstatus {$statusName} dan dialihkan ke Riwayat Tiket.")
-                : "Status tiket berhasil diubah menjadi {$statusName}.",
+            'title'        => $title,
+            'message'      => $message,
             'status_id'    => $statusId,
             'status_name'  => $statusName,
             'redirect_url' => route('teknisi.history'),
@@ -291,7 +354,6 @@ class TeknisiController extends Controller
 
     /**
      * Halaman Riwayat Tiket (History)
-     * Hanya menampilkan tiket milik teknisi login yang berstatus tuntas: 4 (Solved) & 5 (Canceled)
      */
     public function historyIndex(Request $request): View
     {
@@ -325,7 +387,7 @@ class TeknisiController extends Controller
     }
 
     /**
-     * Detail Riwayat Tiket 4-Tab
+     * Detail Riwayat Tiket
      */
     public function historyShow(Tickets $ticket): View
     {
@@ -340,24 +402,36 @@ class TeknisiController extends Controller
             'statusHistories.user'
         ]);
 
-        $slaHours = 4;
-        $createdAt = $ticket->created_at ? Carbon::parse($ticket->created_at) : now();
-        $targetTime = $createdAt->copy()->addHours($slaHours);
+        $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
+
+        $taskMinutes = 0;
+        if ($task) {
+            $taskMinutes = (int) DB::table('ticket_task_activities')
+                ->where('ticket_task_id', $task->id)
+                ->sum('target_minutes_snapshot');
+        }
+
+        $totalDurationMinutes = $taskMinutes > 0 
+            ? $taskMinutes 
+            : (int) ($ticket->service?->sla_minutes ?? 240);
+
+        $slaHours = round($totalDurationMinutes / 60, 1);
+
+        $startTime = $task?->started_at ? Carbon::parse($task->started_at) : ($ticket->created_at ? Carbon::parse($ticket->created_at) : now());
         $finishTime = $ticket->solved_at 
             ? Carbon::parse($ticket->solved_at) 
             : ($ticket->cancelled_at ? Carbon::parse($ticket->cancelled_at) : now());
 
-        $totalDurationMinutes = $slaHours * 60;
-        $elapsedMinutes = max(0, $createdAt->diffInMinutes($finishTime));
-        $slaProgressPercent = min(100, round(($elapsedMinutes / $totalDurationMinutes) * 100));
-        $isSlaOverdue = $finishTime->greaterThan($targetTime);
+        $elapsedMinutes = max(0, $startTime->diffInMinutes($finishTime));
+        $slaProgressPercent = min(100, round(($elapsedMinutes / max(1, $totalDurationMinutes)) * 100));
+        $isSlaOverdue = $elapsedMinutes >= $totalDurationMinutes;
 
         return view('teknisi.history-teknisi-show', compact(
             'ticket', 
             'slaHours', 
             'slaProgressPercent', 
             'isSlaOverdue',
-            'createdAt',
+            'startTime',
             'finishTime'
         ));
     }

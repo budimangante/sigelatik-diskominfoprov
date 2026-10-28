@@ -44,13 +44,25 @@ class BidangController extends Controller
      * Halaman Overview & Monitoring Tiket Bidang
      * Menampilkan tiket yang sudah melalui Triage (Status: 2 / Diproses & 3 / Dijeda)
      */
+    /**
+     * Halaman Overview & Monitoring Tiket Bidang
+     */
+/**
+     * Halaman Overview & Monitoring Tiket Bidang
+     */
+    /**
+     * Halaman Overview & Monitoring Tiket Bidang
+     */
     public function index(): View
     {
+        $now = now();
+
+        // 1. Ambil tiket aktif bidang (Diproses: 2, Dijeda/Pending: 3)
         $tickets = Tickets::with(['user', 'status', 'service'])
             ->whereIn('ticket_status_id', [2, 3])
             ->latest('updated_at')
             ->get()
-            ->map(function ($ticket) {
+            ->map(function ($ticket) use ($now) {
                 $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
                 $techNames = [];
                 $assignedTechIds = [];
@@ -80,6 +92,68 @@ class BidangController extends Controller
                 $ticket->target_sla_minutes = $finalMinutes;
                 $ticket->target_sla_label = $this->formatMinutes($finalMinutes);
 
+                $startTime = $task?->started_at ? Carbon::parse($task->started_at) : null;
+
+                // KONDISI 1: TIKET STATUS 3 (PENDING / DIJEDA TEKNISI)
+                // Wajib tampil sebagai SLA Dibekukan, baik teknisi sudah klik mulai atau belum
+                if ($ticket->ticket_status_id == 3) {
+                    $ticket->sla_state = 'paused';
+                    $ticket->sla_label = 'SLA Dibekukan';
+                    $ticket->sla_color = 'amber';
+
+                    $latestPause = DB::table('ticket_status_histories')
+                        ->where('ticket_id', $ticket->id)
+                        ->where('ticket_status_id', 3)
+                        ->latest('id')
+                        ->first();
+                    $ticket->pending_note = $latestPause?->note ?? 'SLA penanganan dibekukan sementara.';
+
+                    if ($startTime) {
+                        $pauseTime = $ticket->updated_at ? Carbon::parse($ticket->updated_at) : $now;
+                        $elapsed = max(0, (int) $startTime->diffInMinutes($pauseTime));
+                        $percent = min(100, (int) round(($elapsed / max(1, $finalMinutes)) * 100));
+                        $remaining = max(0, $finalMinutes - $elapsed);
+                        $ticket->sla_progress = $percent;
+                        $ticket->sla_info = $this->formatMinutes($remaining) . ' tersisa (dibekukan)';
+                    } else {
+                        $ticket->sla_progress = 0;
+                        $ticket->sla_info = $ticket->target_sla_label . ' tersisa (dibekukan)';
+                    }
+                } elseif (!$startTime) {
+                    // KONDISI 2: DIPROSES TAPI BELUM MULAI KERJA
+                    $ticket->sla_state = 'not_started';
+                    $ticket->sla_label = 'Belum berjalan';
+                    $ticket->sla_color = 'slate';
+                    $ticket->sla_progress = 0;
+                    $ticket->sla_info = 'Menunggu teknisi mulai';
+                } else {
+                    // KONDISI 3: DIPROSES & BERJALAN NORMAL
+                    $elapsed = max(0, (int) $startTime->diffInMinutes($now));
+                    $percent = min(100, (int) round(($elapsed / max(1, $finalMinutes)) * 100));
+                    $remaining = max(0, $finalMinutes - $elapsed);
+                    $isOverdue = $elapsed >= $finalMinutes;
+
+                    $ticket->sla_progress = $percent;
+                    $ticket->is_overdue = $isOverdue;
+
+                    if ($isOverdue) {
+                        $ticket->sla_state = 'overdue';
+                        $ticket->sla_label = 'Terlampaui (100%)';
+                        $ticket->sla_color = 'rose';
+                        $ticket->sla_info = '0 menit tersisa';
+                    } elseif ($percent >= 80) {
+                        $ticket->sla_state = 'critical';
+                        $ticket->sla_label = 'Kritis (' . $percent . '%)';
+                        $ticket->sla_color = 'rose';
+                        $ticket->sla_info = $this->formatMinutes($remaining) . ' tersisa';
+                    } else {
+                        $ticket->sla_state = 'running';
+                        $ticket->sla_label = 'Berjalan (' . $percent . '%)';
+                        $ticket->sla_color = 'blue';
+                        $ticket->sla_info = $this->formatMinutes($remaining) . ' tersisa';
+                    }
+                }
+
                 return $ticket;
             });
 
@@ -88,9 +162,43 @@ class BidangController extends Controller
             })
             ->get();
 
-        return view('bidang.index', compact('tickets', 'technicians'));
-    }
+        // 1. Tiket Masuk (Status 1: Baru)
+        $ticketMasukCount = Tickets::where('ticket_status_id', 1)->count();
 
+        // 2. Tiket Sedang Diproses (Status 2)
+        $inProcessCount = Tickets::where('ticket_status_id', 2)->count();
+
+        // 3. Bekukan SLA: Gabungan Status 3 (Pending Teknisi) + Status 1 yang dibekukan di Triage
+        $teknisiPendingCount = Tickets::where('ticket_status_id', 3)->count();
+        $triagePendingCount = 0;
+        if (Schema::hasTable('ticket_status_histories')) {
+            $triagePendingCount = DB::table('ticket_status_histories')
+                ->join('tickets', 'tickets.id', '=', 'ticket_status_histories.ticket_id')
+                ->where('tickets.ticket_status_id', 1)
+                ->where('ticket_status_histories.note', 'like', '%[PAUSED_SLA1]%')
+                ->distinct('tickets.id')
+                ->count('tickets.id');
+        }
+        $pendingCount = $teknisiPendingCount + $triagePendingCount;
+
+        // 4. Tiket Forward Lintas Bidang
+        $forwardCount = 0;
+        if (Schema::hasTable('ticket_status_histories')) {
+            $forwardCount = DB::table('ticket_status_histories')
+                ->where('note', 'like', 'Forward Tiket:%')
+                ->distinct('ticket_id')
+                ->count('ticket_id');
+        }
+
+        return view('bidang.index', compact(
+            'tickets', 
+            'technicians', 
+            'ticketMasukCount', 
+            'inProcessCount',
+            'pendingCount', 
+            'forwardCount'
+        ));
+    }
     /**
      * Penugasan Teknisi & Penyesuaian Durasi SLA (Overview)
      */
