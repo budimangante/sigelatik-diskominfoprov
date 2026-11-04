@@ -69,11 +69,22 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold space-y-1 shadow-2xs">
+            @foreach($errors->all() as $error)
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle text-rose-600"></i>
+                    <span>{{ $error }}</span>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     <!-- 1. TABEL: MENUNGGU TRIAGE (SLA 1 RESPON) -->
     <div class="mb-10">
         <div class="flex items-center justify-between mb-3.5">
             <div class="flex items-center gap-2.5">
-                <h2 class="text-base font-bold text-slate-800">Menunggu triage</h2>
+                <h2 class="text-base font-bold text-slate-800">Menunggu Triage</h2>
                 <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-[#1a3668]">
                     {{ count($waitingTickets) }} Tiket
                 </span>
@@ -168,7 +179,7 @@
     <div>
         <div class="flex items-center justify-between mb-3.5">
             <h2 class="text-base font-bold text-slate-800">Reassign Antar Teknisi Bidang</h2>
-            <span class="text-xs text-slate-400">Pindahkan penugasan jika teknisi berhalangan atau kelebihan beban tugas</span>
+            <span class="text-xs text-slate-400">Pindahkan penugasan jika teknisi berhalangan atau ajukan penambahan SLA</span>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden overflow-x-auto">
@@ -178,7 +189,8 @@
                         <th class="px-6 py-4 w-36">TIKET</th>
                         <th class="px-6 py-4 w-64">TEKNISI SAAT INI</th>
                         <th class="px-6 py-4 w-60">SLA PENANGANAN</th>
-                        <th class="px-6 py-4 text-right">AKSI</th>
+                        <th class="px-6 py-4 w-36 text-center">TAMBAH SLA</th>
+                        <th class="px-6 py-4 text-right">AKSI REASSIGN</th>
                     </tr>
                 </thead>
 
@@ -273,7 +285,17 @@
                                 @endif
                             </td>
 
-                            <!-- Form Aksi Reassign (Rata Kanan Presisi) -->
+                            <!-- Tombol Modal Tambah SLA -->
+                            <td class="px-6 py-4 align-middle text-center">
+                                <button type="button" 
+                                        onclick="bukaModalTambahSla({{ $ticket->id }}, '{{ $ticket->ticket_number }}', '{{ $ticket->target_sla_label ?? '240 menit' }}')"
+                                        class="border border-[#1a3668] text-[#1a3668] hover:bg-[#1a3668] hover:text-white bg-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap cursor-pointer inline-flex items-center gap-1.5">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                    <span>Tambah SLA</span>
+                                </button>
+                            </td>
+
+                            <!-- Form Aksi Reassign -->
                             <td class="px-6 py-4 align-middle text-right">
                                 <form action="{{ route('bidang.triage.reassign', $ticket->id) }}" method="POST" class="inline-flex items-center justify-end gap-2.5">
                                     @csrf
@@ -293,7 +315,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="py-8 text-center text-xs text-slate-400 italic">
+                            <td colspan="5" class="py-8 text-center text-xs text-slate-400 italic">
                                 Belum ada tiket aktif yang perlu dialihkan teknisinya.
                             </td>
                         </tr>
@@ -465,6 +487,75 @@
     </div>
 </div>
 
+<!-- ================= MODAL 3: TAMBAH SLA PENANGANAN TIKET ================= -->
+<div id="modalTambahSla" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+        <div class="bg-[#1a3668] text-white p-5 flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-bold flex items-center gap-2">
+                    <i class="fas fa-clock text-blue-200"></i>
+                    <span>Tambah Durasi SLA Tiket</span>
+                </h3>
+                <p id="tambahSlaTicketNumber" class="text-[11px] text-blue-200 font-mono mt-0.5"></p>
+            </div>
+            <button type="button" onclick="tutupModal('modalTambahSla')" class="text-white/70 hover:text-white p-1">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+
+        <form id="formTambahSla" method="POST" action="" class="p-6 space-y-4">
+            @csrf
+            
+            <div class="p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-xs flex items-center justify-between">
+                <span class="text-slate-500 font-medium">Target SLA Saat Ini:</span>
+                <span id="tambahSlaCurrentTarget" class="font-bold text-[#1a3668] font-mono"></span>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Durasi Tambahan SLA (Menit) <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                    <input type="number" 
+                           name="additional_minutes" 
+                           id="inputAdditionalMinutes" 
+                           min="5" 
+                           step="5" 
+                           value="60" 
+                           required
+                           class="w-full bg-white border border-slate-200 rounded-xl pl-3.5 pr-16 py-2.5 text-xs text-slate-800 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
+                    <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">Menit</span>
+                </div>
+                <!-- Tombol Preset Cepat -->
+                <div class="flex items-center gap-2 mt-2">
+                    <button type="button" onclick="document.getElementById('inputAdditionalMinutes').value = 30" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">+30 Mnt</button>
+                    <button type="button" onclick="document.getElementById('inputAdditionalMinutes').value = 60" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">+1 Jam</button>
+                    <button type="button" onclick="document.getElementById('inputAdditionalMinutes').value = 120" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition">+2 Jam</button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Alasan / Catatan Penambahan SLA (Opsional)
+                </label>
+                <textarea name="reason" 
+                          rows="2.5" 
+                          placeholder="Contoh: Menunggu penggantian unit switch atau koordinasi teknis di lokasi..."
+                          class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] resize-none"></textarea>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="tutupModal('modalTambahSla')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition">
+                    Batal
+                </button>
+                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+                    Simpan Penambahan SLA
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     function toggleNotifDropdown() {
         const dd = document.getElementById('dropdownNotif');
@@ -494,6 +585,13 @@
         document.getElementById('pendingTicketNumber').innerText = 'Tiket: ' + ticketNumber;
         document.getElementById('formPendingTriage').action = '/bidang/triage/' + ticketId + '/pending';
         document.getElementById('modalPendingTriage').classList.remove('hidden');
+    }
+
+    function bukaModalTambahSla(ticketId, ticketNumber, currentTarget) {
+        document.getElementById('tambahSlaTicketNumber').innerText = '(' + ticketNumber + ')';
+        document.getElementById('tambahSlaCurrentTarget').innerText = currentTarget;
+        document.getElementById('formTambahSla').action = '/bidang/triage/' + ticketId + '/tambahsla';
+        document.getElementById('modalTambahSla').classList.remove('hidden');
     }
 
     function tutupModal(modalId) {

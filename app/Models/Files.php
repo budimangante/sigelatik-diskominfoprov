@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Files extends Model
 {
     protected $table = 'files';
+    
 
     const UPDATED_AT = null;
     protected $fillable = [

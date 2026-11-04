@@ -3,47 +3,57 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bidang;
 use App\Models\Files;
+use App\Models\PerangkatDaerah;
+use App\Models\ServiceCategory;
+use App\Models\Services;
+use App\Models\TicketFile;
+use App\Models\TicketMessage;
 use App\Models\Tickets;
+use App\Models\TicketStatuses;
+use App\Models\TicketStatusHistory;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    /**
+     * Formulir Buat Tiket Pelapor
+     */
     public function createTicket(): View
     {
-        // 1. Ambil Kategori Layanan dari database
-        if (Schema::hasTable('service_categories')) {
-            $categories = DB::table('service_categories')->orderBy('name', 'asc')->get();
-        } else {
-            $categories = DB::table('services')->orderBy('name', 'asc')->get();
-        }
+        $categories = class_exists(ServiceCategory::class)
+            ? ServiceCategory::orderBy('name', 'asc')->get()
+            : Services::orderBy('name', 'asc')->get();
 
-        // 2. Daftar Perangkat Daerah / Dinas
-        $dinasList = [
-            'Dinas Komunikasi dan Informatika',
-            'Dinas Pendidikan dan Kebudayaan',
-            'Dinas Kesehatan',
-            'Badan Pengelola Keuangan dan Aset Daerah',
-            'Badan Kepegawaian Daerah',
-            'Sekretariat Daerah',
-            'Inspektorat Daerah',
-            'Dinas Perhubungan',
-            'Dinas Lingkungan Hidup',
-        ];
+        $perangkatList = PerangkatDaerah::orderBy('name', 'asc')->get();
 
-        return view('user.create-ticket', compact('categories', 'dinasList'));
+        $dinasList = $perangkatList->isNotEmpty()
+            ? $perangkatList->pluck('name')->toArray()
+            : [
+                'Dinas Komunikasi dan Informatika',
+                'Dinas Pendidikan dan Kebudayaan',
+                'Dinas Kesehatan',
+                'Badan Pengelola Keuangan dan Aset Daerah',
+                'Badan Kepegawaian Daerah',
+                'Sekretariat Daerah',
+                'Inspektorat Daerah',
+                'Dinas Perhubungan',
+                'Dinas Lingkungan Hidup',
+            ];
+
+        return view('user.index', compact('categories', 'dinasList'));
     }
 
     /**
-     * Simpan Pengajuan Tiket ke Database
+     * Simpan Pengajuan Tiket Pelapor
      */
-    public function storeTicket(Request $request)
+    public function storeTicket(Request $request): RedirectResponse
     {
         $request->validate([
             'dinas'       => 'required|string|max:255',
@@ -60,32 +70,79 @@ class UserController extends Controller
 
         $userId = Auth::id();
 
-        // Generate Nomor Tiket Otomatis (Format: TCK-YYYYMMDD-XXX)
+        // 1. Nomor Tiket
         $today = now()->format('Ymd');
         $countToday = Tickets::whereDate('created_at', today())->count() + 1;
         $ticketNumber = 'TCK-' . $today . '-' . str_pad($countToday, 3, '0', STR_PAD_LEFT);
 
-        // Jika subjek kosong, ambil 60 karakter pertama dari deskripsi
         $subject = trim($request->subject ?? '') !== '' 
             ? $request->subject 
             : Str::limit(strip_tags($request->description), 60);
 
-        // Sisipkan informasi Dinas ke dalam deskripsi agar mudah dibaca Helpdesk
         $fullDescription = "[Instansi: {$request->dinas}]\n" . $request->description;
 
-        DB::transaction(function () use ($request, $userId, $ticketNumber, $subject, $fullDescription) {
-            // Simpan tiket baru (Status 1: Baru)
+        // 2. Hubungkan Perangkat Daerah Pemohon & Bidang Penanganan Diskominfo
+        $dinasInput = trim($request->dinas);
+        $opd = PerangkatDaerah::where('name', $dinasInput)
+            ->orWhere('id', is_numeric($dinasInput) ? (int)$dinasInput : 0)
+            ->first();
+
+        if (!$opd) {
+            $userEmp = Auth::user()->loadMissing('employments.perangkatDaerah');
+            $opd = $userEmp->employments->first()?->perangkatDaerah;
+        }
+
+        if (!$opd) {
+            $opd = PerangkatDaerah::firstOrCreate(
+                ['name' => $dinasInput],
+                ['code' => strtoupper(Str::slug($dinasInput))]
+            );
+        }
+
+        $perangkatDaerahId = $opd->id;
+
+        // Ambil bidang penanganan dari master layanan
+        $service = Services::find($request->category_id);
+        $bidangId = $service?->bidang_id;
+
+        // Jika layanan belum memiliki bidang_id, pasang ke bidang teknis utama
+        if (!$bidangId) {
+            $bidangId = Bidang::where('name', 'like', '%aplikasi%')
+                ->orWhere('name', 'like', '%aptika%')
+                ->orWhere('name', 'like', '%jaringan%')
+                ->orWhere('name', 'like', '%tik%')
+                ->value('id') ?? Bidang::first()?->id ?? 1;
+        }
+
+        // Ambil ID status 'Baru' yang sah (hindari create acak ID 9 atau 13)
+        $statusId = TicketStatuses::where('code', 'baru')
+            ->orWhere('name', 'like', '%baru%')
+            ->value('id') ?? 1;
+
+        // 3. Simpan ke Database via Transaksi
+        (new Tickets)->getConnection()->transaction(function () use (
+            $request, 
+            $userId, 
+            $ticketNumber, 
+            $subject, 
+            $fullDescription, 
+            $perangkatDaerahId, 
+            $bidangId,
+            $statusId
+        ) {
             $ticket = Tickets::create([
-                'ticket_number'    => $ticketNumber,
-                'public_token'     => Str::random(32),
-                'user_id'          => $userId,
-                'service_id'       => (int) $request->category_id,
-                'ticket_status_id' => 1,
-                'subject'          => $subject,
-                'description'      => $fullDescription,
+                'ticket_number'       => $ticketNumber,
+                'public_token'        => Str::random(32),
+                'user_id'             => $userId,
+                'service_id'          => (int) $request->category_id,
+                'ticket_status_id'    => $statusId,
+                'subject'             => $subject,
+                'description'         => $fullDescription,
+                'perangkat_daerah_id' => $perangkatDaerahId,
+                'bidang_id'           => $bidangId,
             ]);
 
-            // Simpan berkas lampiran jika ada
+            // Simpan Lampiran jika ada
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
                 $path = $file->store('tickets/attachments', 'public');
@@ -103,34 +160,51 @@ class UserController extends Controller
                 if (method_exists($ticket, 'ticketFiles')) {
                     $ticket->ticketFiles()->attach($fileRecord->id);
                 } else {
-                    DB::table('ticket_files')->insert([
+                    TicketFile::create([
                         'ticket_id' => $ticket->id,
                         'file_id'   => $fileRecord->id,
                     ]);
                 }
             }
 
-            // Catat status awal di riwayat
-            if (Schema::hasTable('ticket_status_histories')) {
-                DB::table('ticket_status_histories')->insert([
-                    'ticket_id'        => $ticket->id,
-                    'ticket_status_id' => 1,
-                    'changed_by'       => $userId,
-                    'note'             => "Permohonan tiket baru diajukan dari {$request->dinas}.",
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
-                ]);
+            // Catat Timeline Histori Status
+            $history = new TicketStatusHistory();
+            $cols = $history->getConnection()->getSchemaBuilder()->getColumnListing($history->getTable());
+
+            $history->ticket_id = $ticket->id;
+            $history->ticket_status_id = $statusId;
+            $history->note = "Permohonan tiket baru diajukan dari {$request->dinas}.";
+
+            if (in_array('user_id', $cols)) {
+                $history->user_id = $userId;
+            } elseif (in_array('changed_by', $cols)) {
+                $history->changed_by = $userId;
             }
+
+            if (!in_array('created_at', $cols)) {
+                $history->timestamps = false;
+            }
+
+            $history->save();
         });
 
-        return redirect()->route('user.tiket')->with('success', "Permohonan berhasil dikirim dengan nomor {$ticketNumber}. Menunggu proses triage oleh Helpdesk Bidang.");
+        return redirect()->route('user.tiket')->with('success', "Permohonan berhasil dikirim dengan nomor {$ticketNumber}. Menunggu proses verifikasi dan disposisi oleh Helpdesk.");
     }
 
+    /**
+     * Halaman Riwayat Tiket Saya
+     */
     public function myTickets(Request $request): View
     {
         $userId = Auth::id();
 
-        $query = Tickets::with(['status', 'service'])
+        $query = Tickets::with([
+                'status', 
+                'service',
+                'tasks.assignees',
+                'perangkatDaerah',
+                'bidang'
+            ])
             ->where('user_id', $userId);
 
         if ($request->filled('search')) {
@@ -146,29 +220,22 @@ class UserController extends Controller
         }
 
         $tickets = $query->latest('created_at')->get()->map(function ($ticket) {
-            $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
-            $assignedTechs = [];
+            $ticket->technicians = $ticket->tasks
+                ->flatMap(fn($task) => $task->assignees->pluck('name'))
+                ->unique()
+                ->values()
+                ->toArray();
 
-            if ($task) {
-                $techIds = DB::table('ticket_task_assignees')
-                    ->where('ticket_task_id', $task->id)
-                    ->pluck('user_id')
-                    ->toArray();
-
-                $assignedTechs = User::whereIn('id', $techIds)->pluck('name')->toArray();
-            }
-
-            $ticket->technicians = $assignedTechs;
             return $ticket;
         });
 
-        $allUserTickets = Tickets::where('user_id', $userId)->get();
+        $allUserTickets = Tickets::where('user_id', $userId)->get(['id', 'ticket_status_id']);
         $totalCount    = $allUserTickets->count();
         $activeCount   = $allUserTickets->whereIn('ticket_status_id', [1, 2, 3])->count();
         $solvedCount   = $allUserTickets->where('ticket_status_id', 4)->count();
         $rejectedCount = $allUserTickets->where('ticket_status_id', 5)->count();
 
-        $statuses = DB::table('ticket_statuses')->orderBy('sort_order', 'asc')->get();
+        $statuses = TicketStatuses::orderBy('sort_order', 'asc')->get();
 
         return view('user.tiket', compact(
             'tickets',
@@ -180,40 +247,28 @@ class UserController extends Controller
         ));
     }
 
+    /**
+     * Chat Diskusi Tiket
+     */
     public function chat(Request $request): View
     {
         $userId = Auth::id();
 
-        // 1. Ambil seluruh tiket milik user
-        $tickets = Tickets::with(['status', 'service'])
+        $tickets = Tickets::with(['status', 'service', 'tasks.assignees'])
             ->where('user_id', $userId)
             ->latest('updated_at')
             ->get()
             ->map(function ($ticket) use ($userId) {
-                // Ambil teknisi yang ditugaskan pada tiket ini
-                $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
-                $technicians = [];
+                $ticket->assigned_technicians = $ticket->tasks
+                    ->flatMap(fn($task) => $task->assignees)
+                    ->unique('id')
+                    ->values();
 
-                if ($task) {
-                    $techIds = DB::table('ticket_task_assignees')
-                        ->where('ticket_task_id', $task->id)
-                        ->pluck('user_id')
-                        ->toArray();
-
-                    $technicians = User::whereIn('id', $techIds)->get(['id', 'name', 'email']);
-                }
-
-                $ticket->assigned_technicians = $technicians;
-
-                // Ambil preview pesan terakhir
-                $ticket->latest_message = DB::table('ticket_messages')
-                    ->where('ticket_id', $ticket->id)
+                $ticket->latest_message = TicketMessage::where('ticket_id', $ticket->id)
                     ->latest('created_at')
                     ->first();
 
-                // Hitung pesan yang belum dibaca dari teknisi
-                $ticket->unread_count = DB::table('ticket_messages')
-                    ->where('ticket_id', $ticket->id)
+                $ticket->unread_count = TicketMessage::where('ticket_id', $ticket->id)
                     ->where('user_id', '!=', $userId)
                     ->whereNull('read_at')
                     ->count();
@@ -221,22 +276,17 @@ class UserController extends Controller
                 return $ticket;
             });
 
-        // 2. Tentukan tiket yang sedang dibuka (berdasarkan parameter query atau tiket pertama)
         $activeTicketId = $request->query('ticket_id') ?? ($tickets->first()?->id ?? null);
         $activeTicket = $tickets->firstWhere('id', (int) $activeTicketId);
 
         $messages = collect();
         if ($activeTicket) {
-            // Tandai pesan masuk pada tiket ini sebagai sudah dibaca
-            DB::table('ticket_messages')
-                ->where('ticket_id', $activeTicket->id)
+            TicketMessage::where('ticket_id', $activeTicket->id)
                 ->where('user_id', '!=', $userId)
                 ->whereNull('read_at')
                 ->update(['read_at' => now()]);
 
-            // Ambil daftar pesan terurut dari waktu terlama ke terbaru
-            $messages = DB::table('ticket_messages')
-                ->join('users', 'users.id', '=', 'ticket_messages.user_id')
+            $messages = TicketMessage::join('users', 'users.id', '=', 'ticket_messages.user_id')
                 ->where('ticket_messages.ticket_id', $activeTicket->id)
                 ->select(
                     'ticket_messages.id',

@@ -19,7 +19,7 @@ return new class extends Migration
             ->on('perangkat_daerah')
             ->cascadeOnDelete();
             
-            $table->integer('code')->unique();
+            $table->string('code', 50)->nullable();
             // $table->string('description')->nullable();
             $table->timestamps();
         });

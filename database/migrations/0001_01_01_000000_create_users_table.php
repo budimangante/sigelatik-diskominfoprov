@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('organization')->nullable(); // atau organization_name
             $table->string('password')->nullable();
             
+            
             // Hapus ->after(...) cukup letakkan barisnya di sini
             $table->boolean('is_active')->default(true);
             $table->timestamp('last_login_at')->nullable();

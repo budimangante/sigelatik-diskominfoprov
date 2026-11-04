@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+
     /**
      * Run the migrations.
      */
@@ -25,6 +26,9 @@ return new class extends Migration
                 ->references('id')
                 ->on('bidang')
                 ->cascadeOnDelete();
+            
+            $table->string('nip')->nullable();
+
             $table->string('name');
             $table->string('position_title');
             $table->date('started_at');

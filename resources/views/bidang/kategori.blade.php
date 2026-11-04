@@ -170,7 +170,7 @@
     </div>
 </div>
 
-<!-- ================= MODAL 2: TAMBAH SUB-LAYANAN ================= -->
+<!-- ================= MODAL 2: TAMBAH SUB-LAYANAN (SLA DINAMIS MINIMAL 2) ================= -->
 <div id="modalTambahLayanan" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
         <div class="bg-[#1a3668] text-white p-5 flex items-center justify-between">
@@ -183,7 +183,7 @@
             </button>
         </div>
 
-        <form action="{{ route('bidang.service.store') }}" method="POST" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        <form action="{{ route('bidang.service.store') }}" method="POST" class="p-6 space-y-4 max-h-[78vh] overflow-y-auto">
             @csrf
             
             <div>
@@ -215,24 +215,59 @@
                           class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] resize-none"></textarea>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Target SLA (Menit)
-                    </label>
-                    <div class="relative">
-                        <input type="number" name="sla_minutes" min="5" step="5" value="60" required
-                               class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
-                        <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">Menit</span>
+            <!-- Bagian Target SLA Dinamis (Minimal 2 Input) -->
+            <div class="space-y-3 p-4 bg-slate-50/80 rounded-xl border border-slate-200">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Target SLA (Minimal 2 Input) <span class="text-rose-500">*</span>
+                        </label>
+                        <p class="text-[11px] text-slate-400">SLA 1: Respon Triage, SLA 2+: Proses Teknisi</p>
+                    </div>
+                    <button type="button" 
+                            onclick="tambahBarisSla()"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1a3668] hover:bg-[#122548] text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer">
+                        <i class="fas fa-plus text-[10px]"></i>
+                        <span>Tambah SLA</span>
+                    </button>
+                </div>
+
+                <div id="slaInputsContainer" class="space-y-2 pt-1">
+                    <!-- Baris SLA 1 (Terkunci Wajib) -->
+                    <div class="sla-item flex items-center gap-2">
+                        <span class="sla-label w-24 text-xs font-bold text-blue-700 px-3 py-2 bg-blue-50 rounded-xl border border-blue-200 text-center shrink-0">
+                            SLA 1
+                        </span>
+                        <div class="relative flex-1">
+                            <input type="number" name="sla_minutes[]" value="60" min="5" required placeholder="Durasi SLA 1"
+                                   class="w-full bg-white border border-slate-200 rounded-xl pl-3.5 pr-28 py-2 text-xs text-slate-800 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
+                            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-medium pointer-events-none">Menit (Respon)</span>
+                        </div>
+                        <div class="w-8 shrink-0"></div>
+                    </div>
+
+                    <!-- Baris SLA 2 (Terkunci Wajib) -->
+                    <div class="sla-item flex items-center gap-2">
+                        <span class="sla-label w-24 text-xs font-bold text-blue-700 px-3 py-2 bg-blue-50 rounded-xl border border-blue-200 text-center shrink-0">
+                            SLA 2
+                        </span>
+                        <div class="relative flex-1">
+                            <input type="number" name="sla_minutes[]" value="240" min="5" required placeholder="Durasi SLA 2"
+                                   class="w-full bg-white border border-slate-200 rounded-xl pl-3.5 pr-28 py-2 text-xs text-slate-800 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
+                            <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-medium pointer-events-none">Menit (Proses)</span>
+                        </div>
+                        <div class="w-8 shrink-0"></div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Jam Operasional Kerja
-                    </label>
-                    <input type="text" name="work_hours" value="08:00 - 15:00 WITA" required
-                           class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
-                </div>
+            </div>
+
+            <!-- Jam Operasional Kerja -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Jam Operasional Kerja
+                </label>
+                <input type="text" name="work_hours" value="08:00 - 15:00 WITA" required
+                       class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
@@ -280,7 +315,7 @@
                            class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
                     <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">Menit</span>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-1">Durasi ini akan menjadi acuan hitung mundur otomatis saat triage.</p>
+                <p class="text-[11px] text-slate-400 mt-1">Durasi ini menjadi acuan SLA Proses pengerjaan oleh teknisi.</p>
             </div>
 
             <div>
@@ -304,12 +339,10 @@
 </div>
 
 <script>
-    // Buka Modal Tambah Kategori
     function bukaModalTambahKategori() {
         document.getElementById('modalTambahKategori').classList.remove('hidden');
     }
 
-    // Buka Modal Tambah Sub-Layanan
     function bukaModalTambahLayanan(catId = null) {
         if (catId) {
             document.getElementById('tambahLayananCategoryId').value = catId;
@@ -317,7 +350,6 @@
         document.getElementById('modalTambahLayanan').classList.remove('hidden');
     }
 
-    // Buka Modal Edit Layanan
     function bukaModalEditLayanan(serviceId, name, slaMinutes, workHours) {
         document.getElementById('editServiceName').innerText = name;
         document.getElementById('editServiceSla').value = slaMinutes;
@@ -326,9 +358,75 @@
         document.getElementById('modalEditLayanan').classList.remove('hidden');
     }
 
-    // Tutup Modal Helper
     function tutupModal(modalId) {
         document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // Fungsi Tambah Baris SLA Dinamis
+    function tambahBarisSla() {
+        const container = document.getElementById('slaInputsContainer');
+        const items = container.querySelectorAll('.sla-item');
+        const nomor = items.length + 1;
+
+        const div = document.createElement('div');
+        div.className = 'sla-item flex items-center gap-2 animate-in fade-in duration-150';
+        div.innerHTML = `
+            <span class="sla-label w-24 text-xs font-bold text-emerald-700 px-3 py-2 bg-emerald-50 rounded-xl border border-emerald-200 text-center shrink-0">
+                SLA ${nomor}
+            </span>
+            <div class="relative flex-1">
+                <input type="number" name="sla_minutes[]" value="120" min="5" required placeholder="Durasi SLA ${nomor}"
+                       class="w-full bg-white border border-slate-200 rounded-xl pl-3.5 pr-20 py-2 text-xs text-slate-800 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
+                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-medium pointer-events-none">Menit</span>
+            </div>
+            <button type="button" onclick="hapusBarisSla(this)"
+                    class="w-8 h-8 rounded-lg text-rose-500 hover:text-white hover:bg-rose-500 flex items-center justify-center transition shrink-0 cursor-pointer"
+                    title="Hapus baris SLA ini">
+                <i class="fas fa-trash-alt text-xs"></i>
+            </button>
+        `;
+        container.appendChild(div);
+        updateLabelSla();
+    }
+
+    // Fungsi Hapus Baris SLA (Terkunci minimal 2 baris)
+    function hapusBarisSla(button) {
+        const container = document.getElementById('slaInputsContainer');
+        const items = container.querySelectorAll('.sla-item');
+        if (items.length <= 2) {
+            alert('Minimal harus ada 2 tahapan SLA (SLA 1 dan SLA 2)!');
+            return;
+        }
+        button.closest('.sla-item').remove();
+        updateLabelSla();
+    }
+
+    // Re-index penomoran label SLA
+    function updateLabelSla() {
+        const container = document.getElementById('slaInputsContainer');
+        const items = container.querySelectorAll('.sla-item');
+        items.forEach((item, index) => {
+            const num = index + 1;
+            const label = item.querySelector('.sla-label');
+            if (label) {
+                label.textContent = `SLA ${num}`;
+                if (num <= 2) {
+                    label.className = 'sla-label w-24 text-xs font-bold text-blue-700 px-3 py-2 bg-blue-50 rounded-xl border border-blue-200 text-center shrink-0';
+                } else {
+                    label.className = 'sla-label w-24 text-xs font-bold text-emerald-700 px-3 py-2 bg-emerald-50 rounded-xl border border-emerald-200 text-center shrink-0';
+                }
+            }
+            const spanDesc = item.querySelector('.relative span');
+            if (spanDesc) {
+                if (num === 1) {
+                    spanDesc.textContent = 'Menit (Respon)';
+                } else if (num === 2) {
+                    spanDesc.textContent = 'Menit (Proses)';
+                } else {
+                    spanDesc.textContent = 'Menit';
+                }
+            }
+        });
     }
 </script>
 @endsection

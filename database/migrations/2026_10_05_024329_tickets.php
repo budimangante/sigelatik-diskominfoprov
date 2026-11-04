@@ -37,6 +37,16 @@ return new class extends Migration
                 ->on('ticket_statuses')
                 ->restrictOnDelete();
 
+            $table->foreignId('perangkat_daerah_id')
+                ->references('id')
+                ->on('perangkat_daerah')
+                ->restrictOnDelete()->allowNull();
+            
+            $table->foreignId('bidang_id')
+            ->references('id')
+            ->on('bidang')
+            ->restrictOnDelete()->allowNull();
+
             $table->string('subject');
             $table->text('description');
 

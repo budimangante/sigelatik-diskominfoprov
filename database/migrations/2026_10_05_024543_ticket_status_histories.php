@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('pending_reasons_id')->nullable()->constrained('pending_reasons')->nullOnDelete();
             $table->string('note')->nullable();
             $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
         });
     }
 

@@ -3,28 +3,30 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tickets;
-use App\Models\User;
-use App\Models\TicketTask;
-use App\Models\TicketStatusHistory;
+use App\Models\Bidang;
+use App\Models\Files;
+use App\Models\PerangkatDaerah;
+use App\Models\ServiceCategory;
+use App\Models\Services;
 use App\Models\Sops;
 use App\Models\SopsStep;
-use App\Models\Services;
+use App\Models\Tickets;
+use App\Models\TicketStatuses;
+use App\Models\TicketStatusHistory;
+use App\Models\TicketTask;
+use App\Models\TicketTaskActivity;
+use App\Models\TicketTaskAssignees;
+use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class BidangController extends Controller
 {
-    /**
-     * Helper pemformat menit ke label teks
-     */
     private function formatMinutes(int $minutes): string
     {
         if ($minutes < 60) {
@@ -40,44 +42,83 @@ class BidangController extends Controller
         }
     }
 
+    private function getActivityModel()
+    {
+        if (class_exists('App\Models\ServiceActivites')) {
+            return app('App\Models\ServiceActivites');
+        }
+        if (class_exists('App\Models\ServiceActivity')) {
+            return app('App\Models\ServiceActivity');
+        }
+        return null;
+    }
+
     /**
-     * Halaman Overview & Monitoring Tiket Bidang
-     * Menampilkan tiket yang sudah melalui Triage (Status: 2 / Diproses & 3 / Dijeda)
+     * Mengambil ID Status Tiket Secara Dinamis (Anti Foreign Key Violation)
      */
+    private function getStatusId(string $type): int
+    {
+        $status = match(strtolower($type)) {
+            'diproses', 'process', 'in_progress' => TicketStatuses::where('code', 'diproses')
+                ->orWhere('name', 'like', '%proses%')
+                ->first(),
+            'pending', 'tunda' => TicketStatuses::where('code', 'pending')
+                ->orWhere('name', 'like', '%pending%')
+                ->orWhere('name', 'like', '%tunda%')
+                ->first(),
+            'selesai', 'closed', 'resolved' => TicketStatuses::where('code', 'selesai')
+                ->orWhere('name', 'like', '%selesai%')
+                ->orWhere('name', 'like', '%closed%')
+                ->first(),
+            default => TicketStatuses::where('code', 'baru')
+                ->orWhere('name', 'like', '%baru%')
+                ->first(),
+        };
+
+        if ($status) {
+            return (int) $status->id;
+        }
+
+        // Jika belum ada di master data, buat dengan aman dan tangkap ID aslinya
+        $newStatus = TicketStatuses::create([
+            'name'       => ucfirst($type),
+            'code'       => strtolower($type),
+            'sort_order' => 1,
+        ]);
+
+        return (int) $newStatus->id;
+    }
+
     /**
-     * Halaman Overview & Monitoring Tiket Bidang
-     */
-/**
-     * Halaman Overview & Monitoring Tiket Bidang
-     */
-    /**
-     * Halaman Overview & Monitoring Tiket Bidang
+     * Dashboard / Overview Penanganan Tiket Bidang
      */
     public function index(): View
     {
         $now = now();
+        $diprosesId = $this->getStatusId('diproses');
+        $pendingId  = $this->getStatusId('pending');
+        $baruId     = $this->getStatusId('baru');
 
-        // 1. Ambil tiket aktif bidang (Diproses: 2, Dijeda/Pending: 3)
+        $activeStatusIds = array_unique([$diprosesId, $pendingId]);
+
         $tickets = Tickets::with(['user', 'status', 'service'])
-            ->whereIn('ticket_status_id', [2, 3])
+            ->whereIn('ticket_status_id', $activeStatusIds)
             ->latest('updated_at')
             ->get()
-            ->map(function ($ticket) use ($now) {
-                $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
+            ->map(function ($ticket) use ($now, $pendingId) {
+                $task = TicketTask::where('ticket_id', $ticket->id)->first();
                 $techNames = [];
                 $assignedTechIds = [];
                 $taskMinutes = 0;
 
                 if ($task) {
-                    $assignedTechIds = DB::table('ticket_task_assignees')
-                        ->where('ticket_task_id', $task->id)
+                    $assignedTechIds = TicketTaskAssignees::where('ticket_task_id', $task->id)
                         ->pluck('user_id')
                         ->toArray();
 
                     $techNames = User::whereIn('id', $assignedTechIds)->pluck('name')->toArray();
 
-                    $taskMinutes = (int) DB::table('ticket_task_activities')
-                        ->where('ticket_task_id', $task->id)
+                    $taskMinutes = (int) TicketTaskActivity::where('ticket_task_id', $task->id)
                         ->sum('target_minutes_snapshot');
                 }
 
@@ -87,23 +128,20 @@ class BidangController extends Controller
 
                 $finalMinutes = $taskMinutes > 0 
                     ? $taskMinutes 
-                    : (int) ($ticket->service?->sla_minutes ?? 240);
+                    : (int) ($ticket->service?->sla_process_minutes ?? $ticket->service?->sla_minutes ?? 240);
 
                 $ticket->target_sla_minutes = $finalMinutes;
                 $ticket->target_sla_label = $this->formatMinutes($finalMinutes);
 
                 $startTime = $task?->started_at ? Carbon::parse($task->started_at) : null;
 
-                // KONDISI 1: TIKET STATUS 3 (PENDING / DIJEDA TEKNISI)
-                // Wajib tampil sebagai SLA Dibekukan, baik teknisi sudah klik mulai atau belum
-                if ($ticket->ticket_status_id == 3) {
+                if ($ticket->ticket_status_id == $pendingId) {
                     $ticket->sla_state = 'paused';
                     $ticket->sla_label = 'SLA Dibekukan';
                     $ticket->sla_color = 'amber';
 
-                    $latestPause = DB::table('ticket_status_histories')
-                        ->where('ticket_id', $ticket->id)
-                        ->where('ticket_status_id', 3)
+                    $latestPause = TicketStatusHistory::where('ticket_id', $ticket->id)
+                        ->where('ticket_status_id', $pendingId)
                         ->latest('id')
                         ->first();
                     $ticket->pending_note = $latestPause?->note ?? 'SLA penanganan dibekukan sementara.';
@@ -120,14 +158,12 @@ class BidangController extends Controller
                         $ticket->sla_info = $ticket->target_sla_label . ' tersisa (dibekukan)';
                     }
                 } elseif (!$startTime) {
-                    // KONDISI 2: DIPROSES TAPI BELUM MULAI KERJA
                     $ticket->sla_state = 'not_started';
                     $ticket->sla_label = 'Belum berjalan';
                     $ticket->sla_color = 'slate';
                     $ticket->sla_progress = 0;
                     $ticket->sla_info = 'Menunggu teknisi mulai';
                 } else {
-                    // KONDISI 3: DIPROSES & BERJALAN NORMAL
                     $elapsed = max(0, (int) $startTime->diffInMinutes($now));
                     $percent = min(100, (int) round(($elapsed / max(1, $finalMinutes)) * 100));
                     $remaining = max(0, $finalMinutes - $elapsed);
@@ -158,47 +194,36 @@ class BidangController extends Controller
             });
 
         $technicians = User::whereHas('roles', function ($q) {
-                $q->where('name', 'like', '%teknisi%');
-            })
-            ->get();
+            $q->where('name', 'like', '%teknisi%');
+        })->get();
 
-        // 1. Tiket Masuk (Status 1: Baru)
-        $ticketMasukCount = Tickets::where('ticket_status_id', 1)->count();
+        $ticketMasukCount = Tickets::where('ticket_status_id', $baruId)->count();
+        $inProcessCount   = Tickets::where('ticket_status_id', $diprosesId)->count();
+        $teknisiPendingCount = Tickets::where('ticket_status_id', $pendingId)->count();
+        
+        $triagePendingCount = TicketStatusHistory::join('tickets', 'tickets.id', '=', 'ticket_status_histories.ticket_id')
+            ->where('tickets.ticket_status_id', $baruId)
+            ->where('ticket_status_histories.note', 'like', '%[PAUSED_SLA1]%')
+            ->distinct('tickets.id')
+            ->count('tickets.id');
 
-        // 2. Tiket Sedang Diproses (Status 2)
-        $inProcessCount = Tickets::where('ticket_status_id', 2)->count();
-
-        // 3. Bekukan SLA: Gabungan Status 3 (Pending Teknisi) + Status 1 yang dibekukan di Triage
-        $teknisiPendingCount = Tickets::where('ticket_status_id', 3)->count();
-        $triagePendingCount = 0;
-        if (Schema::hasTable('ticket_status_histories')) {
-            $triagePendingCount = DB::table('ticket_status_histories')
-                ->join('tickets', 'tickets.id', '=', 'ticket_status_histories.ticket_id')
-                ->where('tickets.ticket_status_id', 1)
-                ->where('ticket_status_histories.note', 'like', '%[PAUSED_SLA1]%')
-                ->distinct('tickets.id')
-                ->count('tickets.id');
-        }
         $pendingCount = $teknisiPendingCount + $triagePendingCount;
 
-        // 4. Tiket Forward Lintas Bidang
-        $forwardCount = 0;
-        if (Schema::hasTable('ticket_status_histories')) {
-            $forwardCount = DB::table('ticket_status_histories')
-                ->where('note', 'like', 'Forward Tiket:%')
-                ->distinct('ticket_id')
-                ->count('ticket_id');
-        }
+        $forwardCount = TicketStatusHistory::join('tickets', 'tickets.id', '=', 'ticket_status_histories.ticket_id')
+            ->where('ticket_status_histories.note', 'like', 'Forward Tiket:%')
+            ->distinct('tickets.id')
+            ->count('tickets.id');
 
         return view('bidang.index', compact(
             'tickets', 
             'technicians', 
             'ticketMasukCount', 
-            'inProcessCount',
+            'inProcessCount', 
             'pendingCount', 
             'forwardCount'
         ));
     }
+
     /**
      * Penugasan Teknisi & Penyesuaian Durasi SLA (Overview)
      */
@@ -214,33 +239,28 @@ class BidangController extends Controller
         $hasTechs = !empty($techIds);
         $inputMinutes = (int) $request->sla_minutes;
 
-        DB::transaction(function () use ($ticket, $techIds, $hasTechs, $inputMinutes) {
+        $ticket->getConnection()->transaction(function () use ($ticket, $techIds, $hasTechs, $inputMinutes) {
             $now = now();
             $serviceId = $ticket->service_id ?? 1;
 
-            $taskId = DB::table('tickets_task')->where('ticket_id', $ticket->id)->value('id');
+            $task = TicketTask::updateOrCreate(
+                ['ticket_id' => $ticket->id],
+                [
+                    'service_id'       => $serviceId,
+                    'ticket_status_id' => $ticket->ticket_status_id,
+                    'created_by'       => Auth::id() ?? 1,
+                    'received_at'      => $now,
+                    'started_at'       => $now,
+                    'updated_at'       => $now,
+                ]
+            );
 
-            $taskData = [
-                'ticket_id'        => $ticket->id,
-                'service_id'       => $serviceId,
-                'ticket_status_id' => $ticket->ticket_status_id,
-                'updated_at'       => $now,
-            ];
+            $taskId = $task->id;
 
-            if (!$taskId) {
-                $taskData['created_by']  = Auth::id() ?? 1;
-                $taskData['received_at'] = $now;
-                $taskData['started_at']  = $now;
-                $taskData['created_at']  = $now;
-                $taskId = DB::table('tickets_task')->insertGetId($taskData);
-            } else {
-                DB::table('tickets_task')->where('id', $taskId)->update($taskData);
-            }
-
-            DB::table('ticket_task_assignees')->where('ticket_task_id', $taskId)->delete();
+            TicketTaskAssignees::where('ticket_task_id', $taskId)->delete();
             if ($hasTechs) {
                 foreach ($techIds as $techId) {
-                    DB::table('ticket_task_assignees')->insert([
+                    TicketTaskAssignees::create([
                         'ticket_task_id' => $taskId,
                         'user_id'        => $techId,
                         'created_at'     => $now,
@@ -249,12 +269,12 @@ class BidangController extends Controller
                 }
             }
 
-            DB::table('ticket_task_activities')->where('ticket_task_id', $taskId)->delete();
+            TicketTaskActivity::where('ticket_task_id', $taskId)->delete();
 
-            $masterActivities = DB::table('service_activities')
-                ->where('service_id', $serviceId)
-                ->orderBy('id', 'asc')
-                ->get();
+            $activityModel = $this->getActivityModel();
+            $masterActivities = $activityModel 
+                ? $activityModel::where('service_id', $serviceId)->orderBy('id', 'asc')->get()
+                : collect();
 
             if ($masterActivities->isNotEmpty()) {
                 $totalSteps = $masterActivities->count();
@@ -263,12 +283,12 @@ class BidangController extends Controller
 
                 foreach ($masterActivities as $index => $act) {
                     $stepDuration = ($index === $totalSteps - 1) 
-                        ? ($inputMinutes - $accumulated) 
+                        ? max(1, $inputMinutes - $accumulated) 
                         : $minutesPerStep;
 
                     $accumulated += $stepDuration;
 
-                    DB::table('ticket_task_activities')->insert([
+                    TicketTaskActivity::create([
                         'ticket_task_id'          => $taskId,
                         'service_activities_id'   => $act->id,
                         'name_snapshot'           => $act->name,
@@ -283,7 +303,7 @@ class BidangController extends Controller
                     ]);
                 }
             } else {
-                DB::table('ticket_task_activities')->insert([
+                TicketTaskActivity::create([
                     'ticket_task_id'          => $taskId,
                     'service_activities_id'   => null,
                     'name_snapshot'           => 'Penanganan Tiket oleh Teknisi',
@@ -298,24 +318,17 @@ class BidangController extends Controller
                 ]);
             }
 
-            if ($hasTechs) {
-                $techNames = User::whereIn('id', $techIds)->pluck('name')->join(', ');
-                TicketStatusHistory::create([
-                    'ticket_id'        => $ticket->id,
-                    'ticket_task_id'   => $taskId,
-                    'ticket_status_id' => $ticket->ticket_status_id,
-                    'changed_by'       => Auth::id() ?? 1,
-                    'note'             => "Tiket dialokasikan ke teknisi: {$techNames}.",
-                ]);
-            } else {
-                TicketStatusHistory::create([
-                    'ticket_id'        => $ticket->id,
-                    'ticket_task_id'   => $taskId,
-                    'ticket_status_id' => $ticket->ticket_status_id,
-                    'changed_by'       => Auth::id() ?? 1,
-                    'note'             => "Target SLA tiket diatur ke {$inputMinutes} menit.",
-                ]);
-            }
+            $note = $hasTechs 
+                ? "Tiket dialokasikan ke teknisi: " . User::whereIn('id', $techIds)->pluck('name')->join(', ') . ". Target SLA: {$inputMinutes} menit."
+                : "Target SLA penanganan tiket diatur ke {$inputMinutes} menit.";
+
+            TicketStatusHistory::create([
+                'ticket_id'        => $ticket->id,
+                'ticket_task_id'   => $taskId,
+                'ticket_status_id' => $ticket->ticket_status_id,
+                'changed_by'       => Auth::id() ?? 1,
+                'note'             => $note,
+            ]);
         });
 
         $pesan = $hasTechs 
@@ -326,45 +339,45 @@ class BidangController extends Controller
     }
 
     /**
-     * Halaman Utama Triage & Reassign
+     * Halaman Utama Triage
      */
     public function triageIndex(): View
     {
         $now = now();
+        $baruId     = $this->getStatusId('baru');
+        $diprosesId = $this->getStatusId('diproses');
+        $pendingId  = $this->getStatusId('pending');
 
-        // 1. Data Tiket Menunggu Triage (Status: Baru / ID 1)
-        $waitingTickets = Tickets::with(['user', 'service', 'status'])
-            ->where('ticket_status_id', 1)
+        $activeStatusIds = array_unique([$diprosesId, $pendingId]);
+
+        // 1. TIKET MENUNGGU TRIAGE
+        $waitingTickets = Tickets::with(['user', 'service', 'status', 'perangkatDaerah', 'bidang'])
+            ->where('ticket_status_id', $baruId)
             ->latest('created_at')
             ->get()
             ->map(function ($ticket) use ($now) {
-                $ticket->agency_name = DB::table('perangkat_daerah')
-                    ->where('id', function ($query) use ($ticket) {
-                        $query->select('perangkat_daerah_id')
-                            ->from('employments')
-                            ->where('user_id', $ticket->user_id)
-                            ->limit(1);
-                    })->value('name') ?? 'Perangkat Daerah';
+                $ticket->agency_name = $ticket->perangkatDaerah?->name ?? 'Perangkat Daerah';
 
                 $catId = $ticket->service?->category_id;
                 $ticket->category_name = $catId 
-                    ? (DB::table('service_categories')->where('id', $catId)->value('name') ?? 'Belum Ditentukan')
+                    ? (ServiceCategory::where('id', $catId)->value('name') ?? 'Belum Ditentukan')
                     : 'Belum Ditentukan';
 
-                $latestHistory = DB::table('ticket_status_histories')
-                    ->where('ticket_id', $ticket->id)
+                $latestHistory = TicketStatusHistory::where('ticket_id', $ticket->id)
                     ->latest('id')
                     ->first();
 
                 $isPaused = $latestHistory && str_contains($latestHistory->note, '[PAUSED_SLA1]');
                 $ticket->is_paused = $isPaused;
 
-                $slaTargetMinutes = 60;
+                $slaTargetMinutes = (int) ($ticket->service?->sla_response_minutes ?? 60);
+
                 $createdAt = $ticket->created_at ? Carbon::parse($ticket->created_at) : $now;
                 $elapsedMinutes = (int) $createdAt->diffInMinutes($now);
                 $remainingMinutes = max(0, $slaTargetMinutes - $elapsedMinutes);
-                $progressPercent = min(100, (int) round(($elapsedMinutes / $slaTargetMinutes) * 100));
+                $progressPercent = min(100, (int) round(($elapsedMinutes / max(1, $slaTargetMinutes)) * 100));
 
+                $ticket->sla_target_minutes = $slaTargetMinutes;
                 $ticket->sla_progress = $progressPercent;
                 $ticket->sla_remaining = $remainingMinutes;
 
@@ -393,33 +406,36 @@ class BidangController extends Controller
                 return $ticket;
             });
 
-        // 2. Data Tiket Reassign Antar Teknisi Bidang (Status: Diproses / ID 2 & Dijeda / ID 3)
-        $reassignTickets = Tickets::with(['service', 'status'])
-            ->whereIn('ticket_status_id', [2, 3])
+        // 2. TIKET REASSIGN (Tiket aktif yang sudah ditugaskan teknisi)
+        $reassignTickets = Tickets::with(['service', 'status', 'user', 'tasks.assignees'])
+            ->whereIn('ticket_status_id', $activeStatusIds)
             ->latest('updated_at')
             ->get()
-            ->map(function ($ticket) use ($now) {
-                $targetSla = (int) ($ticket->service?->sla_minutes ?? 240);
-                $ticket->target_sla_label = $this->formatMinutes($targetSla);
-
-                $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
+            ->map(function ($ticket) use ($now, $pendingId) {
+                $task = TicketTask::where('ticket_id', $ticket->id)->first();
                 $currentTechId = null;
                 $currentTechName = 'Belum ada teknisi';
+                $taskMinutes = 0;
 
                 if ($task) {
-                    $currentTechId = DB::table('ticket_task_assignees')
-                        ->where('ticket_task_id', $task->id)
-                        ->value('user_id');
-
+                    $currentTechId = TicketTaskAssignees::where('ticket_task_id', $task->id)->value('user_id');
                     if ($currentTechId) {
                         $currentTechName = User::where('id', $currentTechId)->value('name') ?? 'Belum ada teknisi';
                     }
+
+                    $taskMinutes = (int) TicketTaskActivity::where('ticket_task_id', $task->id)
+                        ->sum('target_minutes_snapshot');
                 }
 
+                $targetSla = $taskMinutes > 0 
+                    ? $taskMinutes 
+                    : (int) ($ticket->service?->sla_process_minutes ?? $ticket->service?->sla_minutes ?? 240);
+
+                $ticket->target_sla_minutes = $targetSla;
+                $ticket->target_sla_label = $this->formatMinutes($targetSla);
                 $ticket->current_tech_id = $currentTechId;
                 $ticket->current_tech_name = $currentTechName;
 
-                // KONDISI 1: Teknisi belum menekan 'Mulai Proses' (started_at masih NULL)
                 if (!$task || empty($task->started_at)) {
                     $ticket->sla_state = 'not_started';
                     $ticket->sla_progress = 0;
@@ -429,8 +445,7 @@ class BidangController extends Controller
 
                 $startTime = Carbon::parse($task->started_at);
 
-                // KONDISI 2: Tiket sedang berstatus PENDING / DIJEDA (Status 3) -> Timer dibekukan
-                if ($ticket->ticket_status_id == 3) {
+                if ($ticket->ticket_status_id == $pendingId) {
                     $freezeTime = $ticket->updated_at ? Carbon::parse($ticket->updated_at) : $now;
                     $elapsed = max(0, (int) $startTime->diffInMinutes($freezeTime));
                     $percent = min(100, (int) round(($elapsed / max(1, $targetSla)) * 100));
@@ -441,7 +456,6 @@ class BidangController extends Controller
                     return $ticket;
                 }
 
-                // KONDISI 3: Tiket sedang BERJALAN (Status 2)
                 $elapsed = max(0, (int) $startTime->diffInMinutes($now));
                 $percent = min(100, (int) round(($elapsed / max(1, $targetSla)) * 100));
 
@@ -452,14 +466,14 @@ class BidangController extends Controller
                 return $ticket;
             });
 
-        $categories = DB::table('service_categories')->get();
+        $categories = ServiceCategory::orderBy('name', 'asc')->get();
         $services = Services::all();
-        $bidangs = DB::table('bidang')->get();
+        $bidangs = Bidang::orderBy('name', 'asc')->get();
         $technicians = User::whereHas('roles', function ($q) {
             $q->where('name', 'like', '%teknisi%');
         })->get();
 
-        $newTickets = Tickets::where('ticket_status_id', 1)
+        $newTickets = Tickets::where('ticket_status_id', $baruId)
             ->latest('created_at')
             ->take(5)
             ->get();
@@ -476,51 +490,55 @@ class BidangController extends Controller
     }
 
     /**
-     * Selesaikan Triage: started_at bernilai NULL agar SLA belum berjalan sebelum teknisi mulai
+     * Selesaikan Triage Tiket (Anti Foreign Key Violation)
      */
     public function processTriage(Request $request, Tickets $ticket): RedirectResponse
     {
         $validated = $request->validate([
-            'service_id'       => 'required|exists:services,id',
-            'sla_minutes'      => 'required|numeric|min:5',
-            'technician_ids'   => 'nullable|array',
-            'technician_ids.*' => 'exists:users,id',
+            'service_id'             => 'required|exists:services,id',
+            'additional_sla_minutes' => 'nullable|numeric|min:0',
+            'sla_minutes'            => 'nullable|numeric|min:0',
+            'technician_ids'         => 'nullable|array',
+            'technician_ids.*'       => 'exists:users,id',
         ]);
 
-        DB::transaction(function () use ($ticket, $validated) {
+        // Ambil ID status 'Diproses' yang benar-benar ada di tabel ticket_statuses
+        $diprosesId = $this->getStatusId('diproses');
+
+        $ticket->getConnection()->transaction(function () use ($ticket, $validated, $diprosesId) {
             $now = now();
             $newService = Services::findOrFail($validated['service_id']);
             $techIds = $validated['technician_ids'] ?? [];
             $hasTechs = !empty($techIds);
 
+            $baseProcessSla = (int) ($newService->sla_process_minutes ?? $newService->sla_minutes ?? 240);
+            $additionalSla = (int) ($validated['additional_sla_minutes'] ?? $validated['sla_minutes'] ?? 0);
+            $totalSlaMinutes = $baseProcessSla + $additionalSla;
+
+            // Update status tiket menggunakan ID yang valid
             $ticket->update([
                 'service_id'       => $newService->id,
-                'ticket_status_id' => 2,
+                'ticket_status_id' => $diprosesId,
             ]);
 
-            $taskId = DB::table('tickets_task')->where('ticket_id', $ticket->id)->value('id');
-            $taskData = [
-                'ticket_id'        => $ticket->id,
-                'service_id'       => $newService->id,
-                'ticket_status_id' => 2,
-                'updated_at'       => $now,
-            ];
+            $task = TicketTask::updateOrCreate(
+                ['ticket_id' => $ticket->id],
+                [
+                    'service_id'       => $newService->id,
+                    'ticket_status_id' => $diprosesId,
+                    'created_by'       => Auth::id() ?? 1,
+                    'received_at'      => $now,
+                    'started_at'       => null,
+                    'updated_at'       => $now,
+                ]
+            );
 
-            if (!$taskId) {
-                $taskData['created_by']  = Auth::id() ?? 1;
-                $taskData['received_at'] = $now;
-                $taskData['started_at']  = null; // <-- Menunggu teknisi menekan mulai kerja
-                $taskData['created_at']  = $now;
-                $taskId = DB::table('tickets_task')->insertGetId($taskData);
-            } else {
-                $taskData['started_at'] = null;
-                DB::table('tickets_task')->where('id', $taskId)->update($taskData);
-            }
+            $taskId = $task->id;
 
-            DB::table('ticket_task_assignees')->where('ticket_task_id', $taskId)->delete();
+            TicketTaskAssignees::where('ticket_task_id', $taskId)->delete();
             if ($hasTechs) {
                 foreach ($techIds as $techId) {
-                    DB::table('ticket_task_assignees')->insert([
+                    TicketTaskAssignees::create([
                         'ticket_task_id' => $taskId,
                         'user_id'        => $techId,
                         'created_at'     => $now,
@@ -529,13 +547,67 @@ class BidangController extends Controller
                 }
             }
 
+            TicketTaskActivity::where('ticket_task_id', $taskId)->delete();
+
+            $activityModel = $this->getActivityModel();
+            $masterActivities = $activityModel 
+                ? $activityModel::where('service_id', $newService->id)->orderBy('id', 'asc')->get() 
+                : collect();
+
+            if ($masterActivities->isNotEmpty()) {
+                $totalSteps = $masterActivities->count();
+                $minutesPerStep = max(1, (int) round($totalSlaMinutes / $totalSteps));
+                $accumulated = 0;
+
+                foreach ($masterActivities as $index => $act) {
+                    $stepDuration = ($index === $totalSteps - 1) 
+                        ? max(1, $totalSlaMinutes - $accumulated) 
+                        : $minutesPerStep;
+
+                    $accumulated += $stepDuration;
+
+                    TicketTaskActivity::create([
+                        'ticket_task_id'          => $taskId,
+                        'service_activities_id'   => $act->id,
+                        'name_snapshot'           => $act->name,
+                        'sort_order'              => $index + 1,
+                        'target_minutes_snapshot' => $stepDuration,
+                        'paused_seconds'          => 0,
+                        'is_sla_met'              => null,
+                        'start_at'                => null,
+                        'due_at'                  => null,
+                        'created_at'              => $now,
+                        'updated_at'              => $now,
+                    ]);
+                }
+            } else {
+                TicketTaskActivity::create([
+                    'ticket_task_id'          => $taskId,
+                    'service_activities_id'   => null,
+                    'name_snapshot'           => 'Penanganan Tiket oleh Teknisi',
+                    'sort_order'              => 1,
+                    'target_minutes_snapshot' => $totalSlaMinutes,
+                    'paused_seconds'          => 0,
+                    'is_sla_met'              => null,
+                    'start_at'                => null,
+                    'due_at'                  => null,
+                    'created_at'              => $now,
+                    'updated_at'              => $now,
+                ]);
+            }
+
             $techNames = $hasTechs ? User::whereIn('id', $techIds)->pluck('name')->join(', ') : 'Belum ditentukan';
+            
+            $logNote = $additionalSla > 0
+                ? "Triage Selesai: Sub-layanan '{$newService->name}'. SLA Standar: {$baseProcessSla} mnt (+Tambahan Disetujui: {$additionalSla} mnt). Total SLA: {$totalSlaMinutes} menit. Teknisi: {$techNames}."
+                : "Triage Selesai: Sub-layanan '{$newService->name}'. SLA Proses Otomatis: {$totalSlaMinutes} menit. Teknisi: {$techNames}.";
+
             TicketStatusHistory::create([
                 'ticket_id'        => $ticket->id,
                 'ticket_task_id'   => $taskId,
-                'ticket_status_id' => 2,
+                'ticket_status_id' => $diprosesId,
                 'changed_by'       => Auth::id() ?? 1,
-                'note'             => "Triage Selesai: Sub-layanan diatur ke '{$newService->name}', SLA: {$validated['sla_minutes']} menit. Teknisi: {$techNames}.",
+                'note'             => $logNote,
             ]);
         });
 
@@ -577,7 +649,7 @@ class BidangController extends Controller
     }
 
     /**
-     * Reassign Tiket ke Teknisi Lain (Internal Bidang - Status Tetap Diproses / ID 2)
+     * Reassign Tiket ke Teknisi Lain
      */
     public function reassignTeknisi(Request $request, Tickets $ticket): RedirectResponse
     {
@@ -587,44 +659,41 @@ class BidangController extends Controller
             return back()->withErrors(['technician_id' => 'Pilih salah satu teknisi yang valid.']);
         }
 
-        DB::transaction(function () use ($ticket, $techId) {
-            $now = now();
-            $taskId = DB::table('tickets_task')->where('ticket_id', $ticket->id)->value('id');
+        $diprosesId = $this->getStatusId('diproses');
 
-            if (!$taskId) {
-                $taskId = DB::table('tickets_task')->insertGetId([
-                    'ticket_id'        => $ticket->id,
+        $ticket->getConnection()->transaction(function () use ($ticket, $techId, $diprosesId) {
+            $now = now();
+            
+            $task = TicketTask::firstOrCreate(
+                ['ticket_id' => $ticket->id],
+                [
                     'service_id'       => $ticket->service_id ?? 1,
-                    'ticket_status_id' => 2,
+                    'ticket_status_id' => $diprosesId,
                     'created_by'       => Auth::id() ?? 1,
                     'received_at'      => $now,
                     'started_at'       => null,
                     'created_at'       => $now,
                     'updated_at'       => $now,
-                ]);
-            }
+                ]
+            );
 
-            $oldTechId = DB::table('ticket_task_assignees')->where('ticket_task_id', $taskId)->value('user_id');
+            $oldTechId = TicketTaskAssignees::where('ticket_task_id', $task->id)->value('user_id');
             $oldTechName = $oldTechId ? (User::find($oldTechId)?->name ?? 'Teknisi Sebelumnya') : 'Belum ada';
 
-            DB::table('ticket_task_assignees')->where('ticket_task_id', $taskId)->delete();
-
-            $assigneeCols = Schema::hasTable('ticket_task_assignees') ? Schema::getColumnListing('ticket_task_assignees') : [];
-            $assigneeData = [
-                'ticket_task_id' => $taskId,
+            TicketTaskAssignees::where('ticket_task_id', $task->id)->delete();
+            TicketTaskAssignees::create([
+                'ticket_task_id' => $task->id,
                 'user_id'        => $techId,
-            ];
-            if (in_array('created_at', $assigneeCols)) $assigneeData['created_at'] = $now;
-            if (in_array('updated_at', $assigneeCols)) $assigneeData['updated_at'] = $now;
-
-            DB::table('ticket_task_assignees')->insert($assigneeData);
+                'created_at'     => $now,
+                'updated_at'     => $now,
+            ]);
 
             $newTechName = User::find($techId)?->name ?? 'Teknisi Baru';
 
             TicketStatusHistory::create([
                 'ticket_id'        => $ticket->id,
-                'ticket_task_id'   => $taskId,
-                'ticket_status_id' => 2,
+                'ticket_task_id'   => $task->id,
+                'ticket_status_id' => $diprosesId,
                 'changed_by'       => Auth::id() ?? 1,
                 'note'             => "Reassign Teknisi: Penanganan dialihkan dari {$oldTechName} ke {$newTechName}.",
             ]);
@@ -636,7 +705,7 @@ class BidangController extends Controller
     }
 
     /**
-     * Forward Tiket ke Bidang Lain (Status Kembali ke 1 / Menunggu Triage di Bidang Tujuan)
+     * Forward Tiket ke Bidang Lain
      */
     public function forwardTicket(Request $request, Tickets $ticket): RedirectResponse
     {
@@ -645,21 +714,23 @@ class BidangController extends Controller
             'forward_note'     => 'nullable|string|max:500',
         ]);
 
-        $targetBidang = DB::table('bidang')->where('id', $validated['target_bidang_id'])->first();
+        $targetBidang = Bidang::find($validated['target_bidang_id']);
         $bidangName = $targetBidang->name ?? 'Bidang Terkait';
+        $baruId = $this->getStatusId('baru');
 
-        DB::transaction(function () use ($ticket, $validated, $bidangName) {
+        $ticket->getConnection()->transaction(function () use ($ticket, $validated, $bidangName, $baruId) {
             $now = now();
 
             $ticket->update([
-                'ticket_status_id' => 1,
+                'ticket_status_id' => $baruId,
+                'bidang_id'        => $validated['target_bidang_id'],
             ]);
 
-            $taskId = DB::table('tickets_task')->where('ticket_id', $ticket->id)->value('id');
-            if ($taskId) {
-                DB::table('ticket_task_assignees')->where('ticket_task_id', $taskId)->delete();
-                DB::table('tickets_task')->where('id', $taskId)->update([
-                    'ticket_status_id' => 1,
+            $task = TicketTask::where('ticket_id', $ticket->id)->first();
+            if ($task) {
+                TicketTaskAssignees::where('ticket_task_id', $task->id)->delete();
+                $task->update([
+                    'ticket_status_id' => $baruId,
                     'updated_at'       => $now,
                 ]);
             }
@@ -671,8 +742,8 @@ class BidangController extends Controller
 
             TicketStatusHistory::create([
                 'ticket_id'        => $ticket->id,
-                'ticket_task_id'   => $taskId,
-                'ticket_status_id' => 1,
+                'ticket_task_id'   => $task?->id,
+                'ticket_status_id' => $baruId,
                 'changed_by'       => Auth::id() ?? 1,
                 'note'             => $noteText,
             ]);
@@ -681,9 +752,6 @@ class BidangController extends Controller
         return redirect()->route('bidang.triage')->with('success', "Tiket {$ticket->ticket_number} berhasil diteruskan (Forward) ke {$bidangName}.");
     }
 
-    /**
-     * Alias penjamin backward compatibility jika route masih menembak reassignBidang
-     */
     public function reassignBidang(Request $request, Tickets $ticket): RedirectResponse
     {
         if ($request->has('technician_id') || $request->filled('technician_id')) {
@@ -698,33 +766,25 @@ class BidangController extends Controller
      */
     public function kategori(): View
     {
-        $sops = collect();
-        if (Schema::hasTable('sops')) {
-            $sops = DB::table('sops')->get()->map(function ($sop) {
-                $steps = [];
-                if (Schema::hasTable('sops_steps')) {
-                    $steps = DB::table('sops_steps')->where('sop_id', $sop->id)->get();
-                }
-                $sop->steps = $steps;
-                return $sop;
-            });
-        }
+        $sops = Sops::with('steps')->get();
+        $activityModel = $this->getActivityModel();
 
-        $categories = DB::table('service_categories')->get()->map(function ($cat) {
-            $services = DB::table('services')
-                ->where('category_id', $cat->id)
+        $categories = ServiceCategory::all()->map(function ($cat) use ($activityModel) {
+            $services = Services::where('category_id', $cat->id)
                 ->get()
-                ->map(function ($svc) {
-                    $minutes = $svc->sla_minutes ?? ((isset($svc->sla_hours) ? $svc->sla_hours * 60 : 240));
-                    $svc->sla_minutes_val = (int) $minutes;
-                    $svc->sla_display = $this->formatMinutes((int) $minutes);
+                ->map(function ($svc) use ($activityModel) {
+                    $respMinutes = $svc->sla_response_minutes ?? 60;
+                    $svc->sla_response_val = (int) $respMinutes;
+                    $svc->sla_response_display = $this->formatMinutes((int) $respMinutes);
 
-                    $activities = [];
-                    if (Schema::hasTable('service_activities')) {
-                        $activities = DB::table('service_activities')
-                            ->where('service_id', $svc->id)
-                            ->get();
-                    }
+                    $procMinutes = $svc->sla_process_minutes ?? $svc->sla_minutes ?? 240;
+                    $svc->sla_minutes_val = (int) $procMinutes;
+                    $svc->sla_display = $this->formatMinutes((int) $procMinutes);
+
+                    $activities = $activityModel 
+                        ? $activityModel::where('service_id', $svc->id)->get() 
+                        : collect();
+
                     $svc->activities = $activities;
                     return $svc;
                 });
@@ -739,20 +799,16 @@ class BidangController extends Controller
     public function storeActivity(Request $request, $serviceId): RedirectResponse
     {
         $validated = $request->validate(['name' => 'required|string|max:255']);
+        $activityModel = $this->getActivityModel();
 
-        if (Schema::hasTable('service_activities')) {
-            $actCols = Schema::getColumnListing('service_activities');
+        if ($activityModel) {
+            $cols = $activityModel->getConnection()->getSchemaBuilder()->getColumnListing($activityModel->getTable());
             $actData = ['service_id' => $serviceId, 'name' => $validated['name']];
 
-            if (in_array('targer_minutes', $actCols)) $actData['targer_minutes'] = 0;
-            if (in_array('target_minutes', $actCols)) $actData['target_minutes'] = 0;
-            if (in_array('duration_minutes', $actCols)) $actData['duration_minutes'] = 0;
-            if (in_array('created_at', $actCols)) {
-                $actData['created_at'] = now();
-                $actData['updated_at'] = now();
-            }
+            if (in_array('target_minutes', $cols)) $actData['target_minutes'] = 0;
+            if (in_array('duration_minutes', $cols)) $actData['duration_minutes'] = 0;
 
-            DB::table('service_activities')->insert($actData);
+            $activityModel::create($actData);
         }
 
         return redirect()->route('bidang.kategori')->with('success', 'Aktivitas SOP berhasil ditambahkan.');
@@ -760,54 +816,86 @@ class BidangController extends Controller
 
     public function storeCategory(Request $request): RedirectResponse
     {
-        $validated = $request->validate(['name' => 'required|string|max:255']);
-        $catCols = Schema::getColumnListing('service_categories');
-        $catData = ['name' => $validated['name']];
+        $validated = $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string|max:500',
+        ]);
 
-        if (in_array('code', $catCols)) $catData['code'] = rand(10, 99);
-        if (in_array('bidang_id', $catCols)) $catData['bidang_id'] = DB::table('bidang')->value('id') ?? 1;
-        if (in_array('perangkat_daerah_id', $catCols)) $catData['perangkat_daerah_id'] = DB::table('perangkat_daerah')->value('id') ?? 1;
-        if (in_array('created_at', $catCols)) {
-            $catData['created_at'] = now();
-            $catData['updated_at'] = now();
+        $catData = [
+            'name' => $validated['name'],
+        ];
+
+        $catModel = new ServiceCategory();
+        $cols = $catModel->getConnection()->getSchemaBuilder()->getColumnListing($catModel->getTable());
+        if (in_array('description', $cols)) {
+            $catData['description'] = $validated['description'] ?? "Kategori {$validated['name']}";
         }
 
-        DB::table('service_categories')->insert($catData);
+        ServiceCategory::create($catData);
+
         return redirect()->route('bidang.kategori')->with('success', "Kategori '{$validated['name']}' berhasil ditambahkan.");
     }
 
+    /**
+     * Tambah Layanan Baru dengan SLA Dinamis
+     */
     public function storeService(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'category_id' => 'required|exists:service_categories,id',
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'sla_minutes' => 'required|numeric|min:5',
-            'work_hours'  => 'nullable|string|max:100',
+            'category_id'   => 'required|exists:service_categories,id',
+            'name'          => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'sla_minutes'   => 'required|array|min:2',
+            'sla_minutes.*' => 'required|numeric|min:5',
+            'work_hours'    => 'nullable|string|max:100',
+        ], [
+            'sla_minutes.required' => 'Input SLA wajib diisi.',
+            'sla_minutes.min'      => 'Minimal input harus 2 tahapan SLA (SLA 1 dan SLA 2).',
+            'sla_minutes.*.min'    => 'Setiap durasi SLA minimal 5 menit.',
         ]);
 
-        $svcCols = Schema::getColumnListing('services');
+        $slas = array_map('intval', $validated['sla_minutes']);
+        
+        $slaResponse = $slas[0];
+        $slaProcess = array_sum(array_slice($slas, 1));
+
+        $svc = new Services();
+        $cols = $svc->getConnection()->getSchemaBuilder()->getColumnListing($svc->getTable());
+
         $svcData = [
             'category_id' => $validated['category_id'],
             'name'        => $validated['name'],
             'description' => $validated['description'] ?? 'Layanan bidang',
         ];
 
-        if (in_array('code', $svcCols)) $svcData['code'] = rand(100, 999);
-        if (in_array('sla_minutes', $svcCols)) $svcData['sla_minutes'] = $validated['sla_minutes'];
-        if (in_array('sla_hours', $svcCols)) $svcData['sla_hours'] = round($validated['sla_minutes'] / 60, 2);
-        if (in_array('work_hours', $svcCols)) $svcData['work_hours'] = $validated['work_hours'] ?? '08:00 - 15:00 WITA';
-        if (in_array('bidang_id', $svcCols)) $svcData['bidang_id'] = DB::table('bidang')->value('id') ?? 1;
-        if (in_array('perangkat_daerah_id', $svcCols)) $svcData['perangkat_daerah_id'] = DB::table('perangkat_daerah')->value('id') ?? 1;
-        if (in_array('created_at', $svcCols)) {
-            $svcData['created_at'] = now();
-            $svcData['updated_at'] = now();
+        if (in_array('sla_response_minutes', $cols)) {
+            $svcData['sla_response_minutes'] = $slaResponse;
         }
 
-        DB::table('services')->insert($svcData);
-        return redirect()->route('bidang.kategori')->with('success', "Layanan '{$validated['name']}' berhasil ditambahkan.");
+        if (in_array('sla_process_minutes', $cols)) {
+            $svcData['sla_process_minutes'] = $slaProcess;
+        }
+
+        if (in_array('sla_minutes', $cols)) {
+            $svcData['sla_minutes'] = $slaProcess;
+        }
+
+        if (in_array('sla_hours', $cols)) {
+            $svcData['sla_hours'] = round($slaProcess / 60, 2);
+        }
+
+        if (in_array('code', $cols)) $svcData['code'] = rand(100, 999);
+        if (in_array('work_hours', $cols)) $svcData['work_hours'] = $validated['work_hours'] ?? '08:00 - 15:00 WITA';
+
+        Services::create($svcData);
+
+        $totalStages = count($slas);
+        return redirect()->route('bidang.kategori')->with('success', "Layanan '{$validated['name']}' berhasil ditambahkan dengan {$totalStages} tahapan SLA dinamis.");
     }
 
+    /**
+     * Update Target SLA Layanan
+     */
     public function updateSla(Request $request, $serviceId): RedirectResponse
     {
         $validated = $request->validate([
@@ -815,16 +903,22 @@ class BidangController extends Controller
             'work_hours'  => 'required|string|max:100',
         ]);
 
+        $service = Services::findOrFail($serviceId);
+        $cols = $service->getConnection()->getSchemaBuilder()->getColumnListing($service->getTable());
         $updateData = [];
-        if (Schema::hasColumn('services', 'sla_minutes')) $updateData['sla_minutes'] = $validated['sla_minutes'];
-        if (Schema::hasColumn('services', 'sla_hours')) $updateData['sla_hours'] = round($validated['sla_minutes'] / 60, 2);
-        if (Schema::hasColumn('services', 'work_hours')) $updateData['work_hours'] = $validated['work_hours'];
+
+        $processMin = (int) $validated['sla_minutes'];
+        if (in_array('sla_process_minutes', $cols)) $updateData['sla_process_minutes'] = $processMin;
+        if (in_array('sla_minutes', $cols)) $updateData['sla_minutes'] = $processMin;
+        if (in_array('sla_hours', $cols)) $updateData['sla_hours'] = round($processMin / 60, 2);
+
+        if (in_array('work_hours', $cols)) $updateData['work_hours'] = $validated['work_hours'];
 
         if (!empty($updateData)) {
-            DB::table('services')->where('id', $serviceId)->update($updateData);
+            $service->update($updateData);
         }
 
-        return redirect()->route('bidang.kategori')->with('success', 'Target SLA layanan berhasil disesuaikan.');
+        return redirect()->route('bidang.kategori')->with('success', 'Target SLA layanan berhasil diperbarui.');
     }
 
     /**
@@ -841,9 +935,6 @@ class BidangController extends Controller
         return view('bidang.sop', compact('sops', 'services'));
     }
 
-    /**
-     * Buka PDF SOP berdasarkan Slug
-     */
     public function viewPdf($slug)
     {
         $possibleId = is_numeric($slug) ? (int) $slug : (int) explode('-', $slug)[0];
@@ -881,57 +972,43 @@ class BidangController extends Controller
             'file'        => 'required|file|mimes:pdf|max:10240',
         ]);
 
-        if (Schema::hasTable('sops')) {
-            $uploaded = $request->file('file');
-            $disk = 'public';
-            $path = $uploaded->store('sops', $disk);
-            $fileId = null;
+        $uploaded = $request->file('file');
+        $disk = 'public';
+        $path = $uploaded->store('sops', $disk);
 
-            if (Schema::hasTable('files')) {
-                $fileData = [
-                    'disk'            => $disk,
-                    'path'            => $path,
-                    'original_name'   => $uploaded->getClientOriginalName(),
-                    'mime_type'       => $uploaded->getClientMimeType(),
-                    'size_bytes'      => $uploaded->getSize(),
-                    'checksum_sha256' => hash_file('sha256', $uploaded->getRealPath()),
-                    'uploaded_by'     => Auth::id() ?? 1,
-                    'created_at'      => now(),
-                ];
+        $fileRecord = Files::create([
+            'disk'            => $disk,
+            'path'            => $path,
+            'original_name'   => $uploaded->getClientOriginalName(),
+            'mime_type'       => $uploaded->getClientMimeType(),
+            'size_bytes'      => $uploaded->getSize(),
+            'checksum_sha256' => hash_file('sha256', $uploaded->getRealPath()),
+            'uploaded_by'     => Auth::id() ?? 1,
+            'created_at'      => now(),
+        ]);
 
-                $fileId = DB::table('files')->insertGetId($fileData);
-            }
+        $latestVersion = Sops::where('service_id', $validated['service_id'])->max('version') ?? 0;
+        $version = $latestVersion + 1;
 
-            $latestVersion = DB::table('sops')->where('service_id', $validated['service_id'])->max('version') ?? 0;
-            $version = $latestVersion + 1;
-
-            $baseSlug = Str::slug($validated['name']) . '-v' . $version;
-            $slug = $baseSlug;
-            $counter = 1;
-            while (DB::table('sops')->where('slug', $slug)->exists()) {
-                $slug = $baseSlug . '-' . $counter++;
-            }
-
-            $cols = Schema::getColumnListing('sops');
-            $data = [];
-
-            if (in_array('name', $cols)) $data['name'] = $validated['name'];
-            if (in_array('title', $cols)) $data['title'] = $validated['name'];
-            if (in_array('slug', $cols)) $data['slug'] = $slug;
-            if (in_array('service_id', $cols)) $data['service_id'] = $validated['service_id'];
-            if (in_array('file_id', $cols)) $data['file_id'] = $fileId ?? 0;
-            if (in_array('version', $cols)) $data['version'] = $version;
-            if (in_array('created_by', $cols)) $data['created_by'] = Auth::id() ?? 1;
-
-            if (in_array('doc_number', $cols)) $data['doc_number'] = $validated['doc_number'];
-            if (in_array('description', $cols)) $data['description'] = $validated['description'];
-            if (in_array('file_path', $cols)) $data['file_path'] = $path;
-
-            if (in_array('created_at', $cols)) $data['created_at'] = now();
-            if (in_array('updated_at', $cols)) $data['updated_at'] = now();
-
-            DB::table('sops')->insert($data);
+        $baseSlug = Str::slug($validated['name']) . '-v' . $version;
+        $slug = $baseSlug;
+        $counter = 1;
+        while (Sops::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter++;
         }
+
+        Sops::create([
+            'name'        => $validated['name'],
+            'title'       => $validated['name'],
+            'slug'        => $slug,
+            'service_id'  => $validated['service_id'],
+            'file_id'     => $fileRecord->id,
+            'version'     => $version,
+            'created_by'  => Auth::id() ?? 1,
+            'doc_number'  => $validated['doc_number'],
+            'description' => $validated['description'],
+            'file_path'   => $path,
+        ]);
 
         return redirect()->route('bidang.sop')->with('success', "Dokumen SOP '{$validated['name']}' berhasil disimpan.");
     }
@@ -946,56 +1023,42 @@ class BidangController extends Controller
             'file'        => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
-        if (Schema::hasTable('sops')) {
-            $cols = Schema::getColumnListing('sops');
-            $data = [];
+        $sop = Sops::findOrFail($id);
+        $data = [
+            'name'        => $validated['name'],
+            'title'       => $validated['name'],
+            'doc_number'  => $validated['doc_number'],
+            'description' => $validated['description'],
+        ];
 
-            if (in_array('name', $cols)) $data['name'] = $validated['name'];
-            if (in_array('title', $cols)) $data['title'] = $validated['name'];
-            if (in_array('service_id', $cols) && !empty($validated['service_id'])) {
-                $data['service_id'] = $validated['service_id'];
-            }
-            if (in_array('doc_number', $cols)) $data['doc_number'] = $validated['doc_number'];
-            if (in_array('description', $cols)) $data['description'] = $validated['description'];
-
-            if ($request->hasFile('file')) {
-                $uploaded = $request->file('file');
-                $disk = 'public';
-                $path = $uploaded->store('sops', $disk);
-
-                if (Schema::hasTable('files')) {
-                    $fileData = [
-                        'disk'            => $disk,
-                        'path'            => $path,
-                        'original_name'   => $uploaded->getClientOriginalName(),
-                        'mime_type'       => $uploaded->getClientMimeType(),
-                        'size_bytes'      => $uploaded->getSize(),
-                        'checksum_sha256' => hash_file('sha256', $uploaded->getRealPath()),
-                        'uploaded_by'     => Auth::id() ?? 1,
-                        'created_at'      => now(),
-                    ];
-
-                    $newFileId = DB::table('files')->insertGetId($fileData);
-                    if (in_array('file_id', $cols)) {
-                        $data['file_id'] = $newFileId;
-                    }
-                }
-
-                if (in_array('version', $cols)) {
-                    $currentVersion = DB::table('sops')->where('id', $id)->value('version') ?? 1;
-                    $newVersion = $currentVersion + 1;
-                    $data['version'] = $newVersion;
-
-                    if (in_array('slug', $cols)) {
-                        $data['slug'] = Str::slug($validated['name']) . '-v' . $newVersion;
-                    }
-                }
-            }
-
-            if (in_array('updated_at', $cols)) $data['updated_at'] = now();
-
-            DB::table('sops')->where('id', $id)->update($data);
+        if (!empty($validated['service_id'])) {
+            $data['service_id'] = $validated['service_id'];
         }
+
+        if ($request->hasFile('file')) {
+            $uploaded = $request->file('file');
+            $disk = 'public';
+            $path = $uploaded->store('sops', $disk);
+
+            $fileRecord = Files::create([
+                'disk'            => $disk,
+                'path'            => $path,
+                'original_name'   => $uploaded->getClientOriginalName(),
+                'mime_type'       => $uploaded->getClientMimeType(),
+                'size_bytes'      => $uploaded->getSize(),
+                'checksum_sha256' => hash_file('sha256', $uploaded->getRealPath()),
+                'uploaded_by'     => Auth::id() ?? 1,
+                'created_at'      => now(),
+            ]);
+
+            $newVersion = ($sop->version ?? 1) + 1;
+            $data['file_id'] = $fileRecord->id;
+            $data['version'] = $newVersion;
+            $data['slug'] = Str::slug($validated['name']) . '-v' . $newVersion;
+            $data['file_path'] = $path;
+        }
+
+        $sop->update($data);
 
         return redirect()->route('bidang.sop')->with('success', 'Dokumen SOP berhasil diperbarui.');
     }
@@ -1037,5 +1100,97 @@ class BidangController extends Controller
             ->decrement('step_no');
 
         return redirect()->route('bidang.sop')->with('success', 'Tahapan SOP berhasil dihapus.');
+    }
+
+    /**
+     * Tambah Ekstensi Durasi SLA pada Tiket
+     */
+    public function tambahSla(Request $request, Tickets $ticket): RedirectResponse
+    {
+        $validated = $request->validate([
+            'additional_minutes' => 'required|numeric|min:5',
+            'reason'             => 'nullable|string|max:500',
+        ], [
+            'additional_minutes.required' => 'Masukkan durasi menit tambahan SLA.',
+            'additional_minutes.min'      => 'Durasi penambahan SLA minimal 5 menit.',
+        ]);
+
+        $addedMinutes = (int) $validated['additional_minutes'];
+        $reason = $validated['reason'] ?? 'Penambahan durasi waktu penanganan tiket';
+
+        $ticket->getConnection()->transaction(function () use ($ticket, $addedMinutes, $reason) {
+            $now = now();
+            $task = TicketTask::where('ticket_id', $ticket->id)->first();
+
+            if (!$task) {
+                $baseProcessSla = (int) ($ticket->service?->sla_process_minutes ?? $ticket->service?->sla_minutes ?? 240);
+                $task = TicketTask::create([
+                    'ticket_id'        => $ticket->id,
+                    'service_id'       => $ticket->service_id ?? 1,
+                    'ticket_status_id' => $ticket->ticket_status_id,
+                    'created_by'       => Auth::id() ?? 1,
+                    'received_at'      => $now,
+                    'started_at'       => null,
+                    'created_at'       => $now,
+                    'updated_at'       => $now,
+                ]);
+
+                TicketTaskActivity::create([
+                    'ticket_task_id'          => $task->id,
+                    'service_activities_id'   => null,
+                    'name_snapshot'           => 'Penanganan Tiket oleh Teknisi',
+                    'sort_order'              => 1,
+                    'target_minutes_snapshot' => $baseProcessSla,
+                    'paused_seconds'          => 0,
+                    'is_sla_met'              => null,
+                    'created_at'              => $now,
+                    'updated_at'              => $now,
+                ]);
+            } else {
+                $hasActivities = TicketTaskActivity::where('ticket_task_id', $task->id)->exists();
+                if (!$hasActivities) {
+                    $baseProcessSla = (int) ($ticket->service?->sla_process_minutes ?? $ticket->service?->sla_minutes ?? 240);
+                    TicketTaskActivity::create([
+                        'ticket_task_id'          => $task->id,
+                        'service_activities_id'   => null,
+                        'name_snapshot'           => 'Penanganan Tiket oleh Teknisi',
+                        'sort_order'              => 1,
+                        'target_minutes_snapshot' => $baseProcessSla,
+                        'paused_seconds'          => 0,
+                        'is_sla_met'              => null,
+                        'created_at'              => $now,
+                        'updated_at'              => $now,
+                    ]);
+                }
+            }
+
+            $nextSort = (TicketTaskActivity::where('ticket_task_id', $task->id)->max('sort_order') ?? 0) + 1;
+
+            TicketTaskActivity::create([
+                'ticket_task_id'          => $task->id,
+                'service_activities_id'   => null,
+                'name_snapshot'           => "Penambahan Waktu SLA (+{$addedMinutes} Menit)",
+                'sort_order'              => $nextSort,
+                'target_minutes_snapshot' => $addedMinutes,
+                'paused_seconds'          => 0,
+                'is_sla_met'              => null,
+                'created_at'              => $now,
+                'updated_at'              => $now,
+            ]);
+
+            $task->touch();
+
+            TicketStatusHistory::create([
+                'ticket_id'        => $ticket->id,
+                'ticket_task_id'   => $task->id,
+                'ticket_status_id' => $ticket->ticket_status_id,
+                'changed_by'       => Auth::id() ?? 1,
+                'note'             => "[SLA_EXTENDED] Penambahan SLA sebesar {$addedMinutes} menit. Alasan/Catatan: {$reason}",
+            ]);
+
+            $ticket->touch();
+        });
+
+        return redirect()->route('bidang.triage')->with('success', "Target SLA tiket {$ticket->ticket_number} berhasil ditambah {$addedMinutes} menit.");
     }
 }

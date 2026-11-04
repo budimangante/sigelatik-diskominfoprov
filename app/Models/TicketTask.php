@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany; // <-- Pastikan ini di-import
 use App\Models\Tickets;
 use App\Models\TicketMessage;
 use App\Models\Services;
@@ -27,7 +28,12 @@ class TicketTask extends Model
         'updated_type',
     ];
 
-    public function ticketTaskActivity():HasMany
+    public function assignees(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'ticket_task_assignees', 'ticket_task_id', 'user_id');
+    }
+
+    public function ticketTaskActivity(): HasMany
     {
         return $this->hasMany(TicketTaskActivity::class, 'ticket_task_id');
     }
@@ -41,6 +47,7 @@ class TicketTask extends Model
     {
         return $this->hasMany(TicketMessage::class);
     }
+
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Tickets::class, 'ticket_id');
@@ -60,6 +67,7 @@ class TicketTask extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
     public function taskReport(): HasMany
     {
         return $this->hasMany(TaskReports::class, 'ticket_task_id');

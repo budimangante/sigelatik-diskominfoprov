@@ -62,6 +62,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(Employments::class, 'user_id');
     }
+    
 
     public function tickets(): HasMany
     {

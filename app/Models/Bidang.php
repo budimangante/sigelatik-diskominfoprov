@@ -15,6 +15,7 @@ class Bidang extends Model
     protected $fillable = [
         'perangkat_daerah_id',
         'name',
+        'code',
     ];
 
     
@@ -27,6 +28,7 @@ class Bidang extends Model
     {
         return $this->belongsTo(PerangkatDaerah::class, 'perangkat_daerah_id');
     }
+    
 
     public function service(): HasMany
     {

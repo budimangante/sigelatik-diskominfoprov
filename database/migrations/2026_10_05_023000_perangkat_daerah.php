@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('perangkat_daerah', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('code')->unique();
+            $table->string('code', 50)->nullable();
             $table->enum('type', ['dinas', 'badan', 'sekretariat', 'inspektorat', 'kecamatan']);
             $table->timestamps();
         });

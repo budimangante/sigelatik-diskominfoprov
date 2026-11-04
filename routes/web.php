@@ -9,10 +9,20 @@ use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\TicketMessageController;
+use App\Http\Controllers\Web\PrioritasTiketController;
 use App\Http\Controllers\Web\TeknisiController;
 use App\Http\Controllers\Web\ForwardController;
 use App\Http\Controllers\Web\BidangController;
-
+use App\Http\Controllers\Web\DaftarTiketController;
+use App\Http\Controllers\Web\NotifikasiController;
+use App\Http\Controllers\Web\PenggunaController;
+use App\Http\Controllers\Web\PerangkatDaerahController;
+use App\Http\Controllers\Web\KategoriTiketController;
+use App\Http\Controllers\Web\SeranganKeamananController;
+use App\Http\Controllers\Web\PemprovSlaController;
+use App\Http\Controllers\Web\SuperAdminController;
+use App\Http\Controllers\Web\MonitoringTiketControllerPemprov;
+use App\Models\PerangkatDaerah;
 
 Route::get('/{section?}', function ($section = null) {
     return view('beranda.index-beranda', ['activeSection' => $section]);
@@ -63,7 +73,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
  
     Route::middleware('role:super_admin')->prefix('superadmin')->group(function () {
-        Route::view('/', 'superadmin.index')->name('superadmin.index');
+        Route::get('/', [SuperAdminController::class, 'index'])->name('superadmin.index');
+
         Route::view('/profil/tentang-kami', 'superadmin.profil-tentang')->name('profil.tentang');
         Route::view('/profil/sub-layanan', 'superadmin.profil-sub')->name('profil.sub');
         Route::view('/profil/team-infrastruktur', 'superadmin.profil-team')->name('profil.team');
@@ -73,21 +84,56 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/metro/jaringan', 'superadmin.metro-jaringan')->name('metro.jaringan');
         Route::view('/device/software', 'superadmin.device-software')->name('device.software');
         Route::view('/device/hardware', 'superadmin.device-hardware')->name('device.hardware');
-        Route::view('/serangan', 'superadmin.serangan')->name('serangan');
+        Route::get('/serangan', [SeranganKeamananController::class, 'index'])->name('serangan');
         Route::view('/gangguan', 'superadmin.gangguan')->name('gangguan');
-        Route::view('/kategori-ticket', 'superadmin.kategori-ticket')->name('kategori.ticket');
-        Route::view('/prioritas-ticket', 'superadmin.prioritas-ticket')->name('prioritas.ticket');
-        Route::view('/daftar-ticket', 'superadmin.daftar-ticket')->name('daftar.ticket');
-        Route::view('/perangkat', 'superadmin.perangkat')->name('perangkat');
-        Route::view('/bidang', 'superadmin.bidang')->name('bidang');
-        Route::view('/notifikasi', 'superadmin.notifikasi')->name('notifikasi');
-        Route::view('/pengguna', 'superadmin.pengguna')->name('pengguna');
+        
+        Route::get('/kategori-ticket', [KategoriTiketController::class, 'index'])->name('kategori.ticket');
+
+        Route::get('/prioritas-ticket', [PrioritasTiketController::class, 'prioritasIndex'])->name('prioritas.ticket');
+
+        //daftar tiket
+        Route::get('/daftar-ticket', [DaftarTiketController::class, 'index'])->name('daftar.ticket');
+        Route::post('/daftar-ticket', [DaftarTiketController::class, 'store'])->name('daftar.ticket.store');
+        Route::put('/daftar-ticket/{ticket}', [DaftarTiketController::class, 'update'])->name('daftar.ticket.update');
+        Route::delete('/daftar-ticket/{ticket}', [DaftarTiketController::class, 'destroy'])->name('daftar.ticket.destroy'); 
+
+        
+        // Manajemen Notifikasi
+        Route::get('/notifikasi', [NotifikasiController::class, 'notifikasiIndex'])->name('notifikasi');
+        Route::post('/notifikasi/{id}/baca', [NotifikasiController::class, 'markNotificationAsRead'])->name('notifikasi.baca');
+        Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'markAllNotificationsAsRead'])->name('notifikasi.bacaSemua');
+        Route::delete('/notifikasi/{id}', [NotifikasiController::class, 'destroyNotification'])->name('notifikasi.destroy');
+        Route::post('/notifikasi/broadcast', [NotifikasiController::class, 'broadcastNotification'])->name('notifikasi.broadcast');
+        
+        // Manajemen Dinas
+        Route::get('/perangkat', [PerangkatDaerahController::class, 'perangkatIndex'])->name('perangkat');
+        Route::post('/perangkat', [PerangkatDaerahController::class, 'storePerangkat'])->name('perangkat.store');
+        Route::put('/perangkat/{perangkatDaerah}', [PerangkatDaerahController::class, 'updatePerangkat'])->name('perangkat.update');
+        Route::delete('/perangkat/{perangkatDaerah}', [PerangkatDaerahController::class, 'destroyPerangkat'])->name('perangkat.destroy');
+
+        // Manajemen Bidang
+        Route::get('/bidang', [SuperAdminController::class, 'bidangIndex'])->name('bidang');
+        Route::post('/bidang', [SuperAdminController::class, 'storeBidang'])->name('bidang.store');
+        Route::put('/bidang/{bidang}', [SuperAdminController::class, 'updateBidang'])->name('bidang.update');
+        Route::delete('/bidang/{bidang}', [SuperAdminController::class, 'destroyBidang'])->name('bidang.destroy');
+        //pengguna
+
+        Route::get('/pengguna', [PenggunaController::class, 'penggunaIndex'])->name('pengguna');
+        Route::get('/pengguna/cek-nip', [PenggunaController::class, 'cekNipBkd'])->name('pengguna.cekNip');
+        Route::post('/pengguna', [PenggunaController::class, 'storePengguna'])->name('pengguna.store');
+        Route::put('/pengguna/{user}', [PenggunaController::class, 'updatePengguna'])->name('pengguna.update');
+        Route::delete('/pengguna/{user}', [PenggunaController::class, 'destroyPengguna'])->name('pengguna.destroy');
     });
 
     Route::middleware('role:admin_pemprov')->prefix('admin')->name('admin.')->group(function () {
-        Route::view('/', 'admin.index')->name('index');
-        Route::view('/monitoring', 'admin.monitoring')->name('monitoring');
-        Route::view('/kinerja', 'admin.kinerja')->name('kinerja');
+        Route::get('/', [PemprovSlaController::class, 'index'])->name('index');
+        // 
+        // Route::view('/monitoring', 'admin.monitoring')->name('monitoring');
+        Route::get('/monitoring', [MonitoringTiketControllerPemprov::class, 'index'])->name('monitoring');
+        // Route::view('/kinerja', 'admin.kinerja')->name('kinerja');
+        Route::get('/kinerja', [MonitoringTiketControllerPemprov::class, 'kinerjaIndex'])->name('kinerja');
+        // Route::get('/kinerja', [::class, 'kinerjaIndex'])->name('index.kinerja');
+        // Route::get('/laporan', [::class, 'laporanIndex'])->name('index.laporan');
         Route::view('/laporan', 'admin.laporan')->name('laporan');
     });
  
@@ -122,6 +168,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/triage/{ticket}/process', [BidangController::class, 'processTriage'])->name('triage.process');
         Route::post('/triage/{ticket}/pending', [BidangController::class, 'pendingTriage'])->name('triage.pending');
         Route::post('/triage/{ticket}/reassign', [BidangController::class, 'reassignTeknisi'])->name('triage.reassign');
+        Route::post('/triage/{ticket}/tambahsla', [BidangController::class, 'tambahSla'])->name('triage.tambahSla');
+
     });
 
     Route::middleware('role:teknisi')->prefix('teknisi')->name('teknisi.')->group(function () {
@@ -132,11 +180,12 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::middleware(['auth', 'role:pelapor'])->prefix('user')->name('user.')->group(function () {
-        Route::view('/', 'user.index')->name('index');
-        Route::get('/tiket', [UserController::class, 'myTickets'])->name('tiket');
-        Route::get('/tickets', [UserController::class, 'myTickets'])->name('tickets.index');
+        Route::get('/', [UserController::class, 'createTicket'])->name('index');
         Route::get('/tiket/buat', [UserController::class, 'createTicket'])->name('tickets.create');
         Route::post('/tiket/simpan', [UserController::class, 'storeTicket'])->name('tickets.store');
+
+        Route::get('/tiket', [UserController::class, 'myTickets'])->name('tiket');
+        Route::get('/tickets', [UserController::class, 'myTickets'])->name('tickets.index');
         Route::get('/chat', [UserController::class, 'chat'])->name('chat');
     });
 

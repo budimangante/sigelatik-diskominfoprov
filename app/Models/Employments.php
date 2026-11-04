@@ -11,6 +11,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Employments extends Model
 {
     protected $table = 'employments';
+    protected $fillable = [
+        'user_id',
+        'perangkat_daerah_id',
+        'bidang_id',
+        'nip',
+        'name',
+        'position_title',
+        'started_at',
+        'ended_at',
+        'end_reason',
+        'source',
+        'current_flag',
+        'description',
+    ];
     public function user() : BelongsTo
     {
         return $this->belongsTo(User::class);

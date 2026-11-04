@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tickets;
 use App\Models\Files;
-use App\Models\TicketStatusHistory;
+use App\Models\Tickets;
 use App\Models\TicketStatuses;
+use App\Models\TicketStatusHistory;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -19,9 +19,6 @@ use Illuminate\View\View;
 
 class TeknisiController extends Controller
 {
-    /**
-     * Helper pemformat menit ke label teks
-     */
     private function formatMinutes(int $minutes): string
     {
         if ($minutes < 60) {
@@ -38,23 +35,75 @@ class TeknisiController extends Controller
     }
 
     /**
+     * Ambil ID status tiket secara dinamis sesuai database
+     */
+    private function getStatusId(string $type): int
+    {
+        $status = match(strtolower($type)) {
+            'diproses', 'process', 'in_progress' => TicketStatuses::where('code', 'diproses')
+                ->orWhere('name', 'like', '%proses%')
+                ->first(),
+            'pending', 'tunda' => TicketStatuses::where('code', 'pending')
+                ->orWhere('name', 'like', '%pending%')
+                ->orWhere('name', 'like', '%tunda%')
+                ->first(),
+            'selesai', 'closed', 'resolved', 'solved' => TicketStatuses::where('code', 'selesai')
+                ->orWhere('name', 'like', '%selesai%')
+                ->orWhere('name', 'like', '%closed%')
+                ->first(),
+            default => TicketStatuses::where('code', 'baru')
+                ->orWhere('name', 'like', '%baru%')
+                ->first(),
+        };
+
+        if ($status) {
+            return (int) $status->id;
+        }
+
+        $newStatus = TicketStatuses::create([
+            'name'       => ucfirst($type),
+            'code'       => strtolower($type),
+            'sort_order' => 1,
+        ]);
+
+        return (int) $newStatus->id;
+    }
+
+    /**
      * Halaman Daftar Tugas Tiket Teknisi
      */
     public function index(Request $request): View
     {
         $userId = Auth::id();
 
-        // 1. Ambil ID tiket yang ditugaskan khusus ke teknisi yang login
+        // 1. Ambil ID tiket yang ditugaskan ke teknisi login (Cari via relasi tabel pivot)
         $assignedTicketIds = DB::table('ticket_task_assignees')
             ->join('tickets_task', 'tickets_task.id', '=', 'ticket_task_assignees.ticket_task_id')
             ->where('ticket_task_assignees.user_id', $userId)
             ->pluck('tickets_task.ticket_id')
+            ->unique()
             ->toArray();
 
-        // 2. Filter tiket aktif teknisi (Status: 1, 2, 3)
-        $query = Tickets::with(['user', 'status', 'service'])
-            ->whereIn('id', $assignedTicketIds)
-            ->whereIn('ticket_status_id', [1, 2, 3]);
+        // 2. Ambil ID status selesai/tutup agar tidak mematikan tiket yang ber-ID dinamis
+        $closedStatusIds = TicketStatuses::where(function ($q) {
+            $q->where('code', 'like', '%selesai%')
+              ->orWhere('code', 'like', '%closed%')
+              ->orWhere('code', 'like', '%solved%')
+              ->orWhere('code', 'like', '%batal%')
+              ->orWhere('name', 'like', '%selesai%')
+              ->orWhere('name', 'like', '%tutup%')
+              ->orWhere('name', 'like', '%batal%');
+        })->pluck('id')->toArray();
+
+        // 3. Query Tiket Aktif Teknisi
+        $query = Tickets::with(['user', 'status', 'service', 'perangkatDaerah'])
+            ->where(function ($q) use ($assignedTicketIds, $userId) {
+                $q->whereIn('id', $assignedTicketIds)
+                  ->orWhereHas('tasks.assignees', fn($sq) => $sq->where('users.id', $userId));
+            })
+            ->whereNotIn('ticket_status_id', $closedStatusIds)
+            ->whereNull('solved_at')
+            ->whereNull('cancelled_at');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -69,16 +118,17 @@ class TeknisiController extends Controller
         }
 
         $now = now();
+        $pendingId = $this->getStatusId('pending');
+
         $tickets = $query->withCount(['messages as unread_messages_count' => function ($q) use ($userId) {
                 $q->where('user_id', '!=', $userId)
                   ->whereNull('read_at');
             }])
             ->latest('updated_at')
             ->get()
-            ->map(function ($ticket) use ($now) {
+            ->map(function ($ticket) use ($now, $pendingId) {
                 $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
 
-                // Ambil target SLA Penanganan riil dari snapshot aktivitas penanganan
                 $taskMinutes = 0;
                 if ($task) {
                     $taskMinutes = (int) DB::table('ticket_task_activities')
@@ -100,7 +150,7 @@ class TeknisiController extends Controller
                     $ticket->sla_progress = 0;
                     $ticket->is_overdue = false;
                     $ticket->sla_status = 'not_started';
-                } elseif ($ticket->ticket_status_id == 3) {
+                } elseif ($ticket->ticket_status_id == $pendingId) {
                     $freezeTime = $ticket->updated_at ? Carbon::parse($ticket->updated_at) : $now;
                     $elapsed = max(0, (int) Carbon::parse($task->started_at)->diffInMinutes($freezeTime));
                     $ticket->sla_progress = min(100, (int) round(($elapsed / max(1, $targetSla)) * 100));
@@ -116,7 +166,10 @@ class TeknisiController extends Controller
                 return $ticket;
             });
 
-        $statuses = TicketStatuses::whereIn('id', [1, 2, 3])->orderBy('sort_order')->get();
+        // Ambil status aktif secara dinamis untuk filter view
+        $statuses = TicketStatuses::whereNotIn('id', $closedStatusIds)
+            ->orderBy('sort_order', 'asc')
+            ->get();
 
         return view('teknisi.index', compact('tickets', 'statuses'));
     }
@@ -124,57 +177,58 @@ class TeknisiController extends Controller
     /**
      * Halaman Workspace Detail Pengerjaan Tiket & Form Penanganan
      */
-   /**
-     * Halaman Workspace Detail Pengerjaan Tiket & Form Penanganan
-     */
     public function show(Tickets $ticket): View
     {
-        // 1. Eager load SEMUA relasi sekaligus untuk mematikan query N+1
         $ticket->loadMissing([
             'user', 
             'status', 
             'service', 
+            'perangkatDaerah',
             'statusHistories.user',
             'messages.user'
         ]);
 
-        $task = DB::table('tickets_task')->where('ticket_id',$ticket->id)->first();
+        $task = DB::table('tickets_task')->where('ticket_id', $ticket->id)->first();
 
-        // 2. Ambil target durasi penanganan
         $taskMinutes = 0;
-        if ($task) {$taskMinutes = (int) DB::table('ticket_task_activities')
+        if ($task) {
+            $taskMinutes = (int) DB::table('ticket_task_activities')
                 ->where('ticket_task_id', $task->id)
                 ->sum('target_minutes_snapshot');
         }
 
-        $targetSla =$taskMinutes > 0 
+        $targetSla = $taskMinutes > 0 
             ? $taskMinutes 
             : (int) ($ticket->service?->sla_minutes ?? 240);
 
-        $slaHours = round($targetSla / 60, 1);$targetLabel = $this->formatMinutes($targetSla);
+        $slaHours = round($targetSla / 60, 1);
+        $targetLabel = $this->formatMinutes($targetSla);
         $isStarted = !empty($task?->started_at);
 
-        // Ambil ID Status secara dinamis
-        $statusProsesId  = DB::table('ticket_statuses')->where('name', 'like', '%proses%')->orWhere('code', 'process')->value('id') ?? 2;
-        $statusPendingId = DB::table('ticket_statuses')->where('name', 'like', '%pending%')->orWhere('code', 'pending')->value('id') ?? 3;
-        $statusSelesaiId = DB::table('ticket_statuses')->where('name', 'like', '%selesai%')->orWhere('code', 'solved')->value('id') ?? 4;
+        $statusProsesId  = $this->getStatusId('diproses');
+        $statusPendingId = $this->getStatusId('pending');
+        $statusSelesaiId = $this->getStatusId('selesai');
 
-        $currentStatusId = (int)$ticket->ticket_status_id;
-        $isPaused = ($currentStatusId === (int)$statusPendingId);
+        $currentStatusId = (int) $ticket->ticket_status_id;
+        $isPaused = ($currentStatusId === $statusPendingId);
 
         $dueAt = null;
         $remainingSeconds = 0;
         $isOverdue = false;
 
-        if ($isStarted) {$startTime = Carbon::parse($task->started_at);$dueAt = $startTime->copy()->addMinutes($targetSla);
+        if ($isStarted) {
+            $startTime = Carbon::parse($task->started_at);
+            $dueAt = $startTime->copy()->addMinutes($targetSla);
 
             if ($isPaused) {
-                $freezeTime =$ticket->updated_at ? Carbon::parse($ticket->updated_at) : now();$elapsed = (int) $startTime->diffInMinutes($freezeTime);
-                $remainingSeconds = max(0, ($targetSla - $elapsed) * 60);$isOverdue = $elapsed >=$targetSla;
+                $freezeTime = $ticket->updated_at ? Carbon::parse($ticket->updated_at) : now();
+                $elapsed = (int) $startTime->diffInMinutes($freezeTime);
+                $remainingSeconds = max(0, ($targetSla - $elapsed) * 60);
+                $isOverdue = $elapsed >= $targetSla;
             } else {
                 $diffSecs = (int) now()->diffInSeconds($dueAt, false);
-                $isOverdue =$diffSecs <= 0;
-                $remainingSeconds = max(0,$diffSecs);
+                $isOverdue = $diffSecs <= 0;
+                $remainingSeconds = max(0, $diffSecs);
             }
         }
 
@@ -200,26 +254,28 @@ class TeknisiController extends Controller
      */
     public function startWork(Tickets $ticket): RedirectResponse
     {
-        DB::transaction(function () use ($ticket) {
+        $statusProsesId = $this->getStatusId('diproses');
+
+        DB::transaction(function () use ($ticket, $statusProsesId) {
             $now = now();
             $taskId = DB::table('tickets_task')->where('ticket_id', $ticket->id)->value('id');
 
             if ($taskId) {
                 DB::table('tickets_task')->where('id', $taskId)->update([
                     'started_at'       => $now,
-                    'ticket_status_id' => 2,
+                    'ticket_status_id' => $statusProsesId,
                     'updated_at'       => $now,
                 ]);
             }
 
             $ticket->update([
-                'ticket_status_id' => 2,
+                'ticket_status_id' => $statusProsesId,
             ]);
 
             TicketStatusHistory::create([
                 'ticket_id'        => $ticket->id,
                 'ticket_task_id'   => $taskId,
-                'ticket_status_id' => 2,
+                'ticket_status_id' => $statusProsesId,
                 'changed_by'       => Auth::id() ?? 1,
                 'note'             => 'Teknisi mengonfirmasi penugasan dan mulai menangani tiket.',
             ]);
@@ -241,12 +297,14 @@ class TeknisiController extends Controller
             'document'           => 'nullable|file|mimes:pdf,jpg,png,docx|max:10240',
         ]);
 
-        $isForwarded = $request->boolean('teruskan_ke_bidang');
-        $statusId = $isForwarded ? 4 : (int) $request->ticket_status_id;
+        $statusSelesaiId = $this->getStatusId('selesai');
+        $statusPendingId = $this->getStatusId('pending');
 
-        // Status 4 = Selesai, Status 3 = Pending, Status 2 = Diproses
-        $isFinal = in_array($statusId, [4, 5]);
-        $isPending = ($statusId === 3);
+        $isForwarded = $request->boolean('teruskan_ke_bidang');
+        $statusId = $isForwarded ? $statusSelesaiId : (int) $request->ticket_status_id;
+
+        $isFinal = ($statusId === $statusSelesaiId);
+        $isPending = ($statusId === $statusPendingId);
 
         // 1. Simpan dokumen lampiran jika ada
         if ($request->hasFile('document')) {
@@ -295,7 +353,7 @@ class TeknisiController extends Controller
             }
         }
 
-        // 4. Catat Riwayat & Alasan
+        // 4. Catat Riwayat
         try {
             if (Schema::hasTable('ticket_status_histories')) {
                 $historiesColumns = Schema::getColumnListing('ticket_status_histories');
@@ -365,9 +423,18 @@ class TeknisiController extends Controller
             ->pluck('tickets_task.ticket_id')
             ->toArray();
 
-        $query = Tickets::with(['user', 'status', 'service'])
-            ->whereIn('id', $assignedTicketIds)
-            ->whereIn('ticket_status_id', [4, 5]);
+        $statusSelesaiId = $this->getStatusId('selesai');
+
+        $query = Tickets::with(['user', 'status', 'service', 'perangkatDaerah'])
+            ->where(function ($q) use ($assignedTicketIds, $userId) {
+                $q->whereIn('id', $assignedTicketIds)
+                  ->orWhereHas('tasks.assignees', fn($sq) => $sq->where('users.id', $userId));
+            })
+            ->where(function ($q) use ($statusSelesaiId) {
+                $q->where('ticket_status_id', $statusSelesaiId)
+                  ->orWhereNotNull('solved_at')
+                  ->orWhereNotNull('cancelled_at');
+            });
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -395,6 +462,7 @@ class TeknisiController extends Controller
             'user', 
             'status', 
             'service', 
+            'perangkatDaerah',
             'messages.user', 
             'statusHistories' => function ($q) {
                 $q->reorder('id', 'asc');
