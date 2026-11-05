@@ -25,6 +25,20 @@
                 @endif
             </a>
         </nav>
+
+        <nav class="p-4 space-y-1">
+            
+            <!-- Kategori UTAMA -->
+            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Laporan</p>
+            <a href="{{ route('dinas.laporan') }}" class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-semibold {{ request()->routeIs('dinas.laporan') ? 'bg-[#f4f7fb] text-[#1a3668]' : 'text-[#4b5563] hover:bg-gray-50' }}">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-file-alt w-5"></i> Laporan SLA Dinas
+                </div>
+                @if(request()->routeIs('dinas.laporan'))
+                    <i class="fas fa-circle text-[6px]"></i>
+                @endif
+            </a>
+        </nav>
     </div>
 
     <!-- AREA PROFIL ADMIN (DI LUAR SCROLL) -->

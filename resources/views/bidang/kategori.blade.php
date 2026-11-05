@@ -20,29 +20,16 @@
         <div class="flex items-center gap-3">
             <button type="button" 
                     onclick="bukaModalTambahKategori()"
-                    class="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:text-[#1a3668] hover:border-slate-300 rounded-xl text-xs font-bold shadow-2xs transition">
+                    class="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:text-[#1a3668] hover:border-slate-300 rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                 + Tambah Kategori
             </button>
             <button type="button" 
                     onclick="bukaModalTambahLayanan()"
-                    class="px-4 py-2 bg-[#1a3668] hover:bg-[#122548] text-white rounded-xl text-xs font-bold shadow-2xs transition">
+                    class="px-4 py-2 bg-[#1a3668] hover:bg-[#122548] text-white rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer">
                 + Tambah Layanan
             </button>
         </div>
     </div>
-
-    <!-- Alert Notifikasi -->
-    @if(session('success'))
-        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-2xs">
-            <div class="flex items-center gap-2.5">
-                <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-            <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700">
-                <i class="fas fa-times text-xs"></i>
-            </button>
-        </div>
-    @endif
 
     @if($errors->any())
         <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold space-y-1 shadow-2xs">
@@ -67,11 +54,21 @@
                             {{ count($cat->services) }} Layanan
                         </span>
                     </div>
+
+                    <!-- Tombol Aksi Kategori: Tambah Sub-Layanan & Hapus Kategori -->
                     <div class="flex items-center gap-3 text-xs font-semibold">
                         <button type="button" 
                                 onclick="bukaModalTambahLayanan({{ $cat->id }})"
-                                class="text-slate-600 hover:text-[#1a3668] transition">
+                                class="text-slate-600 hover:text-[#1a3668] transition cursor-pointer">
                             + Tambah Sub-Layanan
+                        </button>
+                        <span class="text-slate-200">•</span>
+                        <button type="button"
+                                onclick="konfirmasiHapus('/bidang/kategori/{{ $cat->id }}', 'Kategori', '{{ addslashes($cat->name) }}')"
+                                class="text-rose-500 hover:text-rose-700 transition flex items-center gap-1 cursor-pointer"
+                                title="Hapus Kategori Ini">
+                            <i class="fas fa-trash-alt text-[11px]"></i>
+                            <span>Hapus Kategori</span>
                         </button>
                     </div>
                 </div>
@@ -85,7 +82,7 @@
                                 <th class="px-6 py-3.5">DESKRIPSI</th>
                                 <th class="px-6 py-3.5 w-48">TARGET SLA</th>
                                 <th class="px-6 py-3.5 w-28">STATUS</th>
-                                <th class="px-6 py-3.5 w-24 text-center">AKSI</th>
+                                <th class="px-6 py-3.5 w-32 text-center">AKSI</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-xs">
@@ -108,11 +105,21 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 align-middle text-center">
-                                        <button type="button" 
-                                                onclick="bukaModalEditLayanan({{ $svc->id }}, '{{ addslashes($svc->name) }}', {{ $svc->sla_minutes_val }}, '{{ $svc->work_hours ?? '08:00 - 15:00 WITA' }}')"
-                                                class="text-blue-600 hover:text-blue-800 font-bold hover:underline transition">
-                                            Edit
-                                        </button>
+                                        <div class="flex items-center justify-center gap-3">
+                                            <!-- Tombol Edit -->
+                                            <button type="button" 
+                                                    onclick="bukaModalEditLayanan({{ $svc->id }}, '{{ addslashes($svc->name) }}', {{ $svc->sla_minutes_val }}, '{{ $svc->work_hours ?? '08:00 - 15:00 WITA' }}')"
+                                                    class="text-blue-600 hover:text-blue-800 font-bold hover:underline transition cursor-pointer">
+                                                Edit
+                                            </button>
+                                            <span class="text-slate-200">|</span>
+                                            <!-- Tombol Hapus Layanan -->
+                                            <button type="button"
+                                                    onclick="konfirmasiHapus('/bidang/layanan/{{ $svc->id }}', 'Sub-Layanan', '{{ addslashes($svc->name) }}')"
+                                                    class="text-rose-500 hover:text-rose-700 font-bold hover:underline transition cursor-pointer">
+                                                Hapus
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -143,7 +150,7 @@
                 <i class="fas fa-folder-plus text-blue-200"></i>
                 <span>Tambah Kategori Baru</span>
             </h3>
-            <button type="button" onclick="tutupModal('modalTambahKategori')" class="text-white/70 hover:text-white p-1">
+            <button type="button" onclick="tutupModal('modalTambahKategori')" class="text-white/70 hover:text-white p-1 cursor-pointer">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
@@ -159,10 +166,10 @@
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button type="button" onclick="tutupModal('modalTambahKategori')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition">
+                <button type="button" onclick="tutupModal('modalTambahKategori')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                     Simpan Kategori
                 </button>
             </div>
@@ -178,7 +185,7 @@
                 <i class="fas fa-plus-circle text-blue-200"></i>
                 <span>Tambah Sub-Layanan Baru</span>
             </h3>
-            <button type="button" onclick="tutupModal('modalTambahLayanan')" class="text-white/70 hover:text-white p-1">
+            <button type="button" onclick="tutupModal('modalTambahLayanan')" class="text-white/70 hover:text-white p-1 cursor-pointer">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
@@ -271,10 +278,10 @@
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button type="button" onclick="tutupModal('modalTambahLayanan')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition">
+                <button type="button" onclick="tutupModal('modalTambahLayanan')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                     Simpan Layanan
                 </button>
             </div>
@@ -290,7 +297,7 @@
                 <i class="fas fa-edit text-blue-200"></i>
                 <span>Edit Target SLA Layanan</span>
             </h3>
-            <button type="button" onclick="tutupModal('modalEditLayanan')" class="text-white/70 hover:text-white p-1">
+            <button type="button" onclick="tutupModal('modalEditLayanan')" class="text-white/70 hover:text-white p-1 cursor-pointer">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
@@ -327,13 +334,39 @@
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button type="button" onclick="tutupModal('modalEditLayanan')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition">
+                <button type="button" onclick="tutupModal('modalEditLayanan')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                     Perbarui SLA
                 </button>
             </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= MODAL 4: KONFIRMASI HAPUS UNIVERSAL ================= -->
+<div id="modalKonfirmasiHapus" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
+        <div class="p-6 text-center">
+            <div class="w-14 h-14 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500 text-xl">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-800 mb-1">Konfirmasi Penghapusan</h3>
+            <p class="text-xs text-slate-500" id="pesanKonfirmasiHapus">
+                Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.
+            </p>
+        </div>
+
+        <form id="formHapusUniversal" method="POST" action="" class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+            @csrf
+            @method('DELETE')
+            <button type="button" onclick="tutupModal('modalKonfirmasiHapus')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200/60 transition cursor-pointer">
+                Batal
+            </button>
+            <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                Ya, Hapus
+            </button>
         </form>
     </div>
 </div>
@@ -356,6 +389,13 @@
         document.getElementById('editServiceWorkHours').value = workHours;
         document.getElementById('formEditLayanan').action = '/bidang/layanan/' + serviceId + '/sla';
         document.getElementById('modalEditLayanan').classList.remove('hidden');
+    }
+
+    // Modal Konfirmasi Hapus Universal (Bisa untuk Kategori & Layanan)
+    function konfirmasiHapus(actionUrl, jenis, nama) {
+        document.getElementById('formHapusUniversal').action = actionUrl;
+        document.getElementById('pesanKonfirmasiHapus').innerHTML = `Apakah Anda yakin ingin menghapus ${jenis} <strong>"${nama}"</strong>? Tindakan ini permanen.`;
+        document.getElementById('modalKonfirmasiHapus').classList.remove('hidden');
     }
 
     function tutupModal(modalId) {

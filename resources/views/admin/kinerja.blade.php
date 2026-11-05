@@ -50,7 +50,7 @@
             <div class="pb-3 border-b border-slate-100 flex items-start justify-between">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">IDX:EFF</span>
+
                         <h3 class="text-sm font-bold text-slate-800">Indeks Kepatuhan & Efektivitas</h3>
                     </div>
                     <div class="flex items-baseline gap-2 mt-2">
@@ -94,7 +94,6 @@
             <div class="pb-3 border-b border-slate-100 flex items-start justify-between">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">VOL:SLA</span>
                         <h3 class="text-sm font-bold text-slate-800">Kecepatan Resolusi SLA</h3>
                     </div>
                     <div class="flex items-baseline gap-2 mt-2">

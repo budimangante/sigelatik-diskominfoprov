@@ -8,6 +8,7 @@ use App\Charts\AverageSlaChart;
 use App\Charts\TicketCategoryChart;
 use App\Charts\TicketStatusChart;
 use App\Charts\UserVerificationChart;
+use App\Charts\GangguanLayananService;
 use App\Models\Bidang;
 use App\Models\PerangkatDaerah;
 use App\Models\Roles;
@@ -30,7 +31,6 @@ class SuperAdminController extends Controller
             ->whereYear('created_at', now()->year)
             ->count();
 
-        // Eloquent Relationship Checks
         $activeOpdCount = Bidang::whereHas('perangkatDaerah')->count();
         $totalBidang = Bidang::count();
 
@@ -67,9 +67,6 @@ class SuperAdminController extends Controller
         ));
     }
 
-    /**
-     * Tampilkan Pengguna dengan Eager Loading Relasi Roles & Kepegawaian
-     */
 
     public function bidangIndex(Request $request): View
     {
@@ -78,7 +75,6 @@ class SuperAdminController extends Controller
 
         $perangkatDaerahList = PerangkatDaerah::orderBy('name', 'asc')->get();
 
-        // Eloquent Eager Loading relasi induk + Eager Count relasi pegawai
         $bidangList = Bidang::with(['perangkatDaerah'])
             ->withCount('employments')
             ->when($search, function ($q, $search) {
@@ -97,9 +93,6 @@ class SuperAdminController extends Controller
         return view('superadmin.bidang', compact('bidangList', 'perangkatDaerahList', 'search', 'opdFilter'));
     }
 
-    /**
-     * Tambah Bidang Baru via Eloquent
-     */
     public function storeBidang(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -118,9 +111,7 @@ class SuperAdminController extends Controller
         return redirect()->route('bidang')->with('success', 'Bidang baru berhasil ditambahkan.');
     }  
 
-    /**
-     * Ubah Data Bidang via Eloquent
-     */
+
     public function updateBidang(Request $request, Bidang $bidang): RedirectResponse
     {
         $validated = $request->validate([
@@ -138,9 +129,7 @@ class SuperAdminController extends Controller
         return redirect()->route('bidang')->with('success', "Data bidang {$bidang->name} berhasil diperbarui.");
     }
 
-    /**
-     * Hapus Bidang via Eloquent
-     */
+
     public function destroyBidang(Bidang $bidang): RedirectResponse
     {
         if ($bidang->employments()->exists()) {
@@ -151,6 +140,13 @@ class SuperAdminController extends Controller
         $bidang->delete();
 
         return redirect()->route('bidang')->with('success', "Bidang {$namaBidang} berhasil dihapus.");
+    }
+
+    public function gangguanIndex()
+    {
+        return view('superadmin.gangguan', [
+            'gangguanData' => GangguanLayananService::build(),
+        ]);
     }
 
 }

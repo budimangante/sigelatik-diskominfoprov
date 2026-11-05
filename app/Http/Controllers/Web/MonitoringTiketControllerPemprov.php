@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Charts\KinerjaOpdChart;
 use App\Charts\MonitoringLayananCharts;
+use App\Charts\LaporanSlaDinasService;
 use App\Http\Controllers\Controller;
 use Illuminate\View\View;
 
@@ -25,23 +26,11 @@ class MonitoringTiketControllerPemprov extends Controller
             'kinerjaData' => KinerjaOpdChart::build()
         ]);
     }
-    /**
-     * Menu Kinerja Layanan
-     */
-    // public function kinerjaIndex(): View
-    // {
-    //     return view('admin.kinerja', [
-    //         'monitoringData' => MonitoringLayananChart::build()
-    //     ]);
-    // }
 
-    /**
-     * Menu Laporan Tiket Layanan
-     */
-    // public function laporanIndex(): View
-    // {
-    //     return view('admin.laporan', [
-    //         'monitoringData' => MonitoringLayananChart::build()
-    //     ]);
-    // }
+    public function laporanIndex(): View
+    {
+        return view('admin.laporan', [
+            'laporanData' => LaporanSlaDinasService::build()
+        ]);
+    }
 }

@@ -53,10 +53,10 @@
     </div>
 
     @include('components.b-js')
+
     <script>
-    @if (session('welcome') || session('success') || session('error'))
+        @if (session('welcome') || session('success') || session('error'))
         (function showDashboardToast() {
-            // Cek apakah fungsi showModernToast dari app.ts sudah siap
             if (typeof window.showModernToast === 'function') {
                 @if (session('welcome'))
                     window.showModernToast("{{ session('welcome') }}", 'success');
@@ -66,11 +66,21 @@
                     window.showModernToast("{{ session('error') }}", 'error');
                 @endif
             } else {
-                // Tunggu 100ms jika modul Vite app.ts masih proses load
                 setTimeout(showDashboardToast, 100);
             }
         })();
+        @endif
+
+        (function initReverbListener() {
+            if (typeof window.Echo !== 'undefined' && typeof window.showModernToast === 'function') {
+                window.Echo.channel('services-channel')
+                    .listen('.service.event', (e) => {
+                        window.showModernToast(e.message, e.type || 'success');
+                    });
+            } else {
+                setTimeout(initReverbListener, 150);
+            }
+        })();
     </script>
-    @endif
 </body>
 </html>

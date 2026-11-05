@@ -14,6 +14,7 @@ use App\Http\Controllers\Web\TeknisiController;
 use App\Http\Controllers\Web\ForwardController;
 use App\Http\Controllers\Web\BidangController;
 use App\Http\Controllers\Web\DaftarTiketController;
+use App\Http\Controllers\Web\DinasOverviewController;
 use App\Http\Controllers\Web\NotifikasiController;
 use App\Http\Controllers\Web\PenggunaController;
 use App\Http\Controllers\Web\PerangkatDaerahController;
@@ -75,17 +76,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:super_admin')->prefix('superadmin')->group(function () {
         Route::get('/', [SuperAdminController::class, 'index'])->name('superadmin.index');
 
-        Route::view('/profil/tentang-kami', 'superadmin.profil-tentang')->name('profil.tentang');
-        Route::view('/profil/sub-layanan', 'superadmin.profil-sub')->name('profil.sub');
-        Route::view('/profil/team-infrastruktur', 'superadmin.profil-team')->name('profil.team');
-        Route::view('/profil/link-layanan', 'superadmin.profil-link')->name('profil.link');
-        Route::view('/data/VPS', 'superadmin.data-vps')->name('data.vps');
-        Route::view('/data/WHM', 'superadmin.data-whm')->name('data.whm');
-        Route::view('/metro/jaringan', 'superadmin.metro-jaringan')->name('metro.jaringan');
-        Route::view('/device/software', 'superadmin.device-software')->name('device.software');
-        Route::view('/device/hardware', 'superadmin.device-hardware')->name('device.hardware');
         Route::get('/serangan', [SeranganKeamananController::class, 'index'])->name('serangan');
-        Route::view('/gangguan', 'superadmin.gangguan')->name('gangguan');
+        Route::get('/gangguan', [SuperAdminController::class, 'gangguanIndex'])->name('gangguan');
         
         Route::get('/kategori-ticket', [KategoriTiketController::class, 'index'])->name('kategori.ticket');
 
@@ -134,11 +126,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/kinerja', [MonitoringTiketControllerPemprov::class, 'kinerjaIndex'])->name('kinerja');
         // Route::get('/kinerja', [::class, 'kinerjaIndex'])->name('index.kinerja');
         // Route::get('/laporan', [::class, 'laporanIndex'])->name('index.laporan');
-        Route::view('/laporan', 'admin.laporan')->name('laporan');
+        Route::get('/laporan', [MonitoringTiketControllerPemprov::class, 'laporanIndex'])->name('laporan');
     });
  
     Route::middleware('role:helpdesk_utama')->prefix('dinas')->name('dinas.')->group(function () {
-        Route::view('/', 'dinas.index')->name('index');
+        Route::get('/', [DinasOverviewController::class, 'index'])->name('index');
+        Route::get('/laporan', [DinasOverviewController::class, 'laporanIndex'])->name('laporan');
+        // Route::get('/monitoring', [MonitoringTiketControllerPemprov::class, 'index'])->name('monitoring');
+        // Route::get('/kinerja', [MonitoringTiketControllerPemprov::class, 'kinerjaIndex'])->name('kinerja');
+        // Route::get('/laporan', [MonitoringTiketControllerPemprov::class, 'laporanIndex'])->name('laporan');
     });
 
 
@@ -150,6 +146,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/kategori', [BidangController::class, 'storeCategory'])->name('kategori.store');
         Route::post('/layanan', [BidangController::class, 'storeService'])->name('service.store');
         Route::patch('/layanan/{service}/sla', [BidangController::class, 'updateSla'])->name('service.updateSla');
+        Route::delete('/kategori/{id}', [BidangController::class, 'destroyCategory'])->name('kategori.destroy');
+        Route::delete('/layanan/{id}', [BidangController::class, 'destroyService'])->name('service.destroy');
         
         Route::get('/forward', [ForwardController::class, 'index'])->name('forward');
         Route::post('/forward', [ForwardController::class, 'store'])->name('forward.store');

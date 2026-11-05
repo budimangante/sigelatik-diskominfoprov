@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Events\ServiceUpdatedEvent;
 use App\Models\Bidang;
 use App\Models\Files;
 use App\Models\PerangkatDaerah;
@@ -1192,5 +1193,42 @@ class BidangController extends Controller
         });
 
         return redirect()->route('bidang.triage')->with('success', "Target SLA tiket {$ticket->ticket_number} berhasil ditambah {$addedMinutes} menit.");
+    }
+
+    public function destroyService($id)
+    {
+        $service = Services::withCount('tickets')->findOrFail($id);
+
+        if ($service->tickets_count > 0) {
+            broadcast(new ServiceUpdatedEvent("Sub-layanan '{$service->name}' gagal dihapus karena memiliki tiket aktif.", 'error'));
+            return back();
+        }
+
+        $serviceName = $service->name;
+        $service->delete();
+
+        // Broadcast ke Reverb
+        broadcast(new ServiceUpdatedEvent("Sub-layanan '{$serviceName}' berhasil dihapus.", 'success'));
+
+        return back();
+    }
+
+    public function destroyCategory($id)
+    {
+        $category = ServiceCategory::withCount('services')->findOrFail($id);
+
+        if ($category->services_count > 0) {
+            broadcast(new ServiceUpdatedEvent("Kategori '{$category->name}' gagal dihapus karena masih memuat layanan.", 'error'));
+            return back();
+        }
+
+        $catName = $category->name;
+        $category->delete();
+
+        // Broadcast ke Reverb
+        broadcast(new ServiceUpdatedEvent("Kategori '{$catName}' berhasil dihapus.", 'success'));
+
+        // 2. Beri flash session (agar user yang baru saja klik hapus langsung melihat toast dari b-master)
+        return back()->with('success', "Kategori '{$catName}' berhasil dihapus.");
     }
 }

@@ -21,7 +21,6 @@ class KinerjaOpdChart
               ->orWhere('name', 'like', '%tutup%');
         })->pluck('id')->toArray();
 
-        // 1. GENERATE TIMELINE 6 BULAN (SUMBU X ALA SAHAM)
         $months = [];$timelineLabels = [];
         for ($i = 5; $i >= 0; $i--) {
             $dt = now()->subMonths($i);
@@ -29,11 +28,9 @@ class KinerjaOpdChart
             $timelineLabels[] =$dt->translatedFormat('M Y');
         }
 
-        // Baseline gelombang fluktuasi tren saham bulanan
         $infraWave   = [82, 86, 91, 88, 94, 96];$keamananWave = [88, 85, 93, 90, 95, 98];
         $durasiWave   = [3.8, 3.5, 3.1, 2.9, 2.6, 2.4];$targetWave   = [4.0, 4.0, 4.0, 4.0, 4.0, 4.0];
 
-        // Hitung data bulan berjalan nyata jika ada tiket
         $currentMonthTickets =$tickets->filter(fn($t) => Carbon::parse($t->created_at)->format('Y-m') === now()->format('Y-m'));
         if ($currentMonthTickets->isNotEmpty()) {
             $infraTickets =$currentMonthTickets->filter(fn($t) => str_contains(strtolower($t->service?->category?->name ?? ''), 'infra'));
@@ -45,7 +42,6 @@ class KinerjaOpdChart
             }
         }
 
-        // 2. Kinerja per Dinas (Stacked Bar)
         $groupedDinas = $tickets->groupBy('perangkat_daerah_id');$dinasList = [];
 
         foreach ($groupedDinas as$opdId => $items) {$tot = $items->count();$res = $items->filter(fn($t) => in_array($t->ticket_status_id,$resolvedStatusIds) || !empty($t->solved_at))->count();$proc = max(0, $tot -$res);
