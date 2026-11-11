@@ -4,351 +4,314 @@
 @section('subtitle', 'Evaluasi Kinerja Pelayanan TIK per Dinas dan Bidang')
 
 @section('content')
-<!-- Library Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans space-y-6">
-
-    <!-- 1. Header & Quick Stat Pills -->
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+<div class="min-h-screen space-y-5 bg-[#f3f6f8] p-4 font-sans sm:p-6">
+    <!-- Header and live summary -->
+    <div class="flex flex-col gap-4 rounded-[20px] border border-[#dce4e9] bg-white p-5 shadow-[0_3px_12px_rgba(25,55,75,0.045)] lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">
-                <span class="text-[#1a3668]">MARKET ANALYTICS</span>
-                <span class="text-slate-300">•</span>
-                <span>KINERJA PERANGKAT DAERAH</span>
+            <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#397b9d] shadow-sm">
+                <span class="h-2 w-2 rounded-full bg-[#397b9d]"></span>
+                <span>Analisis Kinerja</span>
+                <span class="text-[#b8c7d0]">•</span>
+                <span>Perangkat Daerah</span>
             </div>
-            <h1 class="text-2xl font-black text-[#1a3668] tracking-tight">
-                Pusat Analisis Kinerja Layanan & SLA
-            </h1>
-            <p class="text-xs text-slate-500 mt-0.5">
-                Pemantauan tren penyelesaian dan durasi layanan dengan indikator volatilitas waktu riil.
-            </p>
+            <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">Pusat Layanan & SLA</h1>
+            <p class="mt-1 text-xs text-[#84929c]">Pemantauan tren penyelesaian dan durasi layanan seluruh perangkat daerah.</p>
         </div>
-
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center min-w-[100px]">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Total Dinas</p>
-                <p class="text-lg font-black text-[#1a3668]">{{ $kinerjaData['total_dinas'] ?? 0 }}</p>
+        <div class="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3 lg:min-w-[420px]">
+            <div class="rounded-xl border border-[#e3eaf0] bg-[#f8fafc] px-3.5 py-2.5 text-center">
+                <p class="text-[9px] font-extrabold uppercase tracking-wider text-[#8b99a3]">Total Dinas</p>
+                <p class="mt-1 text-lg font-extrabold tabular-nums text-[#1d405c]">{{ $kinerjaData['total_dinas'] ?? 0 }}</p>
             </div>
-            <div class="px-4 py-2 bg-blue-50 border border-blue-200 rounded-xl text-center min-w-[100px]">
-                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Total Aduan</p>
-                <p class="text-lg font-black text-blue-600">{{ $kinerjaData['total_tickets'] ?? 0 }}</p>
+            <div class="rounded-xl border border-[#d9e8ef] bg-[#f0f7fa] px-3.5 py-2.5 text-center">
+                <p class="text-[9px] font-extrabold uppercase tracking-wider text-[#4c85a1]">Total Aduan</p>
+                <p class="mt-1 text-lg font-extrabold tabular-nums text-[#347fa5]">{{ $kinerjaData['total_tickets'] ?? 0 }}</p>
             </div>
-            <div class="px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-center min-w-[100px]">
-                <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Rata-rata SLA</p>
-                <p class="text-lg font-black text-emerald-600">{{ $kinerjaData['global_avg_hours'] ?? 0 }}<span class="text-xs font-semibold ml-0.5">Jam</span></p>
+            <div class="rounded-xl border border-[#dcece4] bg-[#f0f8f3] px-3.5 py-2.5 text-center">
+                <p class="text-[9px] font-extrabold uppercase tracking-wider text-[#4d9270]">Rata-rata SLA</p>
+                <p class="mt-1 text-lg font-extrabold tabular-nums text-[#25845c]">{{ $kinerjaData['global_avg_hours'] ?? 0 }}<span class="ml-1 text-[10px]">Jam</span></p>
             </div>
         </div>
     </div>
 
-    <!-- 2. Dua Chart Bergaya Bursa Efek (TradingView / Stock Style) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <!-- Stock Chart 1: Indeks Tren Efektivitas Bidang -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between min-w-0">
-            <!-- Ticker Header -->
-            <div class="pb-3 border-b border-slate-100 flex items-start justify-between">
-                <div>
-                    <div class="flex items-center gap-2">
-
-                        <h3 class="text-sm font-bold text-slate-800">Indeks Kepatuhan & Efektivitas</h3>
+    <!-- Two dynamic trend charts -->
+    <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        <section class="flex min-w-0 flex-col rounded-[20px] border border-[#dce4e9] bg-white p-5 shadow-[0_3px_12px_rgba(25,55,75,0.045)]">
+            <div class="flex items-start justify-between gap-3 border-b border-[#edf1f4] pb-3">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#8b99a3]"><i class="fas fa-chart-line text-[#5a9cba]"></i>Indikator Kinerja</div>
+                    <h2 class="mt-1.5 text-sm font-extrabold text-[#1d405c]">Indeks Kepatuhan & Efektivitas</h2>
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                        <span id="kinerjaLatestValue" class="text-2xl font-extrabold tracking-tight text-[#263746]">—</span>
+                        <span id="kinerjaChangeBadge" class="hidden items-center gap-1 rounded-full bg-[#eaf5ef] px-2 py-1 text-[10px] font-bold text-[#25845c]"></span>
                     </div>
-                    <div class="flex items-baseline gap-2 mt-2">
-                        <span class="text-2xl font-black text-slate-800 font-mono tracking-tight">96.8%</span>
-                        <span class="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
-                            <i class="fas fa-arrow-trend-up"></i> +4.2% Bullish
-                        </span>
-                    </div>
+                    <p id="kinerjaChangeCaption" class="mt-1 text-[10px] text-[#91a0a9]">Nilai terbaru dari seri grafik yang diterima.</p>
                 </div>
-
-                <!-- Range Pills Ala Trading -->
-                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-[10px] font-bold text-slate-500">
-                    <span class="px-2 py-0.5 bg-white text-[#1a3668] rounded shadow-2xs">6M</span>
-                    <span class="px-2 py-0.5">YTD</span>
-                    <span class="px-2 py-0.5">1Y</span>
-                </div>
+                <span class="shrink-0 rounded-lg border border-[#e2eaf0] bg-[#f7fafc] px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-wider text-[#66869a]">6 Bulan</span>
             </div>
-
-            <!-- Area Canvas Terkunci -->
-            <div class="relative w-full h-64 my-3">
+            <div class="relative my-3 h-[250px] w-full sm:h-[270px]">
                 <canvas id="stockKinerjaChart"></canvas>
             </div>
+            <div id="stockKinerjaLegend" class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#edf1f4] pt-3 text-[10px] font-semibold text-[#6f818d]"></div>
+        </section>
 
-            <!-- Stock Legend Footer -->
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <div class="flex items-center gap-4 font-semibold">
-                    <span class="flex items-center gap-1.5 text-emerald-600">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Keamanan Informasi
-                    </span>
-                    <span class="flex items-center gap-1.5 text-blue-600">
-                        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Infrastruktur Jaringan
-                    </span>
-                </div>
-                <span class="text-[11px] text-slate-400 font-mono">Real-time Stream</span>
-            </div>
-        </div>
-
-        <!-- Stock Chart 2: Volatilitas Kecepatan Resolusi vs Batas SLA -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between min-w-0">
-            <!-- Ticker Header -->
-            <div class="pb-3 border-b border-slate-100 flex items-start justify-between">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-sm font-bold text-slate-800">Kecepatan Resolusi SLA</h3>
+        <section class="flex min-w-0 flex-col rounded-[20px] border border-[#dce4e9] bg-white p-5 shadow-[0_3px_12px_rgba(25,55,75,0.045)]">
+            <div class="flex items-start justify-between gap-3 border-b border-[#edf1f4] pb-3">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#8b99a3]"><i class="fas fa-bolt text-[#5a9cba]"></i>Efisiensi Waktu</div>
+                    <h2 class="mt-1.5 text-sm font-extrabold text-[#1d405c]">Kecepatan Resolusi SLA</h2>
+                    <div class="mt-2 flex flex-wrap items-baseline gap-2">
+                        <span id="durationLatestValue" class="text-2xl font-extrabold tracking-tight text-[#263746]">—</span>
+                        <span class="text-xs font-bold text-[#70828e]">Jam</span>
+                        <span id="durationCompareBadge" class="hidden items-center gap-1 rounded-full bg-[#eaf5ef] px-2 py-1 text-[10px] font-bold text-[#25845c]"></span>
                     </div>
-                    <div class="flex items-baseline gap-2 mt-2">
-                        <span class="text-2xl font-black text-slate-800 font-mono tracking-tight">2.4 <span class="text-sm font-semibold text-slate-500">Jam</span></span>
-                        <span class="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
-                            <i class="fas fa-bolt"></i> 1.6 Jam Lebih Cepat dr Target
-                        </span>
-                    </div>
+                    <p id="durationCompareCaption" class="mt-1 text-[10px] text-[#91a0a9]">Durasi terbaru dari seri grafik yang diterima.</p>
                 </div>
-
-                <!-- Range Pills Ala Trading -->
-                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-[10px] font-bold text-slate-500">
-                    <span class="px-2 py-0.5 bg-white text-[#1a3668] rounded shadow-2xs">6M</span>
-                    <span class="px-2 py-0.5">AVG</span>
-                </div>
+                <span class="shrink-0 rounded-lg border border-[#e2eaf0] bg-[#f7fafc] px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-wider text-[#66869a]">Rata-rata</span>
             </div>
-
-            <!-- Area Canvas Terkunci -->
-            <div class="relative w-full h-64 my-3">
+            <div class="relative my-3 h-[250px] w-full sm:h-[270px]">
                 <canvas id="stockDurasiChart"></canvas>
             </div>
-
-            <!-- Stock Legend Footer -->
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <div class="flex items-center gap-4 font-semibold">
-                    <span class="flex items-center gap-1.5 text-[#1a3668]">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#1a3668]"></span> Durasi Aktual (Jam)
-                    </span>
-                    <span class="flex items-center gap-1.5 text-amber-500">
-                        <span class="w-3 h-0.5 border-t-2 border-dashed border-amber-500"></span> Batas 4.0 Jam
-                    </span>
-                </div>
-                <span class="text-[11px] text-slate-400 font-mono">Tolerance Band</span>
-            </div>
-        </div>
-
+            <div id="stockDurasiLegend" class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#edf1f4] pt-3 text-[10px] font-semibold text-[#6f818d]"></div>
+        </section>
     </div>
 
-    <!-- 3. Stacked Horizontal Bar: Kinerja Penanganan per Dinas -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs min-w-0">
-        <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
-            <div>
-                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-bars-progress text-[#1a3668]"></i>
-                    <span>Proporsi Penanganan Tiket per Dinas</span>
-                </h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Komposisi tiket yang telah selesai dibanding yang masih diproses per dinas.</p>
+    <!-- Stacked horizontal comparison -->
+    <section class="rounded-[20px] border border-[#dce4e9] bg-white p-5 shadow-[0_3px_12px_rgba(25,55,75,0.045)]">
+        <div class="flex flex-col gap-3 border-b border-[#edf1f4] pb-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="flex items-start gap-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#edf4f8] text-[#397b9d]"><i class="fas fa-bars-progress"></i></span>
+                <div>
+                    <h2 class="text-sm font-extrabold text-[#1d405c]">Proporsi Penanganan Tiket per Dinas</h2>
+                    <p class="mt-0.5 text-[11px] text-[#8b99a3]">Komposisi tiket selesai dibanding tiket yang masih diproses pada tiap dinas.</p>
+                </div>
             </div>
-            <div class="flex items-center gap-4 text-xs font-semibold">
-                <span class="flex items-center gap-1.5 text-emerald-600">
-                    <span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> Selesai
-                </span>
-                <span class="flex items-center gap-1.5 text-blue-600">
-                    <span class="w-2.5 h-2.5 rounded bg-blue-600"></span> Diproses
-                </span>
-            </div>
+            <div id="dinasStackedLegend" class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-semibold text-[#6f818d]"></div>
         </div>
-
-        <div class="relative w-full h-64 my-3">
+        <div class="relative mt-3 h-[300px] w-full sm:h-[330px]">
             <canvas id="dinasStackedChart"></canvas>
         </div>
-    </div>
+    </section>
 
-    <!-- 4. Tabel Rincian Data Kinerja per Dinas -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden min-w-0">
-        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+    <!-- Table -->
+    <section class="overflow-hidden rounded-[20px] border border-[#dce4e9] bg-white shadow-[0_3px_12px_rgba(25,55,75,0.045)]">
+        <div class="flex items-start gap-3 border-b border-[#edf1f4] p-5">
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#edf4f8] text-[#397b9d]"><i class="fas fa-table"></i></span>
             <div>
-                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-table text-[#1a3668]"></i>
-                    <span>Tabel Kinerja Penanganan per Dinas</span>
-                </h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Rincian status tiket yang diajukan masing-masing dinas/perangkat daerah.</p>
+                <h2 class="text-sm font-extrabold text-[#1d405c]">Tabel Kinerja Penanganan per Dinas</h2>
+                <p class="mt-0.5 text-[11px] text-[#8b99a3]">Rincian status tiket yang diajukan masing-masing perangkat daerah.</p>
             </div>
         </div>
-
-        <div class="overflow-x-auto w-full">
-            <table class="w-full text-left whitespace-nowrap text-xs">
-                <thead class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 border-b border-slate-100">
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[720px] text-left text-xs">
+                <thead class="border-b border-[#e9eef2] bg-[#f7fafc] text-[10px] font-extrabold uppercase tracking-wider text-[#81909a]">
                     <tr>
-                        <th class="px-5 py-3">PERANGKAT DAERAH / DINAS</th>
-                        <th class="px-5 py-3 text-center">TOTAL MASUK</th>
-                        <th class="px-5 py-3 text-center">SEDANG DIPROSES</th>
-                        <th class="px-5 py-3 text-center">TELAH SELESAI</th>
-                        <th class="px-5 py-3 text-center">TINGKAT PENYELESAIAN</th>
+                        <th class="px-5 py-3.5">Perangkat Daerah / Dinas</th>
+                        <th class="px-5 py-3.5 text-center">Total Masuk</th>
+                        <th class="px-5 py-3.5 text-center">Sedang Diproses</th>
+                        <th class="px-5 py-3.5 text-center">Telah Selesai</th>
+                        <th class="px-5 py-3.5 text-center">Tingkat Penyelesaian</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-[#edf1f4]">
                     @forelse($kinerjaData['dinasTable'] as $row)
-                        <tr class="hover:bg-slate-50/60 transition">
-                            <td class="px-5 py-3 font-bold text-slate-800 flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-[#1a3668] shrink-0"></span>
-                                <span>{{ $row['name'] }}</span>
-                            </td>
-                            <td class="px-5 py-3 text-center font-bold text-slate-700 font-mono">{{ $row['total'] }}</td>
-                            <td class="px-5 py-3 text-center text-blue-600 font-semibold font-mono">{{ $row['process'] }}</td>
-                            <td class="px-5 py-3 text-center text-emerald-600 font-semibold font-mono">{{ $row['resolved'] }}</td>
-                            <td class="px-5 py-3 text-center">
-                                <div class="inline-flex items-center gap-2">
-                                    <div class="w-20 bg-slate-100 h-2 rounded-full overflow-hidden">
-                                        <div class="bg-emerald-500 h-2 rounded-full" style="width: {{ $row['solve_rate'] }}%"></div>
-                                    </div>
-                                    <span class="font-bold text-[11px] font-mono text-slate-600">{{ $row['solve_rate'] }}%</span>
+                        <tr class="transition hover:bg-[#f8fbfc]">
+                            <td class="px-5 py-3.5 font-bold text-[#344957]"><span class="mr-2 inline-block h-2 w-2 rounded-full bg-[#347fa5]"></span>{{ $row['name'] }}</td>
+                            <td class="px-5 py-3.5 text-center font-bold tabular-nums text-[#344957]">{{ $row['total'] }}</td>
+                            <td class="px-5 py-3.5 text-center"><span class="inline-flex min-w-8 justify-center rounded-full bg-[#eef5f9] px-2 py-1 font-bold tabular-nums text-[#347fa5]">{{ $row['process'] }}</span></td>
+                            <td class="px-5 py-3.5 text-center"><span class="inline-flex min-w-8 justify-center rounded-full bg-[#edf7f1] px-2 py-1 font-bold tabular-nums text-[#25845c]">{{ $row['resolved'] }}</span></td>
+                            <td class="px-5 py-3.5">
+                                <div class="flex min-w-[150px] items-center gap-3">
+                                    <div class="h-2 flex-1 overflow-hidden rounded-full bg-[#edf1f4]"><div class="h-full rounded-full bg-[#25845c]" style="width: {{ max(0, min(100, (float) $row['solve_rate'])) }}%"></div></div>
+                                    <span class="w-10 text-right text-[11px] font-extrabold tabular-nums text-[#586d7b]">{{ $row['solve_rate'] }}%</span>
                                 </div>
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="5" class="py-8 text-center text-slate-400 italic">Belum ada data dinas yang tercatat.</td>
-                        </tr>
+                        <tr><td colspan="5" class="px-5 py-10 text-center text-xs text-[#91a0a9]">Belum ada data dinas yang tercatat.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
-
+    </section>
 </div>
 
-<!-- Inisialisasi Script Chart.js Bergaya Saham -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const stockKinerjaData = {!! json_encode($kinerjaData['stockKinerja'] ?? ['labels' => [], 'datasets' => []]) !!};
-        const stockDurasiData  = {!! json_encode($kinerjaData['stockDurasi'] ?? ['labels' => [], 'datasets' => []]) !!};
-        const stackedData      = {!! json_encode($kinerjaData['dinasStackedChart'] ?? ['labels' => [], 'datasets' => []]) !!};
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Chart === 'undefined') return;
 
-        // 1. Stock Chart: Kinerja Bidang
-        const ctxKinerja = document.getElementById('stockKinerjaChart').getContext('2d');
-        const gradGreen = ctxKinerja.createLinearGradient(0, 0, 0, 240);
-        gradGreen.addColorStop(0, 'rgba(16, 185, 129, 0.28)');
-        gradGreen.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+    const stockKinerjaData = {!! json_encode($kinerjaData['stockKinerja'] ?? ['labels' => [], 'datasets' => []]) !!};
+    const stockDurasiData  = {!! json_encode($kinerjaData['stockDurasi'] ?? ['labels' => [], 'datasets' => []]) !!};
+    const stackedData      = {!! json_encode($kinerjaData['dinasStackedChart'] ?? ['labels' => [], 'datasets' => []]) !!};
+    const numberFormat = value => Number(value).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const valuesOf = dataset => Array.isArray(dataset?.data) ? dataset.data.filter(value => value !== null && value !== '').map(Number).filter(Number.isFinite) : [];
+    const average = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+    const gridColor = 'rgba(224, 232, 237, 0.75)';
 
-        const gradBlue = ctxKinerja.createLinearGradient(0, 0, 0, 240);
-        gradBlue.addColorStop(0, 'rgba(37, 99, 235, 0.22)');
-        gradBlue.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+    // Header metric: derive latest and change from the actual series, never hardcode demo numbers.
+    const kinerjaSeries = (stockKinerjaData.datasets || []).map(ds => ({ ds, values: valuesOf(ds) })).filter(item => item.values.length);
+    if (kinerjaSeries.length) {
+        const latestAverage = average(kinerjaSeries.map(item => item.values[item.values.length - 1]));
+        const initialAverage = average(kinerjaSeries.map(item => item.values[0]));
+        document.getElementById('kinerjaLatestValue').textContent = numberFormat(latestAverage) + '%';
+        const badge = document.getElementById('kinerjaChangeBadge');
+        const delta = latestAverage - initialAverage;
+        if (Number.isFinite(delta)) {
+            badge.classList.remove('hidden');
+            badge.classList.add('inline-flex');
+            badge.classList.toggle('bg-[#eaf5ef]', delta >= 0);
+            badge.classList.toggle('text-[#25845c]', delta >= 0);
+            badge.classList.toggle('bg-[#fff0f1]', delta < 0);
+            badge.classList.toggle('text-[#bd4250]', delta < 0);
+            badge.innerHTML = `<i class="fas ${delta >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>${delta >= 0 ? '+' : ''}${numberFormat(delta)}%`;
+            document.getElementById('kinerjaChangeCaption').textContent = delta >= 0 ? 'Perubahan dibanding titik awal periode.' : 'Penurunan dibanding titik awal periode.';
+        }
+    }
 
-        if (stockKinerjaData.datasets[0]) stockKinerjaData.datasets[0].backgroundColor = gradGreen;
-        if (stockKinerjaData.datasets[1]) stockKinerjaData.datasets[1].backgroundColor = gradBlue;
+    // Identify actual and target series by their real labels; use series values for summary.
+    const durationDatasets = stockDurasiData.datasets || [];
+    const actualDataset = durationDatasets.find(ds => /aktual|realisasi|durasi/i.test(String(ds.label || ''))) || durationDatasets[0];
+    const targetDataset = durationDatasets.find(ds => /target|batas|limit/i.test(String(ds.label || '')) && ds !== actualDataset) || durationDatasets.find(ds => ds !== actualDataset);
+    const actualValues = valuesOf(actualDataset);
+    const targetValues = valuesOf(targetDataset);
+    if (actualValues.length) {
+        const latestActual = actualValues[actualValues.length - 1];
+        document.getElementById('durationLatestValue').textContent = numberFormat(latestActual);
+        if (targetValues.length) {
+            const latestTarget = targetValues[targetValues.length - 1];
+            const difference = latestTarget - latestActual;
+            const badge = document.getElementById('durationCompareBadge');
+            badge.classList.remove('hidden');
+            badge.classList.add('inline-flex');
+            badge.classList.toggle('bg-[#eaf5ef]', difference >= 0);
+            badge.classList.toggle('text-[#25845c]', difference >= 0);
+            badge.classList.toggle('bg-[#fff0f1]', difference < 0);
+            badge.classList.toggle('text-[#bd4250]', difference < 0);
+            badge.innerHTML = `<i class="fas ${difference >= 0 ? 'fa-bolt' : 'fa-triangle-exclamation'}"></i>${numberFormat(Math.abs(difference))} jam ${difference >= 0 ? 'di bawah target' : 'di atas target'}`;
+            document.getElementById('durationCompareCaption').textContent = `Nilai pembanding diambil dari seri "${targetDataset.label || 'target SLA'}".`;
+        }
+    }
 
-        new Chart(ctxKinerja, {
+    function buildLegend(containerId, datasets, colors) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        (datasets || []).forEach((dataset, index) => {
+            const item = document.createElement('span');
+            item.className = 'inline-flex items-center gap-1.5';
+            const swatch = document.createElement('span');
+            swatch.className = 'h-2.5 w-2.5 rounded-full';
+            swatch.style.backgroundColor = colors[index] || dataset.borderColor || '#347fa5';
+            const label = document.createElement('span');
+            label.textContent = dataset.label || `Seri ${index + 1}`;
+            item.append(swatch, label);
+            container.appendChild(item);
+        });
+    }
+
+    // Chart 1: multi-series adherence trend.
+    const kinerjaCanvas = document.getElementById('stockKinerjaChart');
+    if (kinerjaCanvas) {
+        const ctx = kinerjaCanvas.getContext('2d');
+        const seriesColors = ['#1d405c', '#347fa5', '#5a9cba', '#83b5cb'];
+        const styledDatasets = (stockKinerjaData.datasets || []).map((dataset, index) => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+            const color = seriesColors[index % seriesColors.length];
+            gradient.addColorStop(0, index === 0 ? 'rgba(29, 64, 92, 0.18)' : 'rgba(52, 127, 165, 0.13)');
+            gradient.addColorStop(1, 'rgba(52, 127, 165, 0.005)');
+            return { ...dataset, borderColor: color, borderWidth: 2.2, backgroundColor: gradient, fill: true, tension: 0.34, pointRadius: 2.5, pointHoverRadius: 5, pointBackgroundColor: '#ffffff', pointBorderColor: color, pointBorderWidth: 1.8 };
+        });
+        new Chart(ctx, {
             type: 'line',
-            data: stockKinerjaData,
+            data: { labels: stockKinerjaData.labels || [], datasets: styledDatasets },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#0f172a',
-                        titleColor: '#94a3b8',
-                        bodyColor: '#f8fafc',
-                        borderColor: '#334155',
-                        borderWidth: 1,
-                        padding: 10,
-                        usePointStyle: true,
-                        callbacks: {
-                            label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y}%`
-                        }
-                    }
+                    tooltip: { backgroundColor: '#173952', titleColor: '#d8e5ed', bodyColor: '#ffffff', padding: 10, usePointStyle: true,
+                        callbacks: { label: context => ` ${context.dataset.label || 'Kepatuhan'}: ${numberFormat(context.parsed.y)}%` } }
                 },
                 scales: {
-                    x: {
-                        grid: { color: '#f1f5f9', borderDash: [4, 4], drawBorder: false },
-                        ticks: { font: { size: 10 }, color: '#94a3b8' }
-                    },
-                    y: {
-                        position: 'right', // Posisi kanan khas bursa efek
-                        min: 60,
-                        max: 100,
-                        ticks: {
-                            stepSize: 10,
-                            callback: (v) => v + '%',
-                            font: { size: 10 },
-                            color: '#94a3b8'
-                        },
-                        grid: { color: '#f1f5f9', borderDash: [4, 4], drawBorder: false }
-                    }
+                    x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#8a99a3', maxRotation: 0 }, border: { display: false } },
+                    y: { position: 'right', min: 0, max: 100, ticks: { stepSize: 10, callback: value => value + '%', font: { size: 10 }, color: '#8a99a3' }, grid: { color: gridColor, borderDash: [4, 5] }, border: { display: false } }
                 }
             }
         });
+        buildLegend('stockKinerjaLegend', styledDatasets, seriesColors);
+    }
 
-        // 2. Stock Chart: Durasi SLA
-        const ctxDurasi = document.getElementById('stockDurasiChart').getContext('2d');
-        const gradNavy = ctxDurasi.createLinearGradient(0, 0, 0, 240);
-        gradNavy.addColorStop(0, 'rgba(26, 54, 104, 0.28)');
-        gradNavy.addColorStop(1, 'rgba(26, 54, 104, 0.0)');
-
-        if (stockDurasiData.datasets[1]) stockDurasiData.datasets[1].backgroundColor = gradNavy;
-
-        new Chart(ctxDurasi, {
+    // Chart 2: actual resolution line with an optional target/boundary series.
+    const durasiCanvas = document.getElementById('stockDurasiChart');
+    if (durasiCanvas) {
+        const ctx = durasiCanvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+        gradient.addColorStop(0, 'rgba(29, 64, 92, 0.18)');
+        gradient.addColorStop(1, 'rgba(29, 64, 92, 0.005)');
+        const styledDatasets = durationDatasets.map(dataset => {
+            const isTarget = dataset === targetDataset;
+            return {
+                ...dataset,
+                borderColor: isTarget ? '#c49a55' : '#1d405c',
+                borderWidth: isTarget ? 1.8 : 2.4,
+                borderDash: isTarget ? [6, 5] : [],
+                backgroundColor: isTarget ? 'transparent' : gradient,
+                fill: !isTarget,
+                tension: 0.28,
+                pointRadius: isTarget ? 0 : 2.5,
+                pointHoverRadius: isTarget ? 0 : 5,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: isTarget ? '#c49a55' : '#1d405c',
+                pointBorderWidth: 1.8
+            };
+        });
+        const durationMaxValue = Math.max(0, ...styledDatasets.flatMap(ds => valuesOf(ds)));
+        const durationAxisMax = Math.max(1, Math.ceil(durationMaxValue * 1.2));
+        new Chart(ctx, {
             type: 'line',
-            data: stockDurasiData,
+            data: { labels: stockDurasiData.labels || [], datasets: styledDatasets },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#0f172a',
-                        titleColor: '#94a3b8',
-                        bodyColor: '#f8fafc',
-                        borderColor: '#334155',
-                        borderWidth: 1,
-                        padding: 10,
-                        usePointStyle: true,
-                        callbacks: {
-                            label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} Jam`
-                        }
-                    }
+                    tooltip: { backgroundColor: '#173952', titleColor: '#d8e5ed', bodyColor: '#ffffff', padding: 10, usePointStyle: true,
+                        callbacks: { label: context => ` ${context.dataset.label || 'Durasi'}: ${numberFormat(context.parsed.y)} jam` } }
                 },
                 scales: {
-                    x: {
-                        grid: { color: '#f1f5f9', borderDash: [4, 4], drawBorder: false },
-                        ticks: { font: { size: 10 }, color: '#94a3b8' }
-                    },
-                    y: {
-                        position: 'right', // Posisi kanan khas bursa efek
-                        beginAtZero: true,
-                        max: 5,
-                        ticks: {
-                            stepSize: 1,
-                            callback: (v) => v + 'j',
-                            font: { size: 10 },
-                            color: '#94a3b8'
-                        },
-                        grid: { color: '#f1f5f9', borderDash: [4, 4], drawBorder: false }
-                    }
+                    x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#8a99a3', maxRotation: 0 }, border: { display: false } },
+                    y: { position: 'right', beginAtZero: true, max: durationAxisMax, ticks: { stepSize: Math.max(1, Math.ceil(durationAxisMax / 4)), callback: value => value + 'j', font: { size: 10 }, color: '#8a99a3' }, grid: { color: gridColor, borderDash: [4, 5] }, border: { display: false } }
                 }
             }
         });
+        buildLegend('stockDurasiLegend', styledDatasets, styledDatasets.map(ds => ds.borderColor));
+    }
 
-        // 3. Stacked Horizontal Bar
-        new Chart(document.getElementById('dinasStackedChart'), {
+    // Chart 3: horizontal stacked workload by agency.
+    const stackedCanvas = document.getElementById('dinasStackedChart');
+    if (stackedCanvas) {
+        const stackedDatasets = (stackedData.datasets || []).map((dataset, index) => {
+            const label = String(dataset.label || '').toLowerCase();
+            const color = label.includes('selesai') ? '#25845c' : (label.includes('proses') ? '#347fa5' : ['#25845c', '#347fa5', '#5a9cba'][index % 3]);
+            return { ...dataset, backgroundColor: color, borderColor: color, borderWidth: 0, borderRadius: 7, barThickness: 13, maxBarThickness: 16 };
+        });
+        new Chart(stackedCanvas, {
             type: 'bar',
-            data: stackedData,
+            data: { labels: stackedData.labels || [], datasets: stackedDatasets },
             options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#173952', titleColor: '#d8e5ed', bodyColor: '#ffffff', padding: 10, usePointStyle: true }
+                },
                 scales: {
-                    x: {
-                        stacked: true,
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 },
-                        grid: { color: '#f1f5f9' }
-                    },
-                    y: {
-                        stacked: true,
-                        grid: { display: false },
-                        ticks: { font: { size: 10 } }
-                    }
+                    x: { stacked: true, beginAtZero: true, ticks: { precision: 0, font: { size: 10 }, color: '#8a99a3' }, grid: { color: gridColor, borderDash: [4, 5] }, border: { display: false } },
+                    y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 }, color: '#617684' }, border: { display: false } }
                 }
             }
         });
-    });
+        buildLegend('dinasStackedLegend', stackedDatasets, stackedDatasets.map(ds => ds.backgroundColor));
+    }
+});
 </script>
 @endsection

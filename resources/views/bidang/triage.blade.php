@@ -4,27 +4,26 @@
 @section('subtitle', 'Informasi mengenai Triage & Reassign SIGELATIK')
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans">
+<div class="min-h-screen bg-[#f4f7fa] px-4 py-5 font-sans sm:px-6 lg:px-7 space-y-5">
 
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">
-                <span class="text-[#1a3668]">TRIAGE</span>
-                <span class="text-slate-300">•</span>
-                <span>VERIFIKASI & RESPON AWAL</span>
+    <!-- Header halaman -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="min-w-0">
+            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#397b9d] shadow-sm">
+                <span class="h-1.5 w-1.5 rounded-full bg-[#397b9d]"></span>
+                <span>HELPDESK BIDANG</span>
+                <span class="text-[#b8c7d0]">•</span>
+                <span>TRIAGE & VERIFIKASI</span>
             </div>
-            <h1 class="text-3xl font-extrabold text-[#1a3668] tracking-tight">
-                Tiket Baru & Reassign Antar Teknisi Bidang
-            </h1>
-            <p class="text-xs text-slate-500 mt-1">
+            <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">Tiket Baru &amp; Reassign Antar Teknisi Bidang</h1>
+            <p class="mt-1 max-w-3xl text-xs leading-relaxed text-slate-500">
                 Validasi kategori permohonan, tentukan sub-layanan, atau jeda SLA jika tiket masuk di luar jam kerja efektif (menjelang 16.00).
             </p>
         </div>
 
         <!-- Lonceng Notifikasi Tiket Baru -->
         <div class="relative shrink-0">
-            <button type="button" onclick="toggleNotifDropdown()" class="relative w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-[#1a3668] hover:border-slate-300 flex items-center justify-center shadow-2xs transition">
+            <button type="button" onclick="toggleNotifDropdown()" class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-[#dce5ec] bg-white text-slate-600 shadow-sm transition hover:border-[#a9c2d0] hover:text-[#397b9d]">
                 <i class="far fa-bell text-sm"></i>
                 @if(count($waitingTickets) > 0)
                     <span class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white font-bold text-[10px] rounded-full flex items-center justify-center animate-pulse">
@@ -81,36 +80,36 @@
     @endif
 
     <!-- 1. TABEL: MENUNGGU TRIAGE (SLA 1 RESPON) -->
-    <div class="mb-10">
-        <div class="flex items-center justify-between mb-3.5">
+    <div class="mb-7">
+        <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2.5">
-                <h2 class="text-base font-bold text-slate-800">Menunggu Triage</h2>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-[#1a3668]">
+                <h2 class="text-sm font-extrabold text-[#243d50]">Menunggu Triage</h2>
+                <span class="inline-flex items-center rounded-full border border-[#dceaf1] bg-[#eff6f9] px-2.5 py-1 text-[10px] font-bold text-[#397b9d]">
                     {{ count($waitingTickets) }} Tiket
                 </span>
             </div>
             <span class="text-xs text-slate-400">Standar SLA Respon Bidang: 60 Menit</span>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden overflow-x-auto">
+        <div class="overflow-hidden rounded-2xl border border-[#dce5ec] bg-white shadow-[0_3px_14px_rgba(24,54,82,0.045)] overflow-x-auto">
             <table class="w-full text-left whitespace-nowrap">
-                <thead class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
+                <thead class="bg-[#f8fafc] text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 border-b border-slate-100">
                     <tr>
-                        <th class="px-6 py-4 w-36">TIKET</th>
-                        <th class="px-6 py-4">PERMOHONAN & KATEGORI USER</th>
-                        <th class="px-6 py-4 w-48">MASUK</th>
-                        <th class="px-6 py-4 w-56">SLA RESPON (TRIAGE)</th>
-                        <th class="px-6 py-4 w-60 text-center">AKSI BIDANG</th>
+                        <th class="px-4 py-3.5 w-36">TIKET</th>
+                        <th class="px-4 py-3.5">PERMOHONAN & KATEGORI USER</th>
+                        <th class="px-4 py-3.5 w-48">MASUK</th>
+                        <th class="px-4 py-3.5 w-56">SLA RESPON (TRIAGE)</th>
+                        <th class="px-4 py-3.5 w-60 text-center">AKSI BIDANG</th>
                     </tr>
                 </thead>
 
                 <tbody class="divide-y divide-slate-100 text-xs">
                     @forelse($waitingTickets as $ticket)
                         <tr class="hover:bg-slate-50/60 transition {{ $ticket->is_paused ? 'bg-amber-50/20' : '' }}">
-                            <td class="px-6 py-4 font-mono font-bold text-blue-600 align-middle">
+                            <td class="px-4 py-3.5 font-mono font-bold text-blue-600 align-middle">
                                 <a href="#" class="hover:underline">{{ $ticket->ticket_number }}</a>
                             </td>
-                            <td class="px-6 py-4 align-middle">
+                            <td class="px-4 py-3.5 align-middle">
                                 <div class="font-bold text-slate-800 leading-snug">{{ $ticket->subject }}</div>
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="text-[11px] text-slate-400">{{ $ticket->agency_name }}</span>
@@ -120,10 +119,10 @@
                                     </span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-slate-500 font-medium align-middle">
+                            <td class="px-4 py-3.5 text-slate-500 font-medium align-middle">
                                 {{ \Carbon\Carbon::parse($ticket->created_at)->translatedFormat('d M Y, H:i') }}
                             </td>
-                            <td class="px-6 py-4 align-middle">
+                            <td class="px-4 py-3.5 align-middle">
                                 <div class="flex items-center justify-between text-xs mb-1">
                                     <span class="font-bold text-{{ $ticket->sla_color }}-600 flex items-center gap-1.5">
                                         @if($ticket->sla_status === 'running')
@@ -141,22 +140,22 @@
                                     <div class="bg-{{ $ticket->sla_color }}-600 h-1.5 rounded-full" style="width: {{ $ticket->sla_progress }}%"></div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 align-middle text-center">
+                            <td class="px-4 py-3.5 align-middle text-center">
                                 <div class="inline-flex items-center gap-2">
                                     <button type="button" 
                                             onclick="bukaModalTriage({{ $ticket->id }}, '{{ $ticket->ticket_number }}', '{{ addslashes($ticket->subject) }}', '{{ addslashes($ticket->agency_name) }}', '{{ addslashes($ticket->category_name) }}', {{ $ticket->service?->category_id ?? 'null' }}, {{ $ticket->service_id ?? 'null' }})"
-                                            class="bg-[#1a3668] hover:bg-[#122548] text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs">
+                                            class="bg-[#327fa2] hover:bg-[#286b89] text-white px-3.5 py-2 rounded-lg text-[11px] font-bold transition shadow-sm">
                                         Proses Triage
                                     </button>
                                     @if($ticket->is_paused)
-                                        <button type="button" class="px-2.5 py-1.5 bg-slate-100 text-slate-400 rounded-xl text-xs font-medium cursor-not-allowed" title="SLA 1 sudah dalam kondisi dijeda">
+                                        <button type="button" class="px-2.5 py-2 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-semibold cursor-not-allowed" title="SLA 1 sudah dalam kondisi dijeda">
                                             <i class="fas fa-check text-xs text-amber-600"></i> Dijeda
                                         </button>
                                     @else
                                         <button type="button" 
                                                 onclick="bukaModalPendingTriage({{ $ticket->id }}, '{{ $ticket->ticket_number }}')"
                                                 title="Jeda SLA 1 (Di luar jam kerja / Butuh konfirmasi)"
-                                                class="p-1.5 border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-xl text-xs font-bold transition">
+                                                class="h-8 w-8 border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-xs font-bold transition">
                                             <i class="fas fa-pause text-xs"></i>
                                         </button>
                                     @endif
@@ -165,7 +164,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-8 text-center text-xs text-slate-400 italic">
+                            <td colspan="5" class="py-10 text-center text-xs text-slate-400 italic">
                                 Belum ada tiket baru yang menunggu proses triage.
                             </td>
                         </tr>
@@ -177,20 +176,20 @@
 
     <!-- 2. TABEL: REASSIGN ANTAR TEKNISI BIDANG -->
     <div>
-        <div class="flex items-center justify-between mb-3.5">
-            <h2 class="text-base font-bold text-slate-800">Reassign Antar Teknisi Bidang</h2>
+        <div class="flex flex-col gap-1.5 mb-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="text-sm font-extrabold text-[#243d50]">Reassign Antar Teknisi Bidang</h2>
             <span class="text-xs text-slate-400">Pindahkan penugasan jika teknisi berhalangan atau ajukan penambahan SLA</span>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden overflow-x-auto">
+        <div class="overflow-hidden rounded-2xl border border-[#dce5ec] bg-white shadow-[0_3px_14px_rgba(24,54,82,0.045)] overflow-x-auto">
             <table class="w-full text-left whitespace-nowrap">
-                <thead class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
+                <thead class="bg-[#f8fafc] text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 border-b border-slate-100">
                     <tr>
-                        <th class="px-6 py-4 w-36">TIKET</th>
-                        <th class="px-6 py-4 w-64">TEKNISI SAAT INI</th>
-                        <th class="px-6 py-4 w-60">SLA PENANGANAN</th>
-                        <th class="px-6 py-4 w-36 text-center">TAMBAH SLA</th>
-                        <th class="px-6 py-4 text-right">AKSI REASSIGN</th>
+                        <th class="px-4 py-3.5 w-36">TIKET</th>
+                        <th class="px-4 py-3.5 w-64">TEKNISI SAAT INI</th>
+                        <th class="px-4 py-3.5 w-60">SLA PENANGANAN</th>
+                        <th class="px-4 py-3.5 w-36 text-center">TAMBAH SLA</th>
+                        <th class="px-4 py-3.5 text-right">AKSI REASSIGN</th>
                     </tr>
                 </thead>
 
@@ -198,12 +197,12 @@
                     @forelse($reassignTickets as $ticket)
                         <tr class="hover:bg-slate-50/60 transition">
                             <!-- Nomor Tiket -->
-                            <td class="px-6 py-4 font-mono font-bold text-blue-600 align-middle">
+                            <td class="px-4 py-3.5 font-mono font-bold text-blue-600 align-middle">
                                 <a href="#" class="hover:underline">{{ $ticket->ticket_number }}</a>
                             </td>
 
                             <!-- Teknisi Saat Ini -->
-                            <td class="px-6 py-4 align-middle">
+                            <td class="px-4 py-3.5 align-middle">
                                 <div class="font-bold text-slate-800 flex items-center gap-2">
                                     <div class="w-6 h-6 rounded-full bg-[#1a3668] text-white text-[10px] flex items-center justify-center font-bold shrink-0">
                                         {{ strtoupper(substr($ticket->current_tech_name ?? 'T', 0, 1)) }}
@@ -216,7 +215,7 @@
                             </td>
 
                             <!-- SLA Penanganan (4 Kondisi Dinamis) -->
-                            <td class="px-6 py-4 align-middle">
+                            <td class="px-4 py-3.5 align-middle">
                                 @if($ticket->sla_state === 'not_started')
                                     <!-- 1. Belum Berjalan (Menunggu Teknisi) -->
                                     <div class="w-48">
@@ -286,20 +285,20 @@
                             </td>
 
                             <!-- Tombol Modal Tambah SLA -->
-                            <td class="px-6 py-4 align-middle text-center">
+                            <td class="px-4 py-3.5 align-middle text-center">
                                 <button type="button" 
                                         onclick="bukaModalTambahSla({{ $ticket->id }}, '{{ $ticket->ticket_number }}', '{{ $ticket->target_sla_label ?? '240 menit' }}')"
-                                        class="border border-[#1a3668] text-[#1a3668] hover:bg-[#1a3668] hover:text-white bg-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap cursor-pointer inline-flex items-center gap-1.5">
+                                        class="border border-[#c8dce7] text-[#397b9d] hover:bg-[#327fa2] hover:text-white bg-white px-3 py-2 rounded-lg text-[10px] font-bold transition whitespace-nowrap cursor-pointer inline-flex items-center gap-1.5">
                                     <i class="fas fa-plus text-[10px]"></i>
                                     <span>Tambah SLA</span>
                                 </button>
                             </td>
 
                             <!-- Form Aksi Reassign -->
-                            <td class="px-6 py-4 align-middle text-right">
+                            <td class="px-4 py-3.5 align-middle text-right">
                                 <form action="{{ route('bidang.triage.reassign', $ticket->id) }}" method="POST" class="inline-flex items-center justify-end gap-2.5">
                                     @csrf
-                                    <select name="technician_id" required class="w-52 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] transition">
+                                    <select name="technician_id" required class="w-44 bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-[11px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] transition">
                                         <option value="" disabled selected>Pilih teknisi pengganti...</option>
                                         @foreach($technicians as $tech)
                                             <option value="{{ $tech->id }}" {{ $tech->id == ($ticket->current_tech_id ?? null) ? 'disabled class=text-slate-300' : '' }}>
@@ -307,7 +306,7 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <button type="submit" class="border border-[#1a3668] text-[#1a3668] hover:bg-[#1a3668] hover:text-white bg-white px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs whitespace-nowrap">
+                                    <button type="submit" class="border border-[#c8dce7] text-[#397b9d] hover:bg-[#327fa2] hover:text-white bg-white px-3 py-2 rounded-lg text-[11px] font-bold transition whitespace-nowrap">
                                         Reassign
                                     </button>
                                 </form>
@@ -315,7 +314,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-8 text-center text-xs text-slate-400 italic">
+                            <td colspan="5" class="py-10 text-center text-xs text-slate-400 italic">
                                 Belum ada tiket aktif yang perlu dialihkan teknisinya.
                             </td>
                         </tr>
@@ -329,17 +328,17 @@
 
 <!-- ================= MODAL 1: PROSES TRIAGE & DISPOSISI ================= -->
 <div id="modalTriage" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col">
-        <div class="bg-[#1a3668] text-white p-5 flex items-center justify-between">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-xl overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-slate-100 bg-white text-slate-800 flex items-center justify-between">
             <div>
                 <h3 class="text-sm font-bold flex items-center gap-2">
-                    <i class="fas fa-clipboard-check text-blue-200"></i>
+                    <i class="fas fa-clipboard-check text-[#397b9d]"></i>
                     <span>Triage & Validasi Tiket</span>
-                    <span id="triageTicketNumber" class="font-mono text-blue-200"></span>
+                    <span id="triageTicketNumber" class="font-mono text-[#397b9d]"></span>
                 </h3>
-                <p class="text-[11px] text-blue-100 mt-0.5">Selesaikan triage untuk menghentikan SLA Respon 1 dan meneruskan tiket ke teknisi.</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Selesaikan triage untuk menghentikan SLA Respon 1 dan meneruskan tiket ke teknisi.</p>
             </div>
-            <button type="button" onclick="tutupModal('modalTriage')" class="text-white/70 hover:text-white p-1">
+            <button type="button" onclick="tutupModal('modalTriage')" class="text-slate-400 hover:text-slate-700 p-1">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
@@ -401,9 +400,10 @@
                 </div>
                 <div class="relative">
                     <input type="number" name="sla_minutes" id="triageSlaMinutes" min="5" step="5" value="60" required
-                           class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
-                    <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">Menit</span>
+                        class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] [&::-webkit-inner-spin-button]:opacity-100 [&::-webkit-outer-spin-button]:opacity-100">
+                    <span class="absolute right-10 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold pointer-events-none">Menit</span>
                 </div>
+
             </div>
 
             <!-- 4. Pilihan Teknisi -->
@@ -437,7 +437,7 @@
 
 <!-- ================= MODAL 2: JEDA / PENDING SLA 1 ================= -->
 <div id="modalPendingTriage" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
         <div class="bg-amber-600 text-white p-5 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
                 <i class="fas fa-pause-circle text-amber-200 text-lg"></i>
@@ -446,7 +446,7 @@
                     <p id="pendingTicketNumber" class="text-[11px] text-amber-100 font-mono mt-0.5"></p>
                 </div>
             </div>
-            <button type="button" onclick="tutupModal('modalPendingTriage')" class="text-white/70 hover:text-white p-1">
+            <button type="button" onclick="tutupModal('modalPendingTriage')" class="text-slate-400 hover:text-slate-700 p-1">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
@@ -489,16 +489,16 @@
 
 <!-- ================= MODAL 3: TAMBAH SLA PENANGANAN TIKET ================= -->
 <div id="modalTambahSla" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-        <div class="bg-[#1a3668] text-white p-5 flex items-center justify-between">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+        <div class="px-5 py-4 border-b border-slate-100 bg-white text-slate-800 flex items-center justify-between">
             <div>
                 <h3 class="text-sm font-bold flex items-center gap-2">
-                    <i class="fas fa-clock text-blue-200"></i>
+                    <i class="fas fa-clock text-[#397b9d]"></i>
                     <span>Tambah Durasi SLA Tiket</span>
                 </h3>
-                <p id="tambahSlaTicketNumber" class="text-[11px] text-blue-200 font-mono mt-0.5"></p>
+                <p id="tambahSlaTicketNumber" class="text-[11px] text-[#397b9d] font-mono mt-0.5"></p>
             </div>
-            <button type="button" onclick="tutupModal('modalTambahSla')" class="text-white/70 hover:text-white p-1">
+            <button type="button" onclick="tutupModal('modalTambahSla')" class="text-slate-400 hover:text-slate-700 p-1">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>

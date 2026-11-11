@@ -14,8 +14,8 @@
                 <span class="text-slate-300">•</span>
                 <span>MONITORING INSIDEN & DOWNTIME</span>
             </div>
-            <h1 class="text-2xl font-black text-[#1a3668] tracking-tight">
-                Pusat Informasi Gangguan Layanan
+            <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">
+                Pusat Gangguan Layanan
             </h1>
             <p class="text-xs text-slate-500 mt-0.5">
                 Pemantauan status operasional layanan publik, server, jaringan, dan eskalasi perbaikan teknis.

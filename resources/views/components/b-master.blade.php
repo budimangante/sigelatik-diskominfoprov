@@ -10,6 +10,12 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        @font-face {
+        font-family: 'StretchPro';
+        src: url('/fonts/StretchPro.otf') format('opentype');
+        font-weight: normal;
+        font-style: normal;
+        }
     </style>
     @vite(['resources/js/app.ts'])
 </head>

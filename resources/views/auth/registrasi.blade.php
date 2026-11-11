@@ -10,8 +10,10 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
 
-    <!-- Latar Belakang Ungu di Kiri -->
-    <div class="absolute top-0 -left-[10%] h-full w-[55%] bg-[#4c2a95] [border-top-right-radius:50%] [border-bottom-right-radius:50%] z-0 hidden md:block"></div>
+    <!-- Latar Belakang Ungu di Kiri dengan Animasi Jaringan TIK -->
+    <div class="absolute top-0 -left-[10%] h-full w-[55%] bg-[#4c2a95] [border-top-right-radius:50%] [border-bottom-right-radius:50%] z-0 hidden md:block overflow-hidden">
+        <canvas id="networkCanvas" class="absolute inset-0 w-full h-full opacity-60 pointer-events-none" aria-hidden="true"></canvas>
+    </div>
 
     <!-- Container Utama -->
     <div class="relative z-10 flex flex-col md:flex-row w-full max-w-5xl bg-white shadow-2xl rounded-xl overflow-hidden mx-4 my-8 min-h-[550px]">
@@ -146,7 +148,7 @@
             <div class="text-center mt-6 text-sm text-gray-500">
                 <p>Sudah punya akun ? <a href="{{ route('login') }}" class="text-gray-800 font-bold hover:underline">Login</a></p>
                 
-                <a href="/beranda" class="block mt-4 text-[#4c2a95] font-semibold text-sm hover:underline">
+                <a href="{{ route('beranda') }}" class="block mt-4 text-[#4c2a95] font-semibold text-sm hover:underline">
                     &lt; Kembali ke beranda
                 </a>
             </div>
@@ -154,20 +156,121 @@
 
     </div>
 
-    <!-- Script Checkbox Tampilkan Password -->
+    <!-- Script Checkbox Tampilkan Password (dipertahankan seperti form asli) -->
     <script>
-        document.getElementById('showPassword').addEventListener('change', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            const showPassword = document.getElementById('showPassword');
             const passwordInput = document.getElementById('password');
             const confirmPasswordInput = document.getElementById('password_confirmation');
-            
-            if (this.checked) {
-                passwordInput.type = 'text';
-                confirmPasswordInput.type = 'text';
-            } else {
-                passwordInput.type = 'password';
-                confirmPasswordInput.type = 'password';
-            }
+            if (!showPassword || !passwordInput || !confirmPasswordInput) return;
+
+            showPassword.addEventListener('change', function () {
+                const inputType = this.checked ? 'text' : 'password';
+                passwordInput.type = inputType;
+                confirmPasswordInput.type = inputType;
+            });
         });
     </script>
+    <!-- Animasi Canvas Jaringan TIK: hanya visual, tidak mengubah proses autentikasi/registrasi -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const canvas = document.getElementById('networkCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const container = canvas.parentElement;
+            let width = 0;
+            let height = 0;
+            let particles = [];
+            let animationFrameId = null;
+            let resizeTimer = null;
+
+            function initCanvas() {
+                width = container.clientWidth;
+                height = container.clientHeight;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                canvas.width = Math.max(1, Math.floor(width * dpr));
+                canvas.height = Math.max(1, Math.floor(height * dpr));
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                particles = [];
+
+                const particleCount = 40;
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * 1.2,
+                        vy: (Math.random() - 0.5) * 1.2,
+                        radius: Math.random() * 1.5 + 1
+                    });
+                }
+            }
+
+            function drawNetwork() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+                    ctx.fill();
+
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        const distance = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if (distance < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - distance / 120) * 0.22})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                animationFrameId = window.requestAnimationFrame(drawNetwork);
+            }
+
+            function startAnimation() {
+                if (window.innerWidth < 768 || animationFrameId !== null) return;
+                initCanvas();
+                drawNetwork();
+            }
+
+            function stopAnimation() {
+                if (animationFrameId !== null) {
+                    window.cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                ctx.clearRect(0, 0, width, height);
+            }
+
+            window.addEventListener('resize', function () {
+                window.clearTimeout(resizeTimer);
+                resizeTimer = window.setTimeout(function () {
+                    if (window.innerWidth >= 768) {
+                        stopAnimation();
+                        startAnimation();
+                    } else {
+                        stopAnimation();
+                    }
+                }, 120);
+            }, { passive: true });
+
+            startAnimation();
+        });
+    </script>
+
 </body>
 </html>

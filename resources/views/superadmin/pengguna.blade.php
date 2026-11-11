@@ -4,27 +4,28 @@
 @section('subtitle', 'Daftar dan pemetaan hak akses role pengguna SIGELATIK')
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans">
+<div class="min-h-screen bg-[#f3f6f8] p-4 font-sans sm:p-6 lg:p-7">
 
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between lg:mb-7">
         <div>
-            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">
-                <span class="text-[#1a3668]">SUPER ADMIN</span>
-                <span class="text-slate-300">•</span>
+            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[#397b9d] shadow-sm">
+                <span class="h-2 w-2 rounded-full bg-[#397b9d]"></span>
+                <span>SUPER ADMIN</span>
+                <span class="text-[#b8c7d0]">•</span>
                 <span>INTEGRASI SSO BKD</span>
             </div>
-            <h1 class="text-3xl font-extrabold text-[#1a3668] tracking-tight">
+            <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">
                 Manajemen Pengguna & Role
             </h1>
-            <p class="text-xs text-slate-500 mt-1">
+            <p class="mt-1 max-w-2xl text-xs leading-relaxed text-[#71808c] sm:text-sm">
                 Verifikasi identitas NIP melalui direktori kepegawaian SSO BKD lalu tentukan peran wewenang di SIGELATIK.
             </p>
         </div>
 
         <button type="button" 
                 onclick="bukaModalTambah()"
-                class="inline-flex items-center gap-2 bg-[#1a3668] hover:bg-[#122548] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer">
+                class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#2f789e] px-4 py-3 text-xs font-bold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#1d6388] hover:shadow-md cursor-pointer">
             <i class="fas fa-id-card text-xs"></i>
             <span>Tambah Pengguna</span>
         </button>
@@ -55,21 +56,21 @@
     @endif
 
     <!-- Filter & Pencarian -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs mb-6">
-        <form method="GET" action="{{ route('pengguna') }}" class="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div class="relative w-full sm:w-80">
+    <div class="mb-5 rounded-2xl border border-[#dce4e9] bg-white p-3.5 shadow-[0_3px_12px_rgba(25,55,75,0.045)] sm:p-4">
+        <form method="GET" action="{{ route('pengguna') }}" class="grid grid-cols-1 items-center gap-3 lg:grid-cols-[minmax(260px,1fr)_auto]">
+            <div class="relative w-full lg:max-w-[430px]">
                 <input type="text" 
                        name="search" 
                        value="{{ $search ?? '' }}" 
                        placeholder="Cari nama, NIP, atau email..."
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] transition">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                       class="w-full rounded-xl border border-[#dce4e9] bg-[#f7f9fb] py-3 pl-10 pr-4 text-xs text-slate-800 placeholder:text-slate-400 transition focus:border-[#397b9d] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#397b9d]/10">
+                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
             </div>
 
-            <div class="flex items-center gap-2 w-full sm:w-auto">
+            <div class="flex w-full items-center gap-2 sm:justify-end">
                 <select name="role" 
                         onchange="this.form.submit()" 
-                        class="w-full sm:w-48 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] transition">
+                        class="w-full min-w-0 rounded-xl border border-[#dce4e9] bg-white px-3.5 py-3 text-xs text-slate-700 transition focus:border-[#397b9d] focus:outline-none focus:ring-4 focus:ring-[#397b9d]/10 sm:w-[220px]">
                     <option value="">Semua Hak Akses</option>
                     @foreach($roles as $role)
                         <option value="{{ $role->id }}" {{ ($roleFilter ?? '') == $role->id ? 'selected' : '' }}>
@@ -79,7 +80,7 @@
                 </select>
 
                 @if(!empty($search) || !empty($roleFilter))
-                    <a href="{{ route('pengguna') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs rounded-xl font-medium transition" title="Reset Filter">
+                    <a href="{{ route('pengguna') }}" class="inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs font-medium text-slate-600 transition hover:bg-slate-100" title="Reset Filter">
                         <i class="fas fa-redo-alt text-xs"></i>
                     </a>
                 @endif
@@ -88,9 +89,22 @@
     </div>
 
     <!-- Tabel Pengguna -->
-    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden overflow-x-auto">
-        <table class="w-full text-left whitespace-nowrap">
-            <thead class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
+    <div class="overflow-hidden rounded-2xl border border-[#dce4e9] bg-white shadow-[0_3px_12px_rgba(25,55,75,0.045)]">
+        <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
+            <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf4f8] text-[#397b9d]">
+                    <i class="fas fa-users text-sm"></i>
+                </span>
+                <div>
+                    <p class="text-xs font-bold text-[#293b49]">Daftar Pengguna</p>
+                    <p class="mt-0.5 text-[10px] text-slate-400">{{ $users->count() }} dari {{ $users->total() }} pengguna ditampilkan</p>
+                </div>
+            </div>
+            <span class="hidden rounded-full bg-[#edf4f8] px-3 py-1 text-[10px] font-semibold text-[#397b9d] sm:inline-flex">Integrasi SSO BKD</span>
+        </div>
+        <div class="overflow-x-auto">
+        <table class="w-full min-w-[900px] text-left whitespace-nowrap">
+            <thead class="border-b border-slate-100 bg-[#f8fafc] text-[10px] font-bold uppercase tracking-[0.09em] text-slate-500">
                 <tr>
                     <th class="px-6 py-4">PEGAWAI / ASN</th>
                     <th class="px-6 py-4">PERANGKAT DAERAH (OPD)</th>
@@ -106,6 +120,8 @@
                         $userRole = $user->roles->first();
                         $roleName = $userRole?->name ?? 'Belum ada role';
                         $roleId   = $userRole?->id ?? '';
+                        $nameParts = preg_split('/\s+/', trim($user->name ?? ''));
+                        $userInitials = strtoupper(substr($nameParts[0] ?? 'U', 0, 1) . (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : ''));
 
                         $badgeClasses = match($roleName) {
                             'super_admin'     => 'bg-purple-50 text-purple-700 border-purple-200',
@@ -116,16 +132,16 @@
                             default           => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                         };
                     @endphp
-                    <tr class="hover:bg-slate-50/60 transition">
+                    <tr class="transition-colors duration-150 hover:bg-[#f7fafc]">
                         <!-- Profil Pegawai -->
-                        <td class="px-6 py-4 align-middle">
+                        <td class="px-5 py-4 align-middle sm:px-6">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-full bg-[#1a3668] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d8e8f0] bg-[#2f789e] text-xs font-extrabold text-white shadow-sm">
+                                    {{ $userInitials }}
                                 </div>
                                 <div>
-                                    <div class="font-bold text-slate-800 leading-snug">{{ $user->name }}</div>
-                                    <div class="text-[11px] text-slate-400 font-mono mt-0.5">
+                                    <div class="font-bold leading-snug text-[#293b49]">{{ $user->name }}</div>
+                                    <div class="mt-1 text-[10px] font-mono text-slate-400">
                                         NIP: {{ $user->nip ?? '-' }} • {{ $user->email }}
                                     </div>
                                 </div>
@@ -133,31 +149,31 @@
                         </td>
 
                         <!-- OPD -->
-                        <td class="px-6 py-4 align-middle text-slate-600 font-medium">
+                        <td class="px-5 py-4 align-middle font-medium text-slate-600 sm:px-6">
                             <span class="inline-flex items-center gap-1.5">
-                                <i class="fas fa-building text-slate-400 text-xs"></i>
+                                <i class="fas fa-building text-[11px] text-slate-400"></i>
                                 <span>{{ $user->opd_name ?? 'Pemerintah Provinsi' }}</span>
                             </span>
                         </td>
 
                         <!-- Badge Role -->
-                        <td class="px-6 py-4 align-middle">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold border {{ $badgeClasses }}">
+                        <td class="px-5 py-4 align-middle sm:px-6">
+                            <span class="inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold {{ $badgeClasses }}">
                                 {{ ucfirst(str_replace('_', ' ', $roleName)) }}
                             </span>
                         </td>
 
                         <!-- Tanggal Terdaftar -->
-                        <td class="px-6 py-4 text-slate-500 font-medium align-middle">
+                        <td class="px-5 py-4 align-middle text-[11px] font-medium text-slate-500 sm:px-6">
                             {{ \Carbon\Carbon::parse($user->created_at)->translatedFormat('d M Y, H:i') }}
                         </td>
 
                         <!-- Aksi -->
-                        <td class="px-6 py-4 align-middle text-center">
-                            <div class="inline-flex items-center gap-1.5">
+                        <td class="px-5 py-4 align-middle text-center sm:px-6">
+                            <div class="inline-flex items-center gap-2">
                                 <button type="button" 
                                         onclick="bukaModalEdit({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ $user->nip ?? '-' }}', '{{ $roleId }}')"
-                                        class="p-2 border border-slate-200 text-slate-600 hover:text-[#1a3668] hover:border-slate-300 rounded-xl transition cursor-pointer"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#dce4e9] bg-white text-[#397b9d] shadow-sm transition hover:border-[#b7d0dd] hover:bg-[#edf4f8] cursor-pointer"
                                         title="Ubah Role Pengguna">
                                     <i class="fas fa-user-shield text-xs"></i>
                                 </button>
@@ -167,7 +183,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 
-                                                class="p-2 border border-rose-100 bg-rose-50/50 text-rose-600 hover:bg-rose-100 rounded-xl transition cursor-pointer" 
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-500 shadow-sm transition hover:bg-rose-50 cursor-pointer" 
                                                 title="Hapus Pengguna">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
@@ -178,16 +194,17 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="py-8 text-center text-xs text-slate-400 italic">
+                        <td colspan="5" class="px-6 py-12 text-center text-xs italic text-slate-400">
                             Tidak ditemukan data pengguna yang cocok.
                         </td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
 
         @if($users->hasPages())
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+            <div class="border-t border-slate-100 bg-slate-50/50 px-5 py-4 sm:px-6">
                 {{ $users->links() }}
             </div>
         @endif
@@ -197,32 +214,32 @@
 
 <!-- ================= MODAL 1: TAMBAH PENGGUNA VIA NIP SSO BKD ================= -->
 <div id="modalTambah" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-        <div class="bg-[#1a3668] text-white p-5 flex items-center justify-between">
+    <div class="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
             <div>
                 <h3 class="text-sm font-bold flex items-center gap-2">
-                    <i class="fas fa-id-card text-blue-200"></i>
-                    <span>Tambah Pengguna</span>
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf4f8] text-[#397b9d]"><i class="fas fa-id-card"></i></span>
+                    <span class="text-base font-bold text-[#293b49]">Tambah Pengguna</span>
                 </h3>
-                <p class="text-[11px] text-blue-100 mt-0.5">Masukkan NIP.</p>
+                <p class="mt-1 text-[11px] text-slate-500">Verifikasi identitas pegawai melalui direktori SSO BKD.</p>
             </div>
-            <button type="button" onclick="tutupModal('modalTambah')" class="text-white/70 hover:text-white p-1 cursor-pointer">
+            <button type="button" onclick="tutupModal('modalTambah')" class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 cursor-pointer">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
 
-        <form action="{{ route('pengguna.store') }}" method="POST" class="p-6 space-y-4">
+        <form action="{{ route('pengguna.store') }}" method="POST" class="space-y-4 overflow-y-auto p-6">
             @csrf
             
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-600">
                     Nomor Induk Pegawai (NIP) <span class="text-rose-500">*</span>
                 </label>
                 <div class="flex gap-2">
                     <input type="text" name="nip" id="inputNip" required placeholder="Contoh: 198507122010011002"
-                           class="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
+                           class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-mono text-slate-800 transition focus:border-[#397b9d] focus:outline-none focus:ring-4 focus:ring-[#397b9d]/10">
                     <button type="button" onclick="verifikasiNipBkd()" id="btnCekNip"
-                            class="bg-blue-50 hover:bg-blue-100 text-[#1a3668] border border-blue-200 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+                            class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-[#cfe0e9] bg-[#edf4f8] px-4 py-3 text-xs font-bold text-[#286b8d] transition hover:bg-[#e0edf4] whitespace-nowrap cursor-pointer">
                         <i class="fas fa-search text-xs"></i>
                         <span>Cek Verifikasi User</span>
                     </button>
@@ -230,35 +247,35 @@
                 <p id="nipStatusFeedback" class="text-[11px] mt-1.5 hidden"></p>
             </div>
 
-            <div id="dataBkdWrapper" class="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-xl hidden">
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+            <div id="dataBkdWrapper" class="hidden space-y-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+                <div class="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
                     <i class="fas fa-user-check text-emerald-500"></i>
                     <span>Data Terverifikasi SSO BKD</span>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nama Lengkap</label>
                     <input type="text" name="name" id="bkdName" readonly required
-                           class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 font-bold cursor-not-allowed">
+                           class="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-800">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Perangkat Daerah (OPD)</label>
                     <input type="text" name="opd_name" id="bkdOpd" readonly
-                           class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-700 cursor-not-allowed">
+                           class="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700">
                     <input type="hidden" name="perangkat_daerah_id" id="bkdOpdId">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email Dinas / SSO</label>
                     <input type="email" name="email" id="bkdEmail" readonly required
-                           class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-700 font-mono cursor-not-allowed">
+                           class="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-mono text-slate-700">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-600">
                     Tetapkan Role / Hak Akses <span class="text-rose-500">*</span>
                 </label>
                 <select name="role_id" id="selectRole" required disabled
-                        class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] disabled:bg-slate-100 disabled:cursor-not-allowed">
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs text-slate-800 transition focus:border-[#397b9d] focus:outline-none focus:ring-4 focus:ring-[#397b9d]/10 disabled:cursor-not-allowed disabled:bg-slate-100">
                     <option value="" disabled selected>Verifikasi NIP terlebih dahulu...</option>
                     @foreach($roles as $role)
                         <option value="{{ $role->id }}">
@@ -268,12 +285,12 @@
                 </select>
             </div>
 
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button type="button" onclick="tutupModal('modalTambah')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition cursor-pointer">
+            <div class="flex items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
+                <button type="button" onclick="tutupModal('modalTambah')" class="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 cursor-pointer">
                     Batal
                 </button>
                 <button type="submit" id="btnSimpanPengguna" disabled
-                        class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                        class="rounded-xl bg-[#2f789e] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#1d6388] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer">
                     Simpan Hak Akses
                 </button>
             </div>
@@ -283,21 +300,21 @@
 
 <!-- ================= MODAL 2: UBAH ROLE PENGGUNA ================= -->
 <div id="modalEdit" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-        <div class="bg-[#1a3668] text-white p-5 flex items-center justify-between">
+    <div class="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
             <div>
                 <h3 class="text-sm font-bold flex items-center gap-2">
-                    <i class="fas fa-user-shield text-blue-200"></i>
-                    <span>Ubah Hak Akses / Role</span>
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#edf4f8] text-[#397b9d]"><i class="fas fa-user-shield"></i></span>
+                    <span class="text-base font-bold text-[#293b49]">Ubah Hak Akses / Role</span>
                 </h3>
-                <p class="text-[11px] text-blue-100 mt-0.5" id="editSubtitle">Sesuaikan peran wewenang pegawai.</p>
+                <p class="mt-1 text-[11px] text-slate-500" id="editSubtitle">Sesuaikan peran wewenang pegawai.</p>
             </div>
-            <button type="button" onclick="tutupModal('modalEdit')" class="text-white/70 hover:text-white p-1 cursor-pointer">
+            <button type="button" onclick="tutupModal('modalEdit')" class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 cursor-pointer">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
 
-        <form id="formEditRole" method="POST" action="" class="p-6 space-y-4">
+        <form id="formEditRole" method="POST" action="" class="space-y-4 overflow-y-auto p-6">
             @csrf
             @method('PUT')
             
@@ -306,7 +323,7 @@
                     Nama Pegawai
                 </label>
                 <input type="text" id="displayEditName" readonly
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold cursor-not-allowed">
+                       class="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs font-bold text-slate-800">
             </div>
 
             <div>
@@ -314,7 +331,7 @@
                     Pilih Role Baru <span class="text-rose-500">*</span>
                 </label>
                 <select name="role_id" id="editRoleId" required
-                        class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-xs text-slate-800 transition focus:border-[#397b9d] focus:outline-none focus:ring-4 focus:ring-[#397b9d]/10">
                     <option value="" disabled>Pilih salah satu role...</option>
                     @foreach($roles as $role)
                         <option value="{{ $role->id }}">
@@ -328,7 +345,7 @@
                 <button type="button" onclick="tutupModal('modalEdit')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                <button type="submit" class="rounded-xl bg-[#2f789e] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#1d6388] cursor-pointer">
                     Perbarui Role
                 </button>
             </div>

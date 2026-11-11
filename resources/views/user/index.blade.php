@@ -4,54 +4,56 @@
 @section('subtitle', 'Pilih dinas dan kategori untuk mengajukan permohonan ke Diskominfo')
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans">
+<div class="min-h-screen bg-[#f3f6f9] p-5 font-sans md:p-8">
     
     <!-- Header Section -->
-    <div class="mb-8">
-        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-            <span>USER</span>
-            <span class="text-gray-300">•</span>
-            <span>TIKET BARU</span>
-        </div>
-        <h1 class="text-3xl font-bold text-[#1a3668] mb-2">Buat permohonan layanan</h1>
-        <p class="text-gray-500">Pilih dinas dan kategori layanan secara berurutan, lalu jelaskan kebutuhan Anda.</p>
+    <div class="mb-6">
+        <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#397b9d] shadow-sm">
+                <span class="h-2 w-2 rounded-full bg-[#397b9d]"></span>
+                <span>USER</span>
+                <span class="text-[#b8c7d0]">•</span>
+                <span>TIKET BARU</span>
+            </div>
+        <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">Buat permohonan</h1>
+        <p class="text-xs text-slate-500 md:text-sm">Pilih dinas dan kategori layanan secara berurutan, lalu jelaskan kebutuhan Anda.</p>
     </div>
 
     <!-- Layout Utama: Form Kiri & Alur Kanan -->
-    <div class="flex flex-col lg:flex-row gap-6 items-start">
+    <div class="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_288px]">
         
         <!-- ========================================== -->
         <!-- KOLOM KIRI: FORMULIR INPUT -->
         <!-- ========================================== -->
-        <div class="flex-1 w-full bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
-            <form action="{{ route('user.tickets.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <div class="w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7">
+            <div class="mb-5 flex items-center gap-3 border-b border-slate-100 pb-4"><span class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-[#347fa5]"><i class="fas fa-clipboard-list"></i></span><div><h2 class="text-sm font-extrabold text-slate-800">Formulir Permohonan</h2><p class="mt-0.5 text-[11px] text-slate-400">Lengkapi data secara berurutan untuk mengirim tiket.</p></div></div>
+            <form action="{{ route('user.tickets.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                 @csrf
                 
                 <!-- 1. Pilih Dinas -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-800 mb-2">
+                    <label class="mb-2 block text-xs font-bold text-slate-800 md:text-sm">
                         1. Pilih Dinas / Instansi <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
                         <select id="inputDinas" 
                                 name="dinas" 
                                 required 
-                                class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-700 focus:ring-2 focus:ring-[#1a3668]/20 focus:border-[#1a3668] outline-none transition-colors appearance-none cursor-pointer">
+                                class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition focus:border-[#397fa5] focus:ring-2 focus:ring-[#397fa5]/15 cursor-pointer">
                             <option value="" disabled selected>Pilih dinas...</option>
                             @foreach($dinasList as $dinas)
                                 <option value="{{ $dinas }}" {{ old('dinas') == $dinas ? 'selected' : '' }}>{{ $dinas }}</option>
                             @endforeach
                         </select>
-                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     </div>
                     @error('dinas')
-                        <p class="text-xs text-rose-500 mt-1.5">{{ $message }}</p>
+                        <p class="mt-1.5 text-xs font-medium text-rose-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- 2. Pilih Kategori Layanan -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-800 mb-2">
+                    <label class="mb-2 block text-xs font-bold text-slate-800 md:text-sm">
                         2. Pilih Kategori Layanan <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
@@ -59,7 +61,7 @@
                                 name="category_id" 
                                 disabled 
                                 required 
-                                class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-400 focus:ring-2 focus:ring-[#1a3668]/20 focus:border-[#1a3668] outline-none transition-colors appearance-none cursor-not-allowed">
+                                class="w-full cursor-not-allowed appearance-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400 outline-none transition focus:border-[#397fa5] focus:ring-2 focus:ring-[#397fa5]/15">
                             <option value="" disabled selected>Pilih kategori...</option>
                             @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
@@ -67,17 +69,17 @@
                                 </option>
                             @endforeach
                         </select>
-                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                        <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
                     </div>
                     @error('category_id')
-                        <p class="text-xs text-rose-500 mt-1.5">{{ $message }}</p>
+                        <p class="mt-1.5 text-xs font-medium text-rose-500">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- 3. Penjelasan Permohonan -->
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-bold text-gray-800 mb-2">
+                        <label class="mb-2 block text-xs font-bold text-slate-800 md:text-sm">
                             3. Penjelasan Permohonan <span class="text-rose-500">*</span>
                         </label>
                         
@@ -88,7 +90,7 @@
                                disabled 
                                value="{{ old('subject') }}"
                                placeholder="Subjek / judul kendala (misal: Gangguan Koneksi Ruang Rapat Lt. 2)" 
-                               class="w-full mb-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-400 focus:ring-2 focus:ring-[#1a3668]/20 focus:border-[#1a3668] outline-none transition-colors cursor-not-allowed">
+                               class="mb-3 w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400 outline-none transition focus:border-[#397fa5] focus:ring-2 focus:ring-[#397fa5]/15">
 
                         <!-- Textarea Deskripsi Rinci -->
                         <textarea id="inputPenjelasan" 
@@ -97,28 +99,28 @@
                                   required 
                                   rows="4" 
                                   placeholder="Jelaskan kendala atau kebutuhan Anda secara detail..." 
-                                  class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-400 focus:ring-2 focus:ring-[#1a3668]/20 focus:border-[#1a3668] outline-none transition-colors resize-y cursor-not-allowed">{{ old('description') }}</textarea>
+                                  class="w-full cursor-not-allowed resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400 outline-none transition focus:border-[#397fa5] focus:ring-2 focus:ring-[#397fa5]/15">{{ old('description') }}</textarea>
                         
                         <p class="text-[11px] text-gray-400 mt-1.5">Sertakan ruangan/lokasi spesifik, kronologi kejadian, dan pesan galat bila ada.</p>
                         @error('description')
-                            <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
+                            <p class="mt-1 text-xs font-medium text-rose-500">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
 
                 <!-- 4. Lampiran File -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-800 mb-2">Lampiran Berkas (Opsional)</label>
-                    <div class="relative flex items-center border border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                    <label class="mb-2 block text-xs font-bold text-slate-800 md:text-sm">Lampiran Berkas (Opsional)</label>
+                    <div class="relative flex items-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50/70 transition hover:bg-slate-50">
                         <input type="file" 
                                id="inputFile" 
                                name="attachment" 
                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                                title="Pilih File">
-                        <div class="bg-[#1a3668] text-white px-5 py-2.5 text-sm font-semibold z-0 border-r border-gray-300 whitespace-nowrap shrink-0">
+                        <div class="z-0 shrink-0 whitespace-nowrap border-r border-slate-300 bg-[#347fa5] px-5 py-3 text-xs font-bold text-white">
                             Choose File
                         </div>
-                        <div id="fileName" class="px-4 text-sm text-gray-400 z-0 truncate w-full">
+                        <div id="fileName" class="z-0 w-full truncate px-4 py-3 text-xs text-slate-400">
                             No file chosen
                         </div>
                     </div>
@@ -127,10 +129,10 @@
 
                 <!-- Tombol Submit -->
                 <div class="pt-2 flex items-center gap-3">
-                    <a href="{{ route('user.tiket') }}" class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-semibold transition">
+                    <a href="{{ route('user.tiket') }}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-xs font-bold text-slate-600 shadow-sm transition hover:bg-slate-50">
                         Batal
                     </a>
-                    <button type="submit" id="btnSubmit" class="bg-[#1a3668] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#112445] transition-colors shadow-sm">
+                    <button type="submit" id="btnSubmit" class="rounded-xl bg-[#347fa5] px-6 py-3 text-xs font-extrabold text-white shadow-sm transition hover:bg-[#2c6a8c] focus:outline-none focus:ring-2 focus:ring-[#347fa5]/30">
                         Kirim Permohonan
                     </button>
                 </div>
@@ -140,8 +142,8 @@
         <!-- ========================================== -->
         <!-- KOLOM KANAN: ALUR PENGAJUAN (TRACKER 3 LANGKAH) -->
         <!-- ========================================== -->
-        <div class="w-full lg:w-80 bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit shrink-0">
-            <h2 class="text-base font-bold text-gray-800 mb-6">Alur pengajuan</h2>
+        <div class="h-fit w-full shrink-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 class="mb-6 text-sm font-extrabold text-slate-800">Alur pengajuan</h2>
             
             <div class="flex flex-col gap-6 relative">
                 <!-- Garis Penghubung Vertikal -->
@@ -149,26 +151,26 @@
 
                 <!-- Step 1: Dinas (Aktif Default) -->
                 <div class="flex items-center gap-4">
-                    <div id="step1-icon" class="w-8 h-8 rounded-full bg-[#1a3668] text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-sm transition-all duration-300">
+                    <div id="step1-icon" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#347fa5] bg-[#347fa5] text-sm font-bold text-white shadow-sm transition-all duration-300">
                         <span class="number">1</span>
                     </div>
-                    <span id="step1-text" class="text-sm font-bold text-[#1a3668] transition-colors duration-300">Dinas / Instansi</span>
+                    <span id="step1-text" class="text-sm font-bold text-[#1d405c] transition-colors duration-300">Dinas / Instansi</span>
                 </div>
 
                 <!-- Step 2: Kategori -->
                 <div class="flex items-center gap-4">
-                    <div id="step2-icon" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-sm font-bold shrink-0 transition-all duration-300">
+                    <div id="step2-icon" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#dce7ee] bg-[#edf3f7] text-sm font-bold text-[#526b7d] transition-all duration-300">
                         <span class="number">2</span>
                     </div>
-                    <span id="step2-text" class="text-sm font-medium text-gray-400 transition-colors duration-300">Kategori Layanan</span>
+                    <span id="step2-text" class="text-sm font-semibold text-[#647b8b] transition-colors duration-300">Kategori Layanan</span>
                 </div>
 
                 <!-- Step 3: Penjelasan -->
                 <div class="flex items-center gap-4">
-                    <div id="step3-icon" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-sm font-bold shrink-0 transition-all duration-300">
+                    <div id="step3-icon" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#dce7ee] bg-[#edf3f7] text-sm font-bold text-[#526b7d] transition-all duration-300">
                         <span class="number">3</span>
                     </div>
-                    <span id="step3-text" class="text-sm font-medium text-gray-400 transition-colors duration-300">Penjelasan & Detail</span>
+                    <span id="step3-text" class="text-sm font-semibold text-[#647b8b] transition-colors duration-300">Penjelasan & Detail</span>
                 </div>
             </div>
         </div>
@@ -186,27 +188,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputFile = document.getElementById('inputFile');
     const fileName = document.getElementById('fileName');
 
+    // Aktifkan field tanpa meninggalkan warna disabled (slate-50/slate-400).
+    // Class yang lama memakai slate-*, sedangkan script sebelumnya hanya
+    // menghapus gray-* sehingga field tampak tetap pudar walaupun sudah aktif.
     function unlockInput(element) {
+        if (!element) return;
+
         element.disabled = false;
-        element.classList.remove('bg-gray-50', 'text-gray-400', 'cursor-not-allowed', 'border-gray-200');
-        element.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+        element.classList.remove(
+            'bg-gray-50', 'text-gray-400', 'cursor-not-allowed', 'border-gray-200',
+            'bg-slate-50', 'text-slate-400', 'border-slate-200'
+        );
+        element.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+        element.style.opacity = '1';
+        element.style.color = '#334155';
+        element.style.cursor = element.tagName === 'SELECT' ? 'pointer' : 'text';
     }
 
+    // Gunakan inline style untuk warna tracker agar tidak bergantung pada
+    // Tailwind CDN saat class arbitrary ditambahkan lewat JavaScript.
     function updateTracker(stepNumber, mode) {
         const icon = document.getElementById(`step${stepNumber}-icon`);
         const text = document.getElementById(`step${stepNumber}-text`);
         if (!icon || !text) return;
 
-        if (mode === 'active' || mode === 'completed') {
-            icon.classList.remove('bg-gray-100', 'text-gray-500');
-            icon.classList.add('bg-[#1a3668]', 'text-white', 'shadow-sm');
-            text.classList.remove('text-gray-400', 'font-medium');
-            text.classList.add('text-[#1a3668]', 'font-bold');
+        const isEnabled = mode === 'active' || mode === 'completed';
+
+        if (isEnabled) {
+            icon.style.backgroundColor = '#347fa5';
+            icon.style.borderColor = '#347fa5';
+            icon.style.color = '#ffffff';
+            icon.style.boxShadow = '0 4px 10px rgba(52, 127, 165, 0.20)';
+            text.style.color = '#1d405c';
+            text.style.fontWeight = '700';
+        } else {
+            icon.style.backgroundColor = '#edf3f7';
+            icon.style.borderColor = '#dce7ee';
+            icon.style.color = '#526b7d';
+            icon.style.boxShadow = 'none';
+            text.style.color = '#647b8b';
+            text.style.fontWeight = '600';
         }
 
         if (mode === 'completed') {
-            icon.innerHTML = '<i class="fas fa-check text-xs"></i>';
-        } else if (mode === 'active') {
+            icon.innerHTML = '<i class="fas fa-check text-xs" aria-hidden="true"></i>';
+        } else {
             icon.innerHTML = `<span class="number">${stepNumber}</span>`;
         }
     }
@@ -237,8 +263,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.value.trim().length > 0) {
             updateTracker(3, 'completed');
         } else {
-            const icon3 = document.getElementById('step3-icon');
-            if (icon3) icon3.innerHTML = '<span class="number">3</span>';
+            // Tahap penjelasan masih aktif, hanya tanda selesai yang dikembalikan.
+            updateTracker(3, 'active');
         }
     });
 
@@ -247,11 +273,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.files.length > 0) {
             fileName.textContent = e.target.files[0].name;
             fileName.classList.remove('text-gray-400');
-            fileName.classList.add('text-[#1a3668]', 'font-medium');
+            fileName.classList.add('font-semibold');
+            fileName.style.color = '#1d405c';
         } else {
             fileName.textContent = 'No file chosen';
-            fileName.classList.remove('text-[#1a3668]', 'font-medium');
+            fileName.classList.remove('font-semibold');
             fileName.classList.add('text-gray-400');
+            fileName.style.color = '';
         }
     });
 

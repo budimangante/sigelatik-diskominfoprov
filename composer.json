@@ -17,7 +17,8 @@
         "laravel/passport": "^13.10",
         "laravel/reverb": "^1.0",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14"
+        "laravel/wayfinder": "^0.1.14",
+        "livewire/livewire": "^4.4"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^4.4",

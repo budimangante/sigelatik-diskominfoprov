@@ -59,7 +59,7 @@
 @endphp
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans">
+<div class="p-5 md:p-7 bg-[#f3f5f7] min-h-screen font-sans">
     
     <!-- ================= TOAST NOTIFIKASI POJOK KANAN ================= -->
     <div id="toastNotification" class="fixed top-5 right-5 z-50 transform transition-all duration-300 translate-y-[-20px] opacity-0 pointer-events-none">
@@ -79,7 +79,7 @@
 
     <!-- Header Tiket & Navigasi Balik -->
     <div class="mb-4">
-        <a href="{{ route('teknisi.index') }}" class="text-xs text-blue-600 hover:underline flex items-center gap-1 mb-2 font-medium">
+        <a href="{{ route('teknisi.index') }}" class="text-[11px] font-bold text-[#397b9d] hover:text-[#245f7d] hover:underline flex items-center gap-2 mb-2">
             <i class="fas fa-arrow-left"></i> Kembali ke Daftar Task
         </a>
     </div>
@@ -98,7 +98,7 @@
     @endif
 
     <!-- ================= BANNER SLA DINAMIS ================= -->
-    <div id="bannerSlaBox" class="{{ $isPaused ? 'bg-amber-600' : ($isStarted && $isOverdue ? 'bg-rose-700' : 'bg-[#1a3668]') }} text-white px-6 py-5 rounded-2xl shadow-sm mb-6 flex flex-col justify-center transition-colors">
+    <div id="bannerSlaBox" class="{{ $isPaused ? 'bg-amber-600' : ($isStarted && $isOverdue ? 'bg-rose-700' : 'bg-[#2d789e]') }} text-white px-5 md:px-6 py-4 md:py-5 rounded-2xl shadow-[0_5px_18px_rgba(45,120,158,0.18)] mb-5 flex flex-col justify-center transition-colors">
         <div class="flex items-center justify-between">
             <span class="text-xs uppercase tracking-wider {{ $isPaused ? 'text-amber-100' : 'text-blue-200' }} font-semibold mb-1">
                 SISA WAKTU SLA PENANGANAN
@@ -107,13 +107,13 @@
                 Target: {{ $targetLabel }}
             </span>
         </div>
-        <div id="slaTimer" class="text-4xl md:text-5xl font-mono font-bold tracking-wide mt-1">
+        <div id="slaTimer" class="text-3xl md:text-[42px] font-mono font-bold tracking-wide mt-1">
             Memuat...
         </div>
     </div>
 
     <!-- ================= KARTU INFO TIKET LENGKAP ================= -->
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm mb-6">
+    <div class="bg-white rounded-2xl border border-[#dce4eb] p-5 md:p-6 shadow-[0_3px_14px_rgba(27,64,92,0.05)] mb-5">
         <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-mono font-semibold text-blue-600">
                 {{ $ticket->ticket_number ?? ('HD-2610-00' . $ticket->id) }}
@@ -124,7 +124,7 @@
             </span>
         </div>
 
-        <h1 class="text-xl md:text-2xl font-bold text-slate-900 mb-6">
+        <h1 class="text-lg md:text-xl font-extrabold text-[#253b4c] mb-5">
             {{ $ticket->subject }}
         </h1>
 
@@ -160,11 +160,11 @@
     </div>
 
     <!-- GRID 2 KOLOM: FORM PENANGANAN (KIRI) + SIDEBAR CHAT (KANAN) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
         
         <!-- ================= KOLOM KIRI (2/3): FORM TINDAKAN TEKNISI ================= -->
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div class="bg-white rounded-2xl shadow-[0_3px_14px_rgba(27,64,92,0.05)] border border-[#dce4eb] p-5 md:p-6">
                 
                 <!-- Deskripsi Keluhan Pelapor -->
                 <div class="mb-5 pb-5 border-b border-gray-100">
@@ -176,7 +176,7 @@
 
                 @if(!$isStarted)
                     <!-- KONDISI 1: Belum Mulai Dikerjakan -->
-                    <div class="bg-blue-50/60 border-2 border-dashed border-[#1a3668]/30 rounded-2xl p-8 text-center">
+                    <div class="bg-[#f1f7fa] border border-dashed border-[#b9d1df] rounded-2xl p-7 text-center">
                         <div class="w-14 h-14 rounded-full bg-[#1a3668]/10 text-[#1a3668] flex items-center justify-center mx-auto mb-3.5 text-xl font-bold">
                             <i class="fas fa-tools"></i>
                         </div>
@@ -188,7 +188,7 @@
                         <form action="{{ route('teknisi.tickets.start', $ticket->id) }}" method="POST">
                             @csrf
                             <button type="submit" 
-                                    class="bg-[#1a3668] hover:bg-[#122548] text-white font-bold px-7 py-3 rounded-xl text-xs transition shadow-md inline-flex items-center gap-2">
+                                    class="bg-[#2d789e] hover:bg-[#245f7d] text-white font-bold px-6 py-3 rounded-xl text-xs transition shadow-sm inline-flex items-center gap-2">
                                 <i class="fas fa-play text-xs"></i>
                                 <span>Mulai Kerjakan Tiket</span>
                             </button>
@@ -200,7 +200,7 @@
                         @csrf
                         
                         <!-- Pilihan Status Kerja: Diproses, Pending, Selesai -->
-                        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                        <div class="bg-white rounded-2xl border border-[#dce4eb] p-5 shadow-sm">
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
                                 Pilih Status / Tindakan Pengerjaan
                             </label>
@@ -285,7 +285,7 @@
 
                         <!-- Tombol Simpan Laporan Dinamis -->
                         <button type="submit" id="btnSubmitLaporan" 
-                                class="w-full py-3 rounded-xl bg-[#1a3668] hover:bg-[#122548] text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-2">
+                                class="w-full py-3 rounded-xl bg-[#2d789e] hover:bg-[#245f7d] text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-2">
                             <span id="btnSubmitText">
                                 @if($ticket->ticket_status_id == $statusPendingId)
                                     Simpan & Jeda Waktu (Pending)
@@ -302,11 +302,10 @@
             </div>
         </div>
 
-        <!-- ================= KOLOM KANAN (1/3): CHAT REALTIME ================= -->
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 h-[620px] flex flex-col overflow-hidden">
-                
-                <div class="bg-[#1e3a8a] text-white p-3.5 flex items-center justify-between shadow-sm">
+        <!-- Chat realtime tersedia sebagai panel mengambang; kontainer tetap ada agar pemuatan pesan berjalan seperti semula. -->
+        <div class="fixed bottom-6 right-6 z-40">
+            <div id="detailChatWidget" class="hidden absolute bottom-16 right-0 w-[min(360px,calc(100vw-2rem))] bg-white rounded-2xl shadow-2xl border border-[#dce4eb] h-[min(560px,calc(100vh-7rem))] flex-col overflow-hidden">
+                <div class="bg-[#1d405c] text-white p-3.5 flex items-center justify-between shadow-sm">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white">
                             <i class="fas fa-comments text-sm text-blue-200"></i>
@@ -338,8 +337,11 @@
                         <i class="fas fa-paper-plane text-xs"></i>
                     </button>
                 </form>
-
             </div>
+            <button type="button" onclick="toggleDetailChat()" aria-label="Buka atau tutup chat pelapor"
+                    class="w-12 h-12 rounded-full bg-[#2d789e] hover:bg-[#245f7d] text-white shadow-lg flex items-center justify-center transition relative border-2 border-white">
+                <i class="fas fa-comments text-lg"></i>
+            </button>
         </div>
 
     </div>
@@ -347,6 +349,17 @@
 
 <!-- ================= JAVASCRIPT ================= -->
 <script>
+    function toggleDetailChat() {
+        const widget = document.getElementById('detailChatWidget');
+        widget.classList.toggle('hidden');
+        if (!widget.classList.contains('hidden')) {
+            widget.classList.add('flex');
+            scrollDetailChatToBottom();
+        } else {
+            widget.classList.remove('flex');
+        }
+    }
+
     const ticketId = {{ (int) $ticket->id }};
     const currentUserId = {{ auth()->id() ?? 'null' }};
     let toastTimeout;
@@ -645,7 +658,7 @@
             <span class="text-[10px] text-gray-400 mb-0.5 px-1 font-medium">${msg.is_me ? 'Anda' : msg.user_name}</span>
             <div class="max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed shadow-sm ${
                 msg.is_me 
-                    ? 'bg-[#1e3a8a] text-white rounded-tr-none' 
+                    ? 'bg-[#2d789e] text-white rounded-tr-none' 
                     : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
             }">
                 ${msg.body}

@@ -4,39 +4,29 @@
 @section('subtitle', 'Daftar pemberitahuan tiket, status SLA, dan pengumuman sistem')
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans">
+<div class="min-h-screen bg-[#f3f6f8] px-4 py-6 font-sans sm:px-6 lg:px-8">
+    <div class="mx-auto w-full max-w-[1900px]">
 
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">
+            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#397b9d] shadow-sm">
                 <span class="text-[#1a3668]">SUPER ADMIN</span>
                 <span class="text-slate-300">•</span>
                 <span>INBOX & MONITORING SISTEM</span>
             </div>
-            <h1 class="text-3xl font-extrabold text-[#1a3668] tracking-tight">
+            <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">
                 Pusat Notifikasi
             </h1>
-            <p class="text-xs text-slate-500 mt-1">
+            <p class="mt-1 text-xs text-[#71808c] sm:text-sm">
                 Pantau peringatan tiket kritis, disposisi bidang, serta arsip siaran ke seluruh unit kerja.
             </p>
         </div>
 
-        <div class="flex items-center gap-2.5">
-            @if($unreadCount > 0)
-                <form action="{{ route('notifikasi.bacaSemua') }}" method="POST">
-                    @csrf
-                    <button type="submit" 
-                            class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer">
-                        <i class="fas fa-check-double text-blue-600 text-xs"></i>
-                        <span>Tandai Semua Dibaca</span>
-                    </button>
-                </form>
-            @endif
-
+        <div class="flex flex-wrap items-center gap-2.5 sm:pt-10">
             <button type="button" 
                     onclick="bukaModalBroadcast()"
-                    class="inline-flex items-center gap-2 bg-[#1a3668] hover:bg-[#122548] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer">
+                    class="inline-flex items-center gap-2 rounded-xl bg-[#2f789e] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#2f789e]/20 transition hover:bg-[#245f80] cursor-pointer">
                 <i class="fas fa-bullhorn text-xs"></i>
                 <span>Siarkan Pengumuman</span>
             </button>
@@ -45,7 +35,7 @@
 
     <!-- Alert Notifikasi -->
     @if(session('success'))
-        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-2xs">
+        <div class="mb-5 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-xs font-semibold text-emerald-800 shadow-sm">
             <div class="flex items-center gap-2.5">
                 <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
                 <span>{{ session('success') }}</span>
@@ -57,10 +47,11 @@
     @endif
 
     <!-- Tab Filter -->
-    <div class="flex items-center gap-2 mb-6 border-b border-slate-200 pb-3 flex-wrap">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#d8e1e7] pb-4">
+        <div class="flex flex-wrap items-center gap-2">
         <!-- 1. Inbox Super Admin -->
         <a href="{{ route('notifikasi', ['filter' => 'all']) }}" 
-           class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $filter === 'all' ? 'bg-[#1a3668] text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+           class="inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold transition {{ $filter === 'all' ? 'border-[#2f789e] bg-[#2f789e] text-white shadow-md shadow-[#2f789e]/15' : 'border-[#dce4e9] bg-white text-[#526775] hover:bg-[#f7fafc]' }}">
             <span>Notifikasi Masuk</span>
             <span class="px-2 py-0.5 rounded-full text-[10px] {{ $filter === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600' }}">
                 {{ $totalCount }}
@@ -69,7 +60,7 @@
 
         <!-- 2. Belum Dibaca -->
         <a href="{{ route('notifikasi', ['filter' => 'unread']) }}" 
-           class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $filter === 'unread' ? 'bg-[#1a3668] text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+           class="inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold transition {{ $filter === 'unread' ? 'border-[#2f789e] bg-[#2f789e] text-white shadow-md shadow-[#2f789e]/15' : 'border-[#dce4e9] bg-white text-[#526775] hover:bg-[#f7fafc]' }}">
             <span>Belum Dibaca</span>
             @if($unreadCount > 0)
                 <span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-500 text-white">
@@ -80,17 +71,28 @@
 
         <!-- 3. Monitoring Seluruh Sistem (Global Log) -->
         <a href="{{ route('notifikasi', ['filter' => 'global']) }}" 
-           class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $filter === 'global' ? 'bg-[#1a3668] text-white shadow-2xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200' }}">
+           class="inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-bold transition {{ $filter === 'global' ? 'border-[#2f789e] bg-[#2f789e] text-white shadow-md shadow-[#2f789e]/15' : 'border-[#dce4e9] bg-white text-[#526775] hover:bg-[#f7fafc]' }}">
             <i class="fas fa-globe text-xs"></i>
             <span>Log Seluruh Notifikasi Sistem</span>
             <span class="px-2 py-0.5 rounded-full text-[10px] {{ $filter === 'global' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600' }}">
                 {{ $globalCount }}
             </span>
         </a>
+        </div>
+
+        @if($unreadCount > 0)
+            <form action="{{ route('notifikasi.bacaSemua') }}" method="POST">
+                @csrf
+                <button type="submit" class="inline-flex items-center gap-2 px-2 py-1.5 text-[11px] font-semibold text-[#71808c] transition hover:text-[#2f789e] cursor-pointer">
+                    <i class="fas fa-check-double text-[#397b9d]"></i>
+                    <span>Tandai semua dibaca</span>
+                </button>
+            </form>
+        @endif
     </div>
 
     <!-- Daftar List Notifikasi -->
-    <div class="space-y-3">
+    <div class="space-y-3.5">
         @forelse($notifications as $notif)
             @php
                 $data = $notif->data;
@@ -105,45 +107,45 @@
                 };
             @endphp
 
-            <div class="bg-white rounded-2xl border transition-all duration-150 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 {{ $isUnread ? 'border-blue-200 bg-blue-50/20 shadow-2xs' : 'border-slate-200/90 shadow-2xs' }}">
-                <div class="flex items-start gap-4">
+            <article class="group flex flex-col justify-between gap-4 rounded-2xl border bg-white p-4 shadow-[0_3px_12px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(25,55,75,0.08)] sm:flex-row sm:items-center sm:p-5 {{ $isUnread ? 'border-[#c7ddeb] ring-1 ring-[#e9f3f8]' : 'border-[#dce4e9]' }}">
+                <div class="flex min-w-0 items-start gap-3.5 sm:gap-4">
                     <!-- Icon Bulat -->
-                    <div class="w-10 h-10 rounded-xl {{ $bgColor }} {{ $iconColor }} border flex items-center justify-center text-sm shrink-0 mt-0.5">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl {{ $bgColor }} {{ $iconColor }} border text-sm shadow-sm mt-0.5">
                         <i class="fas {{ $icon }}"></i>
                     </div>
 
                     <!-- Informasi Pesan -->
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h4 class="text-xs font-bold text-slate-800 {{ $isUnread ? 'font-extrabold' : '' }}">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                            <h4 class="text-[13px] font-bold text-[#293b49] {{ $isUnread ? 'font-extrabold' : '' }}">
                                 {{ $data['title'] ?? 'Pemberitahuan Sistem' }}
                             </h4>
 
                             @if($isUnread)
-                                <span class="w-2 h-2 rounded-full bg-blue-600 inline-block" title="Belum dibaca"></span>
+                                <span class="inline-block h-2 w-2 rounded-full bg-[#2f789e] ring-2 ring-[#e7f1f7]" title="Belum dibaca"></span>
                             @endif
 
                             <!-- Target Label (Khusus Teknisi / OPD / Semua) -->
                             @if(!empty($data['target_label']))
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                <span class="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-[10px] font-bold text-purple-700">
                                     {{ $data['target_label'] }}
                                 </span>
                             @endif
 
                             <!-- Penerima (Jika Sedang Melihat Tab Log Global) -->
                             @if($filter === 'global' && $notif->notifiable)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-700">
                                     Penerima: {{ $notif->notifiable->name }}
                                 </span>
                             @endif
 
-                            <span class="text-[11px] text-slate-400 font-mono">• {{ $notif->created_at->diffForHumans() }}</span>
+                            <span class="text-[10px] font-medium text-[#8a98a2]">{{ $notif->created_at?->format('d M Y, H:i') }}</span>
                         </div>
-                        <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                        <p class="mt-1 text-xs leading-relaxed text-[#667782] sm:text-[13px]">
                             {{ $data['message'] ?? '-' }}
                         </p>
                         @if(!empty($data['sender']))
-                            <div class="text-[10px] text-slate-400 font-medium mt-1">
+                            <div class="mt-1.5 text-[10px] font-medium text-[#84919a]">
                                 Disiarkan oleh: <span class="font-bold text-slate-600">{{ $data['sender'] }}</span>
                             </div>
                         @endif
@@ -151,22 +153,21 @@
                 </div>
 
                 <!-- Tombol Aksi -->
-                <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <div class="flex shrink-0 items-center gap-2 self-end sm:self-center">
                     @if($isUnread && $filter !== 'global')
                         <form action="{{ route('notifikasi.baca', $notif->id) }}" method="POST">
                             @csrf
                             <button type="submit" 
-                                    class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition cursor-pointer"
-                                    title="Tandai Sudah Dibaca">
-                                <i class="fas fa-check text-[11px]"></i>
-                                <span class="ml-1">Tandai Dibaca</span>
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#d7e5ed] bg-white text-[#397b9d] shadow-sm transition hover:border-[#a9c9da] hover:bg-[#edf5f9] cursor-pointer"
+                                    title="Tandai Sudah Dibaca" aria-label="Tandai Sudah Dibaca">
+                                <i class="fas fa-eye text-xs"></i>
                             </button>
                         </form>
                     @endif
 
                     @if(!empty($data['url']) && $data['url'] !== route('notifikasi'))
                         <a href="{{ $data['url'] }}" 
-                           class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
+                           class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#dce4e9] bg-white px-3 text-xs font-bold text-[#526775] shadow-sm transition hover:bg-[#f4f8fa]"
                            title="Buka Tautan Terkait">
                             <span>Lihat Detail</span>
                             <i class="fas fa-arrow-right text-[10px] ml-1"></i>
@@ -177,20 +178,20 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" 
-                                class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-100 bg-white text-rose-500 shadow-sm transition hover:bg-rose-50 hover:text-rose-700 cursor-pointer"
                                 title="Hapus Notifikasi">
                             <i class="fas fa-trash-alt text-xs"></i>
                         </button>
                     </form>
                 </div>
-            </div>
+            </article>
         @empty
-            <div class="bg-white rounded-2xl border border-slate-200/90 p-12 text-center shadow-2xs">
-                <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">
+            <div class="rounded-2xl border border-[#dce4e9] bg-white px-6 py-14 text-center shadow-[0_3px_12px_rgba(25,55,75,0.045)]">
+                <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#edf3f6] text-xl text-[#8a9aa5]">
                     <i class="far fa-bell-slash"></i>
                 </div>
-                <h3 class="text-sm font-bold text-slate-700">Tidak ada notifikasi</h3>
-                <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                <h3 class="text-sm font-bold text-[#293b49]">Tidak ada notifikasi</h3>
+                <p class="mx-auto mt-1 max-w-sm text-xs text-[#84919a]">
                     {{ $filter === 'unread' ? 'Semua notifikasi baru Anda telah selesai dibaca.' : 'Belum ada riwayat pemberitahuan tiket atau aktivitas masuk.' }}
                 </p>
             </div>
@@ -199,30 +200,31 @@
 
     <!-- Pagination -->
     @if($notifications->hasPages())
-        <div class="mt-6">
+        <div class="mt-6 rounded-xl border border-[#dce4e9] bg-white px-4 py-3">
             {{ $notifications->links() }}
         </div>
     @endif
 
 </div>
+</div>
 
 <!-- ================= MODAL: SIARKAN PENGUMUMAN SISTEM ================= -->
-<div id="modalBroadcast" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-        <div class="bg-[#1a3668] text-white p-5 flex items-center justify-between">
+<div id="modalBroadcast" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/45 p-4 backdrop-blur-sm">
+    <div class="w-full max-w-md overflow-hidden rounded-2xl border border-[#dce4e9] bg-white shadow-2xl">
+        <div class="flex items-center justify-between border-b border-[#edf1f4] px-5 py-4">
             <div>
-                <h3 class="text-sm font-bold flex items-center gap-2">
-                    <i class="fas fa-bullhorn text-blue-200"></i>
-                    <span>Siarkan Pengumuman Sistem</span>
+                <h3 class="flex items-center gap-2 text-sm font-bold text-[#293b49]">
+                    <i class="fas fa-bullhorn text-[#397b9d]"></i>
+                    <span>Tambah Pengumuman</span>
                 </h3>
-                <p class="text-[11px] text-blue-100 mt-0.5">Kirim pesan notifikasi serentak ke akun pengguna di SIGELATIK.</p>
+                <p class="mt-0.5 text-[11px] text-[#84919a]">Kirim pesan pemberitahuan kepada pengguna SIGELATIK.</p>
             </div>
-            <button type="button" onclick="tutupModal('modalBroadcast')" class="text-white/70 hover:text-white p-1 cursor-pointer">
+            <button type="button" onclick="tutupModal('modalBroadcast')" class="rounded-lg p-2 text-[#84919a] transition hover:bg-slate-100 hover:text-slate-700 cursor-pointer">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
 
-        <form action="{{ route('notifikasi.broadcast') }}" method="POST" class="p-6 space-y-4">
+        <form action="{{ route('notifikasi.broadcast') }}" method="POST" class="space-y-4 px-5 py-5">
             @csrf
             
             <div>
@@ -230,12 +232,12 @@
                     Target Penerima <span class="text-rose-500">*</span>
                 </label>
                 <select name="target_role" 
-                        class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
+                        class="w-full rounded-xl border border-[#dce4e9] bg-white px-3.5 py-2.5 text-xs text-[#293b49] outline-none transition focus:border-[#397b9d] focus:ring-2 focus:ring-[#397b9d]/15">
                     <option value="all">Semua Pengguna Terdaftar</option>
                     <option value="teknisi">Khusus Teknisi Helpdesk</option>
                     <option value="asn">Khusus Pegawai ASN / OPD</option>
                 </select>
-                <p class="text-[11px] text-slate-400 mt-1">Salinan pengumuman akan otomatis tersimpan di riwayat Super Admin.</p>
+                <p class="mt-1 text-[10px] text-[#84919a]">Salinan pengumuman akan otomatis tersimpan di riwayat Super Admin.</p>
             </div>
 
             <div>
@@ -243,7 +245,7 @@
                     Judul Pengumuman <span class="text-rose-500">*</span>
                 </label>
                 <input type="text" name="title" required placeholder="Contoh: Pemeliharaan Server Sistem (Maintenance)"
-                       class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]">
+                       class="w-full rounded-xl border border-[#dce4e9] bg-white px-3.5 py-2.5 text-xs text-[#293b49] outline-none transition focus:border-[#397b9d] focus:ring-2 focus:ring-[#397b9d]/15">
             </div>
 
             <div>
@@ -251,14 +253,14 @@
                     Pesan Pemberitahuan <span class="text-rose-500">*</span>
                 </label>
                 <textarea name="message" rows="4" required placeholder="Tuliskan pesan yang akan disiarkan..."
-                          class="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668]"></textarea>
+                          class="w-full rounded-xl border border-[#dce4e9] bg-white p-3.5 text-xs text-[#293b49] outline-none transition focus:border-[#397b9d] focus:ring-2 focus:ring-[#397b9d]/15"></textarea>
             </div>
 
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button type="button" onclick="tutupModal('modalBroadcast')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition cursor-pointer">
+            <div class="flex items-center justify-end gap-2.5 border-t border-[#edf1f4] pt-4">
+                <button type="button" onclick="tutupModal('modalBroadcast')" class="rounded-xl border border-[#dce4e9] px-4 py-2.5 text-xs font-bold text-[#647782] transition hover:bg-slate-50 cursor-pointer">
                     Batal
                 </button>
-                <button type="submit" class="bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
+                <button type="submit" class="rounded-xl bg-[#2f789e] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#245f80] cursor-pointer">
                     Kirim Sekarang
                 </button>
             </div>
@@ -269,10 +271,12 @@
 <script>
     function bukaModalBroadcast() {
         document.getElementById('modalBroadcast').classList.remove('hidden');
+        document.getElementById('modalBroadcast').classList.add('flex');
     }
 
     function tutupModal(id) {
         document.getElementById(id).classList.add('hidden');
+        document.getElementById(id).classList.remove('flex');
     }
 </script>
 @endsection

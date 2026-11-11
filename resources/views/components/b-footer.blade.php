@@ -1,4 +1,3 @@
-<footer class="bg-white border-t border-gray-200 px-6 py-4 flex flex-col md:flex-row justify-between items-center mt-auto">
-    <div class="text-[13px] font-bold text-[#334155]">
-        Copyright &copy; 2024 SIGELATIK - DISKOMINFO KALTIM
+<footer class="py-7 text-center text-[11px] font-medium text-[#9aa6ad]">
+            Copyright © {{ date('Y') }} SIGELATIK – Dinas Komunikasi dan Informatika
 </footer>

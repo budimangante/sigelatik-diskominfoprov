@@ -1,83 +1,78 @@
 @extends('components.b-master')
 
 @section('content')
-<div class="p-6 md:p-8 bg-[#f8fafc] min-h-screen font-sans">
+<div class="p-5 md:p-7 bg-[#f3f5f7] min-h-screen font-sans">
     
     <!-- Header Section -->
-    <div class="mb-6">
-        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-            <span>TEKNISI</span>
-            <span class="text-slate-300">•</span>
+    <div class="mb-5">
+        <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#397b9d] shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-[#397b9d]"></span>
+            <span>TEKNISI</span><span class="text-[#b8c7d0]">•</span>
             <span class="text-slate-600 font-bold uppercase">{{ auth()->user()->name ?? 'TEKNISI' }}</span>
         </div>
-        <h1 class="text-3xl font-extrabold text-[#1a3668] tracking-tight">
-            History Ticket
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm ml-2">
+        <h1 class="mb-1 text-3xl text-[#1d405c] sm:text-[25px]">
+            <span class="font-['StretchPro'] tracking-wider uppercase">History Ticket</span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#e9f5ef] text-[#25845d] border border-[#cde8da] ml-2 align-middle">
                 <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-                <span id="historyCountBadge">{{ $tickets->count() }} Tiket Selesai</span>
+                <span id="activeTicketCountBadge">{{ $tickets->count() }} Tiket</span>
             </span>
         </h1>
-        <p class="text-xs md:text-sm text-slate-500 mt-1">Pilih tiket untuk melihat riwayat penanganan, arsip chat, pencapaian SLA, dan log eskalasi.</p>
+        <p class="text-[11px] md:text-xs text-slate-500 mt-1">Pilih tiket untuk melihat riwayat penanganan, arsip chat, pencapaian SLA, dan log eskalasi.</p>
     </div>
 
     <!-- Filter & Pencarian Live -->
-    <div class="mb-6 space-y-3">
+    <div class="mb-5 bg-white border border-[#dce4eb] rounded-2xl p-3.5 shadow-[0_3px_12px_rgba(27,64,92,0.04)]">
         <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                <i class="fas fa-search text-sm"></i>
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fas fa-search text-xs"></i>
             </span>
-            <input type="text" 
-                   id="liveSearchHistory" 
-                   placeholder="Ketik nomor tiket, keluhan, nama pelapor, atau instansi (mis. 0142, Srikandi)..." 
+            <input type="text"
+                   id="liveSearchHistory"
+                   placeholder="Ketik nomor tiket, keluhan, nama pelapor, atau instansi (mis. 0142, Srikandi)..."
                    autocomplete="off"
-                   class="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-10 py-3.5 text-xs md:text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] shadow-sm transition">
-            <button type="button" 
-                    id="btnClearHistorySearch" 
-                    onclick="resetLiveHistoryFilter()" 
-                    class="hidden absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600">
-                <i class="fas fa-times-circle text-base"></i>
+                   class="w-full bg-[#f7f9fb] border border-[#dce4eb] rounded-xl pl-10 pr-10 py-3 text-[11px] md:text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3d83a4]/15 focus:border-[#397b9d] transition">
+            <button type="button"
+                    id="btnClearHistorySearch"
+                    onclick="resetLiveHistoryFilter()"
+                    class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times-circle text-sm"></i>
             </button>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <!-- Filter Status Riwayat (Solved / Canceled) -->
-            <div class="relative">
-                <select id="liveStatusFilterHistory" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] appearance-none shadow-sm cursor-pointer">
+
+        <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2.5 mt-2.5">
+            <div class="relative min-w-0">
+                <select id="liveStatusFilterHistory" class="w-full bg-white border border-[#dce4eb] rounded-xl px-3.5 py-2.5 text-[11px] md:text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#3d83a4]/15 focus:border-[#397b9d] appearance-none cursor-pointer">
                     <option value="">Semua Status Selesai</option>
                     <option value="4">Solved (Selesai)</option>
                     <option value="5">Canceled (Dibatalkan)</option>
                 </select>
-                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
             </div>
 
-            <!-- Filter Instansi / Dinas -->
-            <div class="relative">
-                <select id="liveOrgFilterHistory" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] appearance-none shadow-sm cursor-pointer">
+            <div class="relative min-w-0">
+                <select id="liveOrgFilterHistory" class="w-full bg-white border border-[#dce4eb] rounded-xl px-3.5 py-2.5 text-[11px] md:text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#3d83a4]/15 focus:border-[#397b9d] appearance-none cursor-pointer">
                     <option value="">Semua Instansi / Dinas</option>
                     @php
-                        $uniqueHistoryOrgs =$tickets->pluck('user.organization')->filter()->unique();
+                        $uniqueHistoryOrgs = $tickets->pluck('user.organization')->filter()->unique();
                     @endphp
                     @foreach ($uniqueHistoryOrgs as $orgItem)
                         <option value="{{ strtolower($orgItem) }}">{{ $orgItem }}</option>
                     @endforeach
                 </select>
-                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                <i class="fas fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
             </div>
-            
-            <!-- Tombol Reset Cepat -->
-            <div>
-                <button type="button" 
-                        onclick="resetLiveHistoryFilter()" 
-                        class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm">
-                    <i class="fas fa-redo-alt text-xs"></i>
-                    <span>Reset Filter</span>
-                </button>
-            </div>
+
+            <button type="button"
+                    onclick="resetLiveHistoryFilter()"
+                    class="px-4 py-2.5 bg-transparent hover:bg-slate-50 text-slate-500 hover:text-[#286f94] font-semibold rounded-xl text-[11px] transition flex items-center justify-center gap-2 whitespace-nowrap">
+                <i class="fas fa-redo-alt text-[10px]"></i>
+                <span>Reset Filter</span>
+            </button>
         </div>
     </div>
 
     <!-- List Kartu Tiket History -->
-    <div id="historyCardsContainer" class="space-y-3.5">
+    <div id="historyCardsContainer" class="grid grid-cols-1 xl:grid-cols-2 gap-3.5">
         @if ($tickets->count() > 0)
             @foreach ($tickets as $item)
                 @php
@@ -96,17 +91,17 @@
 
                     $searchIndex = strtolower($itemCode . ' ' .$subject . ' ' . $reporter . ' ' .$org);
                 @endphp
-                <div class="history-card bg-white rounded-2xl shadow-sm border border-slate-200 p-5 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                <div class="history-card bg-white rounded-2xl shadow-[0_3px_14px_rgba(27,64,92,0.05)] border border-[#dce4eb] p-4 md:p-5 hover:border-[#a9c6d8] hover:shadow-[0_7px_20px_rgba(27,64,92,0.08)] transition-all duration-200 min-w-0"
                      data-search="{{ $searchIndex }}"
                      data-status-id="{{ $item->ticket_status_id }}"
                      data-org="{{ strtolower($org) }}">
                     <div class="flex justify-between items-start">
                         <div class="pr-6">
                             <span class="text-xs font-mono font-semibold text-slate-400 block mb-1">{{ $itemCode }}</span>
-                            <a href="{{ route('teknisi.history.show', $item) }}" class="text-base font-bold text-slate-900 hover:text-blue-600 transition block leading-snug">
+                            <a href="{{ route('teknisi.history.show', $item) }}" class="text-sm md:text-[15px] font-bold text-[#253b4c] hover:text-[#286f94] transition block leading-snug">
                                 {{ $subject }}
                             </a>
-                            <p class="text-xs text-slate-500 mt-1">
+                            <p class="text-[10px] text-slate-500 mt-1">
                                 <span>{{ $org }}</span>
                                 <span class="mx-1">•</span>
                                 <span>{{ $reporter }}</span>
@@ -129,7 +124,7 @@
         @endif
 
         <!-- State Hasil Live Search Tidak Ditemukan -->
-        <div id="noMatchHistoryState" class="hidden bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center">
+        <div id="noMatchHistoryState" class="hidden xl:col-span-2 bg-white rounded-2xl border border-dashed border-[#cfdbe4] p-10 text-center">
             <div class="w-14 h-14 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3 text-xl">
                 <i class="fas fa-search-minus"></i>
             </div>
@@ -142,7 +137,7 @@
 
         @if ($tickets->count() === 0)
             <!-- State Kosong Default -->
-            <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center">
+            <div class="xl:col-span-2 bg-white rounded-2xl border border-dashed border-[#cfdbe4] p-10 text-center">
                 <div class="w-16 h-16 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
                     <i class="fas fa-history"></i>
                 </div>

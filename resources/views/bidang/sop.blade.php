@@ -4,160 +4,141 @@
 @section('subtitle', 'Pustaka regulasi dan checklist tahapan kerja teknisi SIGELATIK')
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans">
+<div class="min-h-screen bg-[#f4f7fa] px-4 py-5 font-sans sm:px-6 lg:px-7 space-y-5">
 
-    <!-- Header & Action Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800">Manajemen Standar Operasional Prosedur (SOP)</h1>
-            <p class="text-xs text-slate-500 mt-0.5">Daftar dokumen regulasi penanganan aduan dan rincian tahapan kerja baku untuk teknisi.</p>
+    <!-- Header halaman -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="min-w-0">
+            <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#397b9d] shadow-sm">
+                <span class="h-1.5 w-1.5 rounded-full bg-[#397b9d]"></span>
+                <span>HELPDESK BIDANG</span>
+                <span class="text-[#b8c7d0]">•</span>
+                <span>PUSTAKA PROSEDUR</span>
+            </div>
+            <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">Manajemen SOP</h1>
+            <p class="mt-1 text-xs text-slate-500">Daftar dokumen regulasi penanganan aduan dan rincian tahapan kerja baku untuk teknisi.</p>
         </div>
-        <div>
-            <button type="button" onclick="bukaModalSop()" 
-                    class="bg-[#1a3668] hover:bg-[#122548] text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-xs flex items-center gap-1.5">
-                <i class="fas fa-plus text-[10px]"></i>
-                <span>Tambah Dokumen SOP</span>
-            </button>
-        </div>
+        <button type="button" onclick="bukaModalSop()"
+                class="inline-flex items-center gap-2 self-start rounded-xl bg-[#327fa2] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#286b89] sm:self-auto">
+            <i class="fas fa-plus text-[10px]"></i>
+            <span>Tambah Dokumen SOP</span>
+        </button>
     </div>
 
     <!-- Alert Notifikasi -->
     @if(session('success'))
-        <div class="mb-5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
-            <span>{{ session('success') }}</span>
-            <button onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800">&times;</button>
+        <div class="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
+            <div class="flex items-center gap-2"><i class="fas fa-check-circle text-emerald-600"></i><span>{{ session('success') }}</span></div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800">&times;</button>
         </div>
     @endif
 
-    <!-- Daftar Dokumen SOP & Rincian Tahapan -->
-    <div class="space-y-4">
+    @if($errors->any())
+        <div class="space-y-1 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-800">
+            @foreach($errors->all() as $error)
+                <div class="flex items-center gap-2"><i class="fas fa-exclamation-circle text-rose-600"></i><span>{{ $error }}</span></div>
+            @endforeach
+        </div>
+    @endif
+
+    <!-- Kartu dokumen SOP -->
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
         @forelse($sops as $sop)
             @php
                 $pdfPath = $sop->file?->path ?? $sop->file_path ?? null;
                 $serviceName = $sop->service?->name ?? $sop->service_name ?? null;
+                $stepCount = count($sop->steps ?? []);
             @endphp
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
-                
-                <!-- Header Dokumen SOP -->
-                <div class="px-5 py-4 bg-slate-50/70 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div class="flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-white border border-slate-200 text-[#1a3668] flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
-                            <i class="fas fa-file-contract"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="font-bold text-sm text-slate-900">{{ $sop->title ?? $sop->name }}</h3>
-                                
-                                @if(!empty($serviceName))
-                                    <span class="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded">
-                                        {{ $serviceName }}
-                                    </span>
-                                @endif
-
-                                @if(!empty($sop->doc_number))
-                                    <span class="text-[10px] font-mono bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium">
-                                        {{ $sop->doc_number }}
-                                    </span>
-                                @endif
-
-                                @if(isset($sop->version))
-                                    <span class="text-[10px] font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-bold">
-                                        v{{ $sop->version }}
-                                    </span>
-                                @endif
-                            </div>
-                            
-                            @if(!empty($sop->description))
-                                <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-                                    {{ $sop->description }}
-                                </p>
+            <article class="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#dce5ec] bg-white shadow-[0_3px_14px_rgba(24,54,82,0.045)] transition hover:-translate-y-0.5 hover:shadow-md">
+                <div class="flex items-start gap-3 px-4 pt-4 sm:px-5">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d9e8ef] bg-[#eff6f9] text-[#397b9d]">
+                        <i class="fas fa-file-contract text-sm"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <h3 class="text-sm font-extrabold leading-snug text-[#243d50]">{{ $sop->title ?? $sop->name }}</h3>
+                            @if(!empty($serviceName))
+                                <span class="rounded-full border border-[#dceaf1] bg-[#f1f7fa] px-2 py-0.5 text-[10px] font-bold text-[#397b9d]">{{ $serviceName }}</span>
+                            @endif
+                            @if(!empty($sop->doc_number))
+                                <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] font-medium text-slate-600">{{ $sop->doc_number }}</span>
+                            @endif
+                            @if(isset($sop->version))
+                                <span class="rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 font-mono text-[10px] font-bold text-indigo-700">v{{ $sop->version }}</span>
                             @endif
                         </div>
+                        @if(!empty($sop->description))
+                            <p class="mt-2 line-clamp-3 text-xs leading-relaxed text-slate-500">{{ $sop->description }}</p>
+                        @endif
                     </div>
+                </div>
 
-                    <div class="flex items-center gap-2 self-start md:self-auto shrink-0">
-                    @if($pdfPath)
-                        <a href="{{ route('bidang.sop.view', $sop->slug ?? $sop->id) }}" target="_blank"
-                        class="text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
-                            <i class="fas fa-file-pdf"></i>
-                            <span>Lihat PDF</span>
-                        </a>
-                    @endif
-
-                        <button type="button" 
-                                onclick="bukaModalTahapan({{ $sop->id }}, '{{ addslashes($sop->title ?? $sop->name) }}')"
-                                class="text-xs font-semibold text-[#1a3668] hover:text-blue-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:border-[#1a3668] transition">
-                            + Tambah Tahapan
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-4 py-3 sm:px-5">
+                    <div class="flex min-w-0 items-center gap-2 text-[10px] text-slate-400">
+                        @if($pdfPath)
+                            <a href="{{ route('bidang.sop.view', $sop->slug ?? $sop->id) }}" target="_blank" class="inline-flex min-w-0 items-center gap-1.5 font-semibold text-[#397b9d] transition hover:text-[#1d405c]">
+                                <i class="fas fa-file-pdf text-rose-500"></i><span>Lihat dokumen PDF</span>
+                            </a>
+                        @else
+                            <span class="inline-flex items-center gap-1.5"><i class="far fa-file text-slate-400"></i>Dokumen belum tersedia</span>
+                        @endif
+                        <span class="text-slate-300">•</span>
+                        <span>{{ $stepCount }} tahapan</span>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-1.5">
+                        <button type="button" onclick="bukaModalTahapan({{ $sop->id }}, '{{ addslashes($sop->title ?? $sop->name) }}')"
+                                class="inline-flex items-center gap-1.5 rounded-lg border border-[#dce5ec] bg-white px-2.5 py-1.5 text-[10px] font-bold text-[#397b9d] transition hover:bg-[#f1f7fa]">
+                            <i class="fas fa-plus text-[9px]"></i><span>Tambah Tahapan</span>
                         </button>
-                        <button type="button" 
-                                onclick="editSop({{ $sop->id }}, {{ $sop->service_id ?? 'null' }}, '{{ addslashes($sop->title ?? $sop->name) }}', '{{ addslashes($sop->doc_number ?? '') }}', '{{ addslashes($sop->description ?? '') }}')"
-                                class="text-xs text-slate-600 hover:text-slate-800 px-2 py-1.5">
-                            Edit
+                        <button type="button" onclick="editSop({{ $sop->id }}, {{ $sop->service_id ?? 'null' }}, '{{ addslashes($sop->title ?? $sop->name) }}', '{{ addslashes($sop->doc_number ?? '') }}', '{{ addslashes($sop->description ?? '') }}')"
+                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:border-[#a9c2d0] hover:bg-[#f1f7fa] hover:text-[#397b9d]" title="Edit SOP">
+                            <i class="fas fa-pen text-[10px]"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Daftar Tahapan Kerja SOP -->
-                <div class="p-5">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-                        <span>Tahapan Pengerjaan Lapangan:</span>
-                        <span class="font-normal normal-case text-slate-500">
-                            {{ count($sop->steps ?? []) }} langkah pengerjaan
-                        </span>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                        @forelse($sop->steps ?? [] as $index => $step)
-                            <div class="p-3 bg-slate-50/60 border border-slate-200/80 rounded-lg flex items-start justify-between text-xs gap-3 group hover:bg-slate-100/70 transition">
-                                <div class="flex items-start gap-2.5 min-w-0">
-                                    <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                                        {{ $step->step_no ?? ($index + 1) }}
-                                    </span>
-                                    <span class="text-slate-800 font-medium leading-relaxed break-words">
-                                        {{ $step->description ?? $step->name }}
-                                    </span>
+                @if($stepCount > 0)
+                    <details class="border-t border-slate-100 px-4 py-3 sm:px-5">
+                        <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-[11px] font-bold text-slate-500 marker:hidden">
+                            <span class="inline-flex items-center gap-2"><i class="fas fa-list-check text-[#397b9d]"></i> Tahapan pengerjaan lapangan</span>
+                            <span class="text-[10px] font-semibold text-[#397b9d]">Lihat tahapan <i class="fas fa-chevron-down ml-1 text-[9px]"></i></span>
+                        </summary>
+                        <div class="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+                            @foreach($sop->steps ?? [] as $index => $step)
+                                <div class="flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-[#f8fafc] p-3 text-xs">
+                                    <div class="flex min-w-0 items-start gap-2.5">
+                                        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e6f0f5] text-[10px] font-bold text-[#397b9d]">{{ $step->step_no ?? ($index + 1) }}</span>
+                                        <span class="break-words font-medium leading-relaxed text-slate-700">{{ $step->description ?? $step->name }}</span>
+                                    </div>
+                                    <div class="flex shrink-0 items-center gap-1">
+                                        <button type="button" onclick="bukaModalEditTahapan({{ $step->id }}, '{{ addslashes($step->description ?? $step->name) }}', {{ $step->step_no ?? ($index + 1) }})" class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white hover:text-[#397b9d]" title="Edit Tahapan"><i class="fas fa-pen text-[10px]"></i></button>
+                                        <form action="{{ route('bidang.sop.step.destroy', $step->id) }}" method="POST" onsubmit="return confirm('Hapus tahapan ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600" title="Hapus Tahapan"><i class="fas fa-trash-alt text-[10px]"></i></button>
+                                        </form>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" 
-                                            onclick="bukaModalEditTahapan({{ $step->id }}, '{{ addslashes($step->description ?? $step->name) }}', {{ $step->step_no ?? ($index + 1) }})" 
-                                            class="p-1 text-slate-400 hover:text-blue-600 transition" 
-                                            title="Edit Tahapan">
-                                        <i class="fas fa-pen text-[11px]"></i>
-                                    </button>
-                                    <form action="{{ route('bidang.sop.step.destroy', $step->id) }}" method="POST" onsubmit="return confirm('Hapus tahapan ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-1 text-slate-400 hover:text-rose-600 transition" title="Hapus Tahapan">
-                                            <i class="fas fa-trash-alt text-[11px]"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="col-span-full py-3 text-center text-xs text-slate-400 italic bg-slate-50/30 rounded-lg border border-dashed border-slate-200">
-                                Belum ada tahapan kerja yang didaftarkan. Klik tombol '+ Tambah Tahapan' untuk menambahkan langkah pengerjaan teknisi.
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-
-            </div>
+                            @endforeach
+                        </div>
+                    </details>
+                @endif
+            </article>
         @empty
-            <div class="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-400 text-xs">
-                <i class="fas fa-book-open text-3xl mb-2 text-slate-300 block"></i>
+            <div class="col-span-full rounded-2xl border border-dashed border-[#d3e0e8] bg-white p-12 text-center text-xs text-slate-400">
+                <i class="fas fa-book-open mb-3 block text-3xl text-slate-300"></i>
                 <span class="font-semibold text-slate-600">Belum ada dokumen SOP.</span>
                 <p class="mt-1">Silakan klik tombol "Tambah Dokumen SOP" untuk mendaftarkan dokumen acuan baru.</p>
             </div>
         @endforelse
     </div>
-
 </div>
 
 <!-- Modal 1: Tambah / Edit Dokumen SOP -->
-<div id="modalSop" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 hidden p-4">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
-        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
-            <h3 id="judulModalSop" class="font-bold text-sm text-slate-800">Tambah Dokumen SOP</h3>
+<div id="modalSop" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 backdrop-blur-sm hidden p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 id="judulModalSop" class="font-bold text-sm text-[#243d50]">Tambah Dokumen SOP</h3>
             <button type="button" onclick="tutupModal('modalSop')" class="text-slate-400 hover:text-slate-600">&times;</button>
         </div>
         <form id="formSop" method="POST" action="{{ route('bidang.sop.store') }}" enctype="multipart/form-data" class="p-5 space-y-3.5">
@@ -213,11 +194,11 @@
 </div>
 
 <!-- Modal 2: Tambah Tahapan Checklist SOP -->
-<div id="modalTahapan" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 hidden p-4">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-sm overflow-hidden">
-        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+<div id="modalTahapan" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 backdrop-blur-sm hidden p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <div>
-                <h3 class="font-bold text-sm text-slate-800">Tambah Langkah SOP</h3>
+                <h3 class="font-bold text-sm text-[#243d50]">Tambah Langkah SOP</h3>
                 <p id="subJudulTahapanSop" class="text-[11px] text-slate-500 truncate max-w-xs"></p>
             </div>
             <button type="button" onclick="tutupModal('modalTahapan')" class="text-slate-400 hover:text-slate-600">&times;</button>
@@ -238,11 +219,11 @@
 </div>
 
 <!-- Modal 3: Edit Tahapan Checklist SOP -->
-<div id="modalEditTahapan" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 hidden p-4">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-sm overflow-hidden">
-        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+<div id="modalEditTahapan" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 backdrop-blur-sm hidden p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <div>
-                <h3 class="font-bold text-sm text-slate-800">Edit Langkah SOP</h3>
+                <h3 class="font-bold text-sm text-[#243d50]">Edit Langkah SOP</h3>
                 <p id="labelNomorTahapan" class="text-[11px] text-slate-500"></p>
             </div>
             <button type="button" onclick="tutupModal('modalEditTahapan')" class="text-slate-400 hover:text-slate-600">&times;</button>

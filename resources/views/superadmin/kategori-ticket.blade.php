@@ -4,247 +4,319 @@
 @section('subtitle', 'Analisis dan Distribusi Kategori Layanan Tiket')
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans space-y-6">
-
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">
-                <span class="text-[#1a3668]">HELPDESK ANALYTICS</span>
-                <span class="text-slate-300">•</span>
-                <span>CATEGORY BREAKDOWN</span>
-            </div>
-            <h1 class="text-3xl font-extrabold text-[#1a3668] tracking-tight">
-                Statistik Kategori Layanan
-            </h1>
-            <p class="text-xs text-slate-500 mt-1">
-                Monitoring beban penanganan tiket dan rasio penyelesaian per kelompok layanan teknis.
-            </p>
-        </div>
-        <div class="inline-flex items-center gap-2 px-3.5 py-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs">
-            <i class="fas fa-folder-open text-[#1a3668]"></i>
-            <span>{{ $kategoriData['total_categories'] ?? 0 }} Kategori Terdaftar</span>
-        </div>
-    </div>
-
-    <!-- 4 Indikator Metrik -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Total Kategori -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+<div class="min-h-screen space-y-5 bg-[#f3f6f8] p-4 font-sans sm:p-5 lg:p-6">
+    <div class="mx-auto w-full max-w-[1900px]">
+        <!-- Header -->
+        <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Kategori Aktif</p>
-                <h3 class="text-2xl font-extrabold text-[#1a3668] mt-1">{{ $kategoriData['total_categories'] ?? 0 }}</h3>
-                <span class="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md inline-block mt-1">Kelompok Layanan</span>
+                <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[#397b9d] shadow-sm">
+                    <span class="h-1.5 w-1.5 rounded-full bg-[#397b9d]"></span>
+                    <span>Helpdesk Analytics</span>
+                    <span class="text-[#b8c7d0]">•</span>
+                    <span>Category Breakdown</span>
+                </div>
+                <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">Kategori Layanan</h1>
+                <p class="mt-1 text-xs text-[#84919a] sm:text-sm">Monitoring beban penanganan tiket dan rasio penyelesaian per kelompok layanan teknis.</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-50 text-[#1a3668] flex items-center justify-center text-lg shrink-0">
-                <i class="fas fa-th-large"></i>
+
+            <!-- Hanya menampilkan jumlah kategori; tidak menambahkan tombol tambah kategori -->
+            <div class="inline-flex w-fit items-center gap-2 rounded-xl border border-[#dce4e9] bg-white px-3.5 py-2.5 text-xs font-bold text-[#496c82] shadow-sm">
+                <i class="fas fa-folder-open text-[#397b9d]"></i>
+                <span>{{ $kategoriData['total_categories'] ?? 0 }} Kategori Terdaftar</span>
             </div>
         </div>
 
-        <!-- Total Tiket Masuk -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Aduan Masuk</p>
-                <h3 class="text-2xl font-extrabold text-slate-800 mt-1">{{ $kategoriData['total_tickets'] ?? 0 }}</h3>
-                <span class="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md inline-block mt-1">Akumulasi Seluruh Kategori</span>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg shrink-0">
-                <i class="fas fa-ticket-alt"></i>
-            </div>
+        <!-- KPI Cards: seluruh angka berasal dari $kategoriData -->
+        <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+            <!-- Kategori Aktif -->
+            <section class="flex min-h-[112px] items-center justify-between rounded-2xl border border-[#dce4e9] bg-white p-4 shadow-[0_3px_12px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_9px_22px_rgba(25,55,75,0.08)] sm:p-5">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-[#84919a]">Kategori Aktif</p>
+                    <h2 class="mt-1 text-[30px] font-extrabold leading-none tracking-tight text-[#293b49]">{{ $kategoriData['total_categories'] ?? 0 }}</h2>
+                    <span class="mt-2 inline-flex rounded-full bg-[#edf4f8] px-2.5 py-1 text-[10px] font-semibold text-[#47718a]">Kelompok Layanan</span>
+                </div>
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#2f789e] text-base text-white shadow-sm"><i class="fas fa-layer-group"></i></span>
+            </section>
+
+            <!-- Total Aduan Masuk -->
+            <section class="flex min-h-[112px] items-center justify-between rounded-2xl border border-[#dce4e9] bg-white p-4 shadow-[0_3px_12px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_9px_22px_rgba(25,55,75,0.08)] sm:p-5">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-[#84919a]">Total Aduan Masuk</p>
+                    <h2 class="mt-1 text-[30px] font-extrabold leading-none tracking-tight text-[#293b49]">{{ $kategoriData['total_tickets'] ?? 0 }}</h2>
+                    <span class="mt-2 inline-flex rounded-full bg-[#f0f3f5] px-2.5 py-1 text-[10px] font-semibold text-[#647783]">Akumulasi Seluruh Kategori</span>
+                </div>
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1d405c] text-base text-white shadow-sm"><i class="fas fa-ticket-alt"></i></span>
+            </section>
+
+            <!-- Aduan Terbanyak -->
+            <section class="flex min-h-[112px] items-center justify-between rounded-2xl border border-[#dce4e9] bg-white p-4 shadow-[0_3px_12px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_9px_22px_rgba(25,55,75,0.08)] sm:p-5">
+                <div class="min-w-0 max-w-[75%]">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-[#84919a]">Aduan Terbanyak</p>
+                    <h2 class="mt-1 truncate text-base font-extrabold leading-tight text-[#293b49]" title="{{ $kategoriData['top_category'] ?? '-' }}">{{ $kategoriData['top_category'] ?? '-' }}</h2>
+                    <span class="mt-2 inline-flex rounded-full bg-[#fbf4e7] px-2.5 py-1 text-[10px] font-semibold text-[#a87924]">Kategori Paling Sering</span>
+                </div>
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e7a83d] text-base text-white shadow-sm"><i class="fas fa-fire"></i></span>
+            </section>
+
+            <!-- Rata-rata Selesai -->
+            <section class="flex min-h-[112px] items-center justify-between rounded-2xl border border-[#dce4e9] bg-white p-4 shadow-[0_3px_12px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_9px_22px_rgba(25,55,75,0.08)] sm:p-5">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-[#84919a]">Rata-rata Selesai</p>
+                    <h2 class="mt-1 text-[30px] font-extrabold leading-none tracking-tight text-[#23885d]">{{ $kategoriData['global_solve_rate'] ?? 0 }}%</h2>
+                    <span class="mt-2 inline-flex rounded-full bg-[#eaf5ef] px-2.5 py-1 text-[10px] font-semibold text-[#38845e]">Tingkat Efektivitas</span>
+                </div>
+                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#23885d] text-base text-white shadow-sm"><i class="fas fa-check"></i></span>
+            </section>
         </div>
 
-        <!-- Kategori Paling Banyak Masuk -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
-            <div class="max-w-[70%]">
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aduan Terbanyak</p>
-                <h3 class="text-sm font-extrabold text-amber-600 mt-1 truncate" title="{{ $kategoriData['top_category'] }}">
-                    {{ $kategoriData['top_category'] ?? '-' }}
-                </h3>
-                <span class="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md inline-block mt-1">Kategori Paling Sering</span>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg shrink-0">
-                <i class="fas fa-fire"></i>
-            </div>
-        </div>
+        <!-- Charts: Doughnut + grouped bar -->
+        <div class="mb-5 grid grid-cols-1 gap-4 2xl:grid-cols-12">
+            <!-- Doughnut -->
+            <section class="rounded-2xl border border-[#dce4e9] bg-white p-4 shadow-[0_3px_12px_rgba(25,55,75,0.045)] sm:p-5 2xl:col-span-4">
+                <div class="mb-2 flex items-start gap-3">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#edf4f8] text-sm text-[#397b9d]"><i class="fas fa-chart-pie"></i></span>
+                    <div>
+                        <h3 class="text-sm font-bold text-[#293b49]">Proporsi Aduan Kategori</h3>
+                        <p class="mt-0.5 text-[11px] text-[#84919a]">Persentase distribusi tiket berdasarkan kategori layanan.</p>
+                    </div>
+                </div>
 
-        <!-- Tingkat Penyelesaian Global -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
-            <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Rata-rata Selesai</p>
-                <h3 class="text-2xl font-extrabold text-emerald-600 mt-1">{{ $kategoriData['global_solve_rate'] ?? 0 }}%</h3>
-                <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md inline-block mt-1">Tingkat Efektivitas</span>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0">
-                <i class="fas fa-check-double"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Row: Doughnut + Bar Comparison -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Doughnut Chart: Komposisi Tiket per Kategori -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
-            <div>
-                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-chart-pie text-[#1a3668]"></i>
-                    <span>Proporsi Aduan Kategori</span>
-                </h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Persentase distribusi tiket berdasarkan kategori layanan.</p>
-            </div>
-            
-            <div class="relative my-6 flex items-center justify-center">
-                <div class="w-52 h-52">
+                <div class="relative mx-auto my-3 h-[205px] w-full max-w-[250px]">
                     <canvas id="categoryDoughnutChart"></canvas>
                 </div>
-            </div>
 
-            <div class="space-y-1.5 text-xs pt-4 border-t border-slate-100 max-h-40 overflow-y-auto pr-1">
-                @foreach($kategoriData['tableSummary'] as $item)
-                    <div class="flex items-center justify-between py-0.5">
-                        <div class="flex items-center gap-2 truncate max-w-[70%]">
-                            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {{ $item['color'] }}"></span>
-                            <span class="text-slate-600 truncate text-[11px]">{{ $item['name'] }}</span>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-[#edf1f4] pt-3">
+                    @forelse(($kategoriData['tableSummary'] ?? []) as $item)
+                        <div class="flex min-w-0 items-center justify-between gap-2 text-[10px]">
+                            <div class="flex min-w-0 items-center gap-2">
+                                <span class="h-2 w-2 shrink-0 rounded-full" style="background-color: {{ $item['color'] ?? '#8aa5b5' }}"></span>
+                                <span class="truncate text-[#647783]">{{ $item['name'] }}</span>
+                            </div>
+                            <span class="shrink-0 font-bold text-[#293b49]">{{ $item['total'] }}</span>
                         </div>
-                        <span class="font-bold text-slate-800 text-[11px]">{{ $item['total'] }}</span>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
-        <!-- Bar Chart: Perbandingan Masuk, Selesai, Diproses -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs lg:col-span-2 flex flex-col justify-between">
-            <div>
-                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-chart-bar text-[#1a3668]"></i>
-                    <span>Status Tiket Tiap Kategori</span>
-                </h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Perbandingan jumlah tiket masuk, telah selesai, dan sedang diproses.</p>
-            </div>
-
-            <div class="my-4 h-72">
-                <canvas id="categoryStatusBarChart"></canvas>
-            </div>
-
-            <div class="flex items-center justify-end gap-6 text-xs text-slate-500 pt-3 border-t border-slate-100">
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded bg-slate-200 inline-block"></span>
-                    <span>Total Masuk</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span>
-                    <span>Telah Selesai</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded bg-blue-500 inline-block"></span>
-                    <span>Sedang Diproses</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabel Ringkasan Rincian Kategori -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div class="p-5 border-b border-slate-100">
-            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <i class="fas fa-list text-[#1a3668]"></i>
-                <span>Tabel Rincian Kinerja per Kategori Layanan</span>
-            </h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left whitespace-nowrap">
-                <thead class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
-                    <tr>
-                        <th class="px-6 py-4">NAMA KATEGORI LAYANAN</th>
-                        <th class="px-6 py-4 text-center">TOTAL MASUK</th>
-                        <th class="px-6 py-4 text-center">SEDANG DIPROSES</th>
-                        <th class="px-6 py-4 text-center">TELAH SELESAI</th>
-                        <th class="px-6 py-4 text-center">TINGKAT PENYELESAIAN</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-xs">
-                    @forelse($kategoriData['tableSummary'] as $row)
-                        <tr class="hover:bg-slate-50/60 transition">
-                            <td class="px-6 py-4 font-bold text-slate-800 flex items-center gap-2.5">
-                                <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $row['color'] }}"></span>
-                                <span>{{ $row['name'] }}</span>
-                            </td>
-                            <td class="px-6 py-4 text-center font-bold text-slate-700">{{ $row['total'] }}</td>
-                            <td class="px-6 py-4 text-center text-blue-600 font-semibold">{{ $row['process'] }}</td>
-                            <td class="px-6 py-4 text-center text-emerald-600 font-semibold">{{ $row['resolved'] }}</td>
-                            <td class="px-6 py-4 text-center">
-                                <div class="inline-flex items-center gap-2">
-                                    <div class="w-24 bg-slate-100 h-2 rounded-full overflow-hidden">
-                                        <div class="bg-emerald-500 h-2 rounded-full" style="width: {{ $row['solve_rate'] }}%"></div>
-                                    </div>
-                                    <span class="font-bold text-[11px] font-mono text-slate-600">{{ $row['solve_rate'] }}%</span>
-                                </div>
-                            </td>
-                        </tr>
                     @empty
-                        <tr>
-                            <td colspan="5" class="py-10 text-center text-slate-400 italic">
-                                Belum ada data tiket per kategori yang tercatat.
-                            </td>
-                        </tr>
+                        <p class="col-span-2 py-3 text-center text-[11px] italic text-[#9aa6ae]">Belum ada data kategori.</p>
                     @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+                </div>
+            </section>
 
+            <!-- Grouped Bar Chart -->
+            <section class="rounded-2xl border border-[#dce4e9] bg-white p-4 shadow-[0_3px_12px_rgba(25,55,75,0.045)] sm:p-5 2xl:col-span-8">
+                <div class="mb-2 flex items-start gap-3">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#edf4f8] text-sm text-[#397b9d]"><i class="fas fa-chart-column"></i></span>
+                    <div>
+                        <h3 class="text-sm font-bold text-[#293b49]">Status Tiket Tiap Kategori</h3>
+                        <p class="mt-0.5 text-[11px] text-[#84919a]">Perbandingan jumlah tiket masuk, telah selesai, dan sedang diproses.</p>
+                    </div>
+                </div>
+
+                <div class="relative mt-2 h-[235px] sm:h-[255px]">
+                    <canvas id="categoryStatusBarChart"></canvas>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 border-t border-[#edf1f4] pt-3 text-[10px] text-[#71808c]">
+                    <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-[#8db8ce]"></span>Total Masuk</span>
+                    <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-[#23885d]"></span>Telah Selesai</span>
+                    <span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-sm bg-[#4d93b8]"></span>Sedang Diproses</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- Table -->
+        <section class="overflow-hidden rounded-2xl border border-[#dce4e9] bg-white shadow-[0_3px_12px_rgba(25,55,75,0.045)]">
+            <div class="flex items-center gap-3 border-b border-[#edf1f4] px-4 py-4 sm:px-5">
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#edf4f8] text-sm text-[#397b9d]"><i class="fas fa-list"></i></span>
+                <div>
+                    <h3 class="text-sm font-bold text-[#293b49]">Tabel Rincian Kinerja per Kategori Layanan</h3>
+                    <p class="mt-0.5 text-[10px] text-[#84919a]">Ringkasan jumlah tiket dan tingkat penyelesaian tiap kategori.</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[720px] text-left">
+                    <thead class="border-b border-[#edf1f4] bg-[#f8fafb] text-[10px] font-bold uppercase tracking-[0.08em] text-[#87949d]">
+                        <tr>
+                            <th class="px-5 py-3.5">Nama Kategori Layanan</th>
+                            <th class="px-5 py-3.5 text-center">Total Masuk</th>
+                            <th class="px-5 py-3.5 text-center">Sedang Diproses</th>
+                            <th class="px-5 py-3.5 text-center">Telah Selesai</th>
+                            <th class="px-5 py-3.5 text-center">Tingkat Penyelesaian</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#edf1f4] text-xs">
+                        @forelse(($kategoriData['tableSummary'] ?? []) as $row)
+                            <tr class="transition-colors hover:bg-[#f8fbfd]">
+                                <td class="px-5 py-3.5 font-semibold text-[#354957]">
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background-color: {{ $row['color'] ?? '#8aa5b5' }}"></span>
+                                        <span>{{ $row['name'] }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-3.5 text-center font-bold tabular-nums text-[#354957]">{{ $row['total'] }}</td>
+                                <td class="px-5 py-3.5 text-center font-semibold tabular-nums text-[#397b9d]">{{ $row['process'] }}</td>
+                                <td class="px-5 py-3.5 text-center font-semibold tabular-nums text-[#23885d]">{{ $row['resolved'] }}</td>
+                                <td class="px-5 py-3.5">
+                                    <div class="mx-auto flex max-w-[150px] items-center gap-2">
+                                        <div class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#edf1f4]">
+                                            <div class="h-full rounded-full bg-[#23885d] transition-all duration-700" style="width: {{ max(0, min(100, (float) ($row['solve_rate'] ?? 0))) }}%"></div>
+                                        </div>
+                                        <span class="w-10 shrink-0 text-right font-bold tabular-nums text-[#647783]">{{ $row['solve_rate'] ?? 0 }}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-5 py-10 text-center text-xs italic text-[#9aa6ae]">Belum ada data tiket per kategori yang tercatat.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
 </div>
 
-<!-- Script Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const doughnutData   = {!! json_encode($kategoriData['doughnutChart']) !!};
-        const comparisonData = {!! json_encode($kategoriData['comparisonBarChart']) !!};
+(function () {
+    function initKategoriTicketCharts() {
+        if (!window.Chart) return;
 
-        // 1. Doughnut Chart: Proporsi Kategori
-        new Chart(document.getElementById('categoryDoughnutChart'), {
-            type: 'doughnut',
-            data: doughnutData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                let value = context.parsed;
-                                let percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                return ` ${context.label}: ${value} tiket (${percent}%)`;
+        const doughnutCanvas = document.getElementById('categoryDoughnutChart');
+        const barCanvas = document.getElementById('categoryStatusBarChart');
+        if (!doughnutCanvas || !barCanvas) return;
+
+        // Hindari canvas dibuat dua kali bila inisialisasi terpanggil ulang.
+        [doughnutCanvas, barCanvas].forEach(canvas => {
+            const existing = Chart.getChart(canvas);
+            if (existing) existing.destroy();
+        });
+
+        // Kedua dataset berikut sepenuhnya berasal dari controller/database.
+        const doughnutData = @json($kategoriData['doughnutChart'] ?? ['labels' => [], 'datasets' => []]);
+        const comparisonData = @json($kategoriData['comparisonBarChart'] ?? ['labels' => [], 'datasets' => []]);
+
+        const sourceDoughnutDatasets = Array.isArray(doughnutData.datasets) ? doughnutData.datasets : [];
+        const doughnutTotal = sourceDoughnutDatasets.reduce((sum, dataset) => {
+            const values = Array.isArray(dataset.data) ? dataset.data : [];
+            return sum + values.reduce((subtotal, value) => subtotal + (Number(value) || 0), 0);
+        }, 0);
+
+        // Teks tengah menghitung total dari nilai dataset aktual, bukan angka contoh.
+        const categoryCenterText = {
+            id: 'categoryCenterText',
+            afterDraw(chart) {
+                const area = chart.chartArea;
+                if (!area) return;
+
+                const ctx = chart.ctx;
+                const centerX = (area.left + area.right) / 2;
+                const centerY = (area.top + area.bottom) / 2;
+
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#293b49';
+                ctx.font = '700 25px Inter, ui-sans-serif, system-ui, sans-serif';
+                ctx.fillText(String(doughnutTotal), centerX, centerY - 5);
+                ctx.fillStyle = '#84919a';
+                ctx.font = '500 10px Inter, ui-sans-serif, system-ui, sans-serif';
+                ctx.fillText('Total Tiket', centerX, centerY + 15);
+                ctx.restore();
+            }
+        };
+
+        if (sourceDoughnutDatasets.length) {
+            new Chart(doughnutCanvas, {
+                type: 'doughnut',
+                data: {
+                    ...doughnutData,
+                    datasets: sourceDoughnutDatasets.map(dataset => ({
+                        ...dataset,
+                        borderWidth: 0,
+                        borderColor: 'transparent',
+                        borderRadius: 9,
+                        spacing: 4,
+                        hoverOffset: 3
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    rotation: -90,
+                    animation: { duration: 1100, easing: 'easeOutQuart' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1d405c',
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label(context) {
+                                    const datasetValues = context.dataset.data || [];
+                                    const total = datasetValues.reduce((sum, value) => sum + (Number(value) || 0), 0);
+                                    const value = Number(context.parsed) || 0;
+                                    const percent = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                    return ` ${context.label}: ${value} tiket (${percent}%)`;
+                                }
                             }
                         }
                     }
                 },
-                cutout: '70%'
-            }
-        });
+                plugins: [categoryCenterText]
+            });
+        }
 
-        // 2. Bar Chart: Status Tiket per Kategori
-        new Chart(document.getElementById('categoryStatusBarChart'), {
-            type: 'bar',
-            data: comparisonData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+        if (Array.isArray(comparisonData.datasets) && comparisonData.datasets.length) {
+            const seriesColors = ['#8db8ce', '#23885d', '#4d93b8'];
+            new Chart(barCanvas, {
+                type: 'bar',
+                data: {
+                    ...comparisonData,
+                    datasets: comparisonData.datasets.map((dataset, index) => ({
+                        ...dataset,
+                        backgroundColor: seriesColors[index % seriesColors.length],
+                        borderColor: seriesColors[index % seriesColors.length],
+                        borderWidth: 0,
+                        borderRadius: 5,
+                        borderSkipped: false,
+                        maxBarThickness: 24
+                    }))
                 },
-                scales: {
-                    x: { grid: { display: false } },
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 },
-                        grid: { color: '#f1f5f9' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 1000, easing: 'easeOutQuart' },
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#1d405c', padding: 10, cornerRadius: 8 }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: { color: '#71808c', font: { family: 'Inter', size: 10 } },
+                            categoryPercentage: 0.62,
+                            barPercentage: 0.78
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#edf1f4', drawBorder: false },
+                            border: { display: false },
+                            ticks: { color: '#84919a', precision: 0, stepSize: 1, font: { family: 'Inter', size: 10 } }
+                        }
                     }
                 }
-            }
-        });
-    });
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initKategoriTicketCharts, { once: true });
+    } else {
+        initKategoriTicketCharts();
+    }
+})();
 </script>
 @endsection

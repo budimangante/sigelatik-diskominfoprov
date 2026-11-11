@@ -4,27 +4,28 @@
 @section('subtitle', 'Daftar permohonan layanan dan status penanganan tiket Anda')
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans">
+<div class="min-h-screen bg-[#f3f6f9] p-5 font-sans md:p-8">
 
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">
-                <span class="text-[#1a3668]">LAYANAN PENGGUNA</span>
-                <span class="text-slate-300">•</span>
+            <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#397b9d] shadow-sm">
+                <span class="h-2 w-2 rounded-full bg-[#397b9d]"></span>
+                <span>LAYANAN PENGGUNA</span>
+                <span class="text-[#b8c7d0]">•</span>
                 <span>TIKET SAYA</span>
             </div>
-            <h1 class="text-2xl md:text-3xl font-extrabold text-[#1a3668] tracking-tight">
-                Riwayat Tiket Permohonan
+            <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">
+                Riwayat Tiket
             </h1>
-            <p class="text-xs text-slate-500 mt-1">
+            <p class="mt-1 text-xs text-slate-500 md:text-sm">
                 Pantau proses verifikasi, progres pengerjaan teknisi lapangan, dan riwayat penyelesaian keluhan Anda.
             </p>
         </div>
 
         <div>
             <a href="{{ route('user.index') }}" 
-               class="inline-flex items-center gap-2 bg-[#1a3668] hover:bg-[#122548] text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition">
+               class="inline-flex items-center gap-2 rounded-xl bg-[#347fa5] px-5 py-3 text-xs font-extrabold text-white shadow-sm transition hover:bg-[#286a8d]">
                 <i class="fas fa-plus text-xs"></i>
                 <span>Buat Pengaduan Baru</span>
             </a>
@@ -33,7 +34,7 @@
 
     <!-- Alert Notifikasi -->
     @if(session('success'))
-        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-2xs">
+        <div class="mb-5 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 shadow-sm">
             <div class="flex items-center gap-2.5">
                 <i class="fas fa-check-circle text-emerald-600 text-sm"></i>
                 <span>{{ session('success') }}</span>
@@ -45,54 +46,54 @@
     @endif
 
     <!-- 1. KARTU METRIK KPI RINGKASAN -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         
         <!-- Total Tiket -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between">
+        <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Diajukan</p>
-                <h3 class="text-2xl font-extrabold text-[#1a3668] mt-1">{{ $totalCount }}</h3>
+                <p class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Total Diajukan</p>
+                <h3 class="mt-1 text-3xl font-black text-[#1d405c]">{{ $totalCount }}</h3>
                 <span class="text-[10px] text-slate-500 font-medium mt-1 inline-block">Seluruh pengaduan</span>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1a3668] text-lg shrink-0">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1d405c] text-base text-white shadow-sm">
                 <i class="fas fa-ticket-alt"></i>
             </div>
         </div>
 
         <!-- Tiket Aktif / Diproses -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between">
+        <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sedang Diproses</p>
-                <h3 class="text-2xl font-extrabold text-blue-600 mt-1">{{ $activeCount }}</h3>
+                <p class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Sedang Diproses</p>
+                <h3 class="mt-1 text-3xl font-black text-[#347fa5]">{{ $activeCount }}</h3>
                 <span class="text-[10px] text-blue-500 font-medium mt-1 inline-flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> Dalam Penanganan
                 </span>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 text-lg shrink-0">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#347fa5] text-base text-white shadow-sm">
                 <i class="fas fa-spinner fa-spin"></i>
             </div>
         </div>
 
         <!-- Tiket Selesai -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between">
+        <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tuntas / Selesai</p>
-                <h3 class="text-2xl font-extrabold text-emerald-600 mt-1">{{ $solvedCount }}</h3>
+                <p class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Tuntas / Selesai</p>
+                <h3 class="mt-1 text-3xl font-black text-emerald-600">{{ $solvedCount }}</h3>
                 <span class="text-[10px] text-emerald-600 font-medium mt-1 inline-block">Berhasil ditangani</span>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 text-lg shrink-0">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-base text-white shadow-sm">
                 <i class="fas fa-check-double"></i>
             </div>
         </div>
 
         <!-- Tiket Ditolak / Dibatalkan -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between">
+        <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
             <div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ditolak / Batal</p>
-                <h3 class="text-2xl font-extrabold text-rose-600 mt-1">{{ $rejectedCount }}</h3>
+                <p class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Ditolak / Batal</p>
+                <h3 class="mt-1 text-3xl font-black text-rose-600">{{ $rejectedCount }}</h3>
                 <span class="text-[10px] text-rose-500 font-medium mt-1 inline-block">Di luar kewenangan/batal</span>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 text-lg shrink-0">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-base text-white shadow-sm">
                 <i class="fas fa-ban"></i>
             </div>
         </div>
@@ -100,8 +101,8 @@
     </div>
 
     <!-- 2. PENCARIAN & FILTER INTERAKTIF -->
-    <div class="mb-6 flex flex-col md:flex-row items-center gap-3.5">
-        <div class="relative flex-1 w-full">
+    <div class="mb-4 flex flex-col items-stretch gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm md:flex-row md:items-center">
+        <div class="relative w-full min-w-0 flex-1">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <i class="fas fa-search text-xs"></i>
             </span>
@@ -109,13 +110,13 @@
                    id="myTicketSearch" 
                    oninput="applyLiveFilter()"
                    placeholder="Cari nomor tiket, judul masalah, atau layanan..." 
-                   class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] transition shadow-2xs">
+                   class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-9 pr-4 text-xs text-slate-700 placeholder:text-slate-400 shadow-inner outline-none transition focus:border-[#347fa5] focus:ring-2 focus:ring-[#347fa5]/15">
         </div>
 
-        <div class="relative w-full md:w-56 shrink-0">
+        <div class="relative w-full shrink-0 md:w-56">
             <select id="myTicketStatusFilter" 
                     onchange="applyLiveFilter()"
-                    class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1a3668] appearance-none cursor-pointer shadow-2xs">
+                    class="w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs text-slate-700 outline-none transition focus:border-[#347fa5] focus:ring-2 focus:ring-[#347fa5]/15">
                 <option value="">Semua Status Tiket</option>
                 @foreach($statuses as $st)
                     <option value="{{ $st->id }}">{{ $st->name }}</option>
@@ -126,16 +127,17 @@
     </div>
 
     <!-- 3. TABEL DAFTAR TIKET SAYA -->
-    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden overflow-x-auto">
-        <table class="w-full text-sm text-left whitespace-nowrap">
-            <thead class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3.5"><div class="flex items-center gap-2 text-xs font-bold text-slate-700"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-[#347fa5]"><i class="fas fa-list-ul"></i></span>Daftar Permohonan</div><span class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600">{{ $tickets->count() }} tiket</span></div>
+        <div class="overflow-x-auto"><table class="w-full whitespace-nowrap text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-500">
                 <tr>
-                    <th class="px-6 py-4 w-40">NOMOR TIKET</th>
-                    <th class="px-6 py-4">PERMASALAHAN / LAYANAN</th>
-                    <th class="px-6 py-4 w-36">STATUS</th>
-                    <th class="px-6 py-4 w-48">TEKNISI</th>
-                    <th class="px-6 py-4 w-40">TANGGAL MASUK</th>
-                    <th class="px-6 py-4 w-36 text-center">AKSI</th>
+                    <th class="px-5 py-4 w-40">NOMOR TIKET</th>
+                    <th class="px-5 py-4">PERMASALAHAN / LAYANAN</th>
+                    <th class="px-5 py-4 w-36">STATUS</th>
+                    <th class="px-5 py-4 w-48">TEKNISI</th>
+                    <th class="px-5 py-4 w-40">TANGGAL MASUK</th>
+                    <th class="px-5 py-4 w-36 text-center">AKSI</th>
                 </tr>
             </thead>
 
@@ -164,17 +166,17 @@
                         $searchIndex = strtolower($tNumber . ' ' . $t->subject . ' ' . ($t->service->name ?? '') . ' ' . $techName);
                     @endphp
 
-                    <tr class="ticket-row hover:bg-slate-50/60 transition"
+                    <tr class="ticket-row border-b border-slate-100 transition last:border-0 hover:bg-[#f7fafc]"
                         data-search="{{ $searchIndex }}"
                         data-status="{{ $t->ticket_status_id }}">
                         
                         <!-- Nomor Tiket -->
-                        <td class="px-6 py-4 align-middle">
+                        <td class="px-5 py-4 align-middle">
                             <span class="font-mono font-bold text-blue-600">{{ $tNumber }}</span>
                         </td>
 
                         <!-- Permasalahan & Layanan -->
-                        <td class="px-6 py-4 align-middle">
+                        <td class="px-5 py-4 align-middle">
                             <div class="font-bold text-slate-800 leading-snug line-clamp-1 max-w-md">
                                 {{ $t->subject }}
                             </div>
@@ -184,7 +186,7 @@
                         </td>
 
                         <!-- Status Badge -->
-                        <td class="px-6 py-4 align-middle">
+                        <td class="px-5 py-4 align-middle">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider {{ $badgeCls }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $dotCls }}"></span>
                                 {{ $t->status->name ?? 'BARU' }}
@@ -192,7 +194,7 @@
                         </td>
 
                         <!-- Teknisi -->
-                        <td class="px-6 py-4 align-middle">
+                        <td class="px-5 py-4 align-middle">
                             @if($hasTech)
                                 <div class="font-bold text-slate-700 flex items-center gap-1.5">
                                     <i class="fas fa-user-check text-blue-600 text-[10px]"></i>
@@ -206,25 +208,30 @@
                         </td>
 
                         <!-- Tanggal Masuk -->
-                        <td class="px-6 py-4 align-middle font-mono text-slate-600">
+                        <td class="px-5 py-4 align-middle font-mono text-slate-600">
                             {{ $t->created_at->translatedFormat('d M Y, H:i') }}
                         </td>
 
                         <!-- Tombol Aksi -->
-                        <td class="px-6 py-4 align-middle text-center">
+                        <td class="px-5 py-4 align-middle text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <!-- Tombol Chat Langsung -->
                                 <a href="{{ route('user.chat', ['ticket_id' => $t->id]) }}" 
                                    title="Buka Chat Penanganan"
-                                   class="p-2 rounded-xl bg-blue-50 text-[#1a3668] hover:bg-blue-100 transition shadow-2xs border border-blue-100">
+                                   class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-[#347fa5] shadow-sm transition hover:bg-blue-100">
                                     <i class="fas fa-comments text-xs"></i>
                                 </a>
 
                                 <!-- Tombol Modal Detail Kendala -->
-                                <button type="button" 
-                                        onclick="openTicketDetailModal('{{ $tNumber }}', '{{ addslashes($t->subject) }}', '{{ addslashes($t->description ?? 'Tidak ada rincian tambahan.') }}', '{{ $t->status->name ?? 'BARU' }}', '{{ $techName }}')"
+                                <button type="button"
+                                        data-open-ticket-detail
+                                        data-ticket-code="{{ $tNumber }}"
+                                        data-ticket-subject="{{ $t->subject }}"
+                                        data-ticket-description="{{ $t->description ?? 'Tidak ada rincian tambahan.' }}"
+                                        data-ticket-status="{{ $t->status->name ?? 'BARU' }}"
+                                        data-ticket-tech="{{ $techName }}"
                                         title="Lihat Detail Tiket"
-                                        class="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition shadow-2xs">
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 shadow-sm transition hover:bg-slate-200">
                                     <i class="fas fa-eye text-xs"></i>
                                 </button>
                             </div>
@@ -238,7 +245,7 @@
                     </tr>
                 @endforelse
             </tbody>
-        </table>
+        </table></div>
 
         <!-- State Pencarian Kosong -->
         <div id="noMatchSearchState" class="hidden py-12 text-center">
@@ -328,6 +335,18 @@
             }
         }
     }
+
+    document.querySelectorAll('[data-open-ticket-detail]').forEach(button => {
+        button.addEventListener('click', function () {
+            openTicketDetailModal(
+                this.dataset.ticketCode || '',
+                this.dataset.ticketSubject || '',
+                this.dataset.ticketDescription || '',
+                this.dataset.ticketStatus || '',
+                this.dataset.ticketTech || ''
+            );
+        });
+    });
 
     function openTicketDetailModal(code, subject, desc, status, tech) {
         document.getElementById('modalTicketCode').textContent = code;

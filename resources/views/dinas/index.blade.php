@@ -4,161 +4,161 @@
 @section('subtitle', 'Seluruh permohonan perangkat daerah dalam satu pandangan')
 
 @section('content')
-<div class="p-6 bg-[#f8fafc] min-h-screen font-sans space-y-6">
+<div class="min-h-screen space-y-5 bg-[#f3f6f8] p-4 font-sans sm:p-5 lg:p-6">
 
-    <!-- Header Section + Quick SLA Benchmarks -->
-    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-2">
-                <span class="text-[#1a3668]">HELPDESK UTAMA</span>
-                <span class="text-slate-300">•</span>
-                <span>DINAS KOMINFO</span>
+    <!-- Header Overview -->
+    <section class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div class="min-w-0">
+            <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-[#dce6ec] bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#397b9d] shadow-sm">
+                <span class="h-2 w-2 rounded-full bg-[#397b9d]"></span>
+                <span>Helpdesk Utama</span>
+                <span class="text-[#b8c7d0]">•</span>
+                <span>Dinas Kominfo</span>
             </div>
-            <h1 class="text-2xl font-black text-[#1a3668] tracking-tight">Overview Lintas Bidang</h1>
-            <p class="text-xs text-slate-500 mt-0.5">Seluruh permohonan perangkat daerah dalam satu pandangan analitik.</p>
+            <h1 class="mb-1 text-3xl font-['StretchPro'] tracking-wider text-[#1d405c] sm:text-[25px] uppercase">Overview Lintas Bidang</h1>
+            <p class="mt-1 text-sm text-slate-500">Seluruh permohonan perangkat daerah dalam satu pandangan analitik.</p>
         </div>
 
-        <!-- 2 Komparasi SLA: Bidang vs Teknisi -->
-        <div class="flex items-center gap-3">
-            <div class="px-4 py-2.5 bg-blue-50/70 border border-blue-200 rounded-xl text-left min-w-[125px]">
-                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Target SLA Bidang</p>
-                <p class="text-lg font-black text-[#1a3668]">{{ $overviewData['avg_sla_bidang'] }} <span class="text-xs font-semibold text-slate-500">Jam</span></p>
+        <!-- Komparasi SLA dari data controller -->
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="min-w-[145px] rounded-2xl border border-blue-200 bg-blue-50/80 px-4 py-3 shadow-sm">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-blue-700">Target SLA Bidang</p>
+                <p class="mt-1 text-2xl font-extrabold leading-none text-[#1d405c]">
+                    {{ $overviewData['avg_sla_bidang'] ?? 0 }} <span class="text-xs font-semibold text-slate-500">Jam</span>
+                </p>
             </div>
-            <div class="px-4 py-2.5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-left min-w-[125px]">
-                <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Realisasi Teknisi</p>
-                <p class="text-lg font-black text-emerald-600">{{ $overviewData['avg_sla_teknisi'] }} <span class="text-xs font-semibold text-slate-500">Jam</span></p>
+            <div class="min-w-[145px] rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 shadow-sm">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Realisasi Teknisi</p>
+                <p class="mt-1 text-2xl font-extrabold leading-none text-emerald-700">
+                    {{ $overviewData['avg_sla_teknisi'] ?? 0 }} <span class="text-xs font-semibold text-slate-500">Jam</span>
+                </p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- 4 Kotak Ringkasan Atas -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Card 1: Total Permohonan -->
-        <div class="bg-white rounded-xl p-5 shadow-2xs border border-slate-200 border-t-4 border-t-red-500 flex flex-col justify-between">
-            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wide mb-1">Total Permohonan</h3>
-            <p class="text-3xl font-black text-[#1a3668] my-1">{{ $overviewData['total_permohonan'] }}</p>
-            <p class="text-[11px] text-red-500 font-semibold flex items-center gap-1">
-                <i class="fas fa-calendar-day text-[10px]"></i> Akumulasi bulan ini
-            </p>
-        </div>
-        
-        <!-- Card 2: Menunggu Triage -->
-        <div class="bg-white rounded-xl p-5 shadow-2xs border border-slate-200 border-t-4 border-t-blue-500 flex flex-col justify-between">
-            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wide mb-1">Menunggu Triage</h3>
-            <p class="text-3xl font-black text-blue-600 my-1">{{ $overviewData['menunggu_triage'] }}</p>
-            <p class="text-[11px] text-blue-600 font-semibold flex items-center gap-1">
-                <i class="fas fa-inbox text-[10px]"></i> Belum diarahkan ke teknisi
-            </p>
-        </div>
-
-        <!-- Card 3: Dalam Proses -->
-        <div class="bg-white rounded-xl p-5 shadow-2xs border border-slate-200 border-t-4 border-t-emerald-500 flex flex-col justify-between">
-            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wide mb-1">Dalam Proses</h3>
-            <p class="text-3xl font-black text-emerald-600 my-1">{{ $overviewData['dalam_proses'] }}</p>
-            <p class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
-                <i class="fas fa-screwdriver-wrench text-[10px]"></i> Sedang ditangani teknisi
-            </p>
-        </div>
-
-        <!-- Card 4: SLA Terlampaui -->
-        <div class="bg-white rounded-xl p-5 shadow-2xs border border-slate-200 border-t-4 border-t-amber-500 flex flex-col justify-between">
-            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wide mb-1">SLA Terlampaui</h3>
-            <p class="text-3xl font-black text-amber-600 my-1">{{ $overviewData['sla_terlampaui'] }}</p>
-            <p class="text-[11px] text-amber-600 font-semibold flex items-center gap-1">
-                <i class="fas fa-triangle-exclamation text-[10px]"></i> Melewati batas waktu
-            </p>
-        </div>
-    </div>
-
-    <!-- Main Content Grid: Distribusi Tiket per Bidang vs Tiket Terbaru -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Left Panel: Tiket per Bidang (Progress Bars) -->
-        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-6 flex flex-col justify-between min-w-0">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-                <h2 class="text-sm font-bold text-[#1a3668] flex items-center gap-2">
-                    <i class="fas fa-layer-group"></i>
-                    <span>Distribusi Tiket per Bidang</span>
-                </h2>
-                <span class="text-[11px] text-slate-400 font-semibold">Tujuan Disposisi</span>
+    <!-- Ringkasan Permohonan -->
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+        <!-- Total Permohonan -->
+        <article class="min-h-[164px] rounded-[22px] border border-[#dce4e9] bg-white p-5 shadow-[0_4px_16px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(25,55,75,0.08)] sm:p-6">
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Total Permohonan</p>
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#2f789e] text-lg text-white shadow-sm"><i class="fas fa-ticket-alt"></i></span>
             </div>
-            
-            <div class="space-y-5 my-4">
-                @foreach($overviewData['bidang_progress'] as $item)
+            <p class="mt-1 text-[40px] font-extrabold leading-none tracking-tight text-[#293b49]">{{ number_format($overviewData['total_permohonan'] ?? 0) }}</p>
+            <span class="mt-4 inline-flex rounded-full bg-[#edf4f8] px-3 py-1.5 text-[11px] font-semibold text-[#397b9d]">Akumulasi bulan ini</span>
+        </article>
+
+        <!-- Menunggu Triage -->
+        <article class="min-h-[164px] rounded-[22px] border border-[#dce4e9] bg-white p-5 shadow-[0_4px_16px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(25,55,75,0.08)] sm:p-6">
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Menunggu Triage</p>
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#5599b8] text-lg text-white shadow-sm"><i class="fas fa-inbox"></i></span>
+            </div>
+            <p class="mt-1 text-[40px] font-extrabold leading-none tracking-tight text-[#293b49]">{{ number_format($overviewData['menunggu_triage'] ?? 0) }}</p>
+            <span class="mt-4 inline-flex rounded-full bg-[#edf4f8] px-3 py-1.5 text-[11px] font-semibold text-[#397b9d]">Belum diarahkan ke teknisi</span>
+        </article>
+
+        <!-- Dalam Proses -->
+        <article class="min-h-[164px] rounded-[22px] border border-[#dce4e9] bg-white p-5 shadow-[0_4px_16px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(25,55,75,0.08)] sm:p-6">
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Dalam Proses</p>
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#1d405c] text-lg text-white shadow-sm"><i class="fas fa-gears"></i></span>
+            </div>
+            <p class="mt-1 text-[40px] font-extrabold leading-none tracking-tight text-[#293b49]">{{ number_format($overviewData['dalam_proses'] ?? 0) }}</p>
+            <span class="mt-4 inline-flex rounded-full bg-[#edf1f7] px-3 py-1.5 text-[11px] font-semibold text-[#1d405c]">Sedang ditangani teknisi</span>
+        </article>
+
+        <!-- SLA Terlampaui -->
+        <article class="min-h-[164px] rounded-[22px] border border-[#dce4e9] bg-white p-5 shadow-[0_4px_16px_rgba(25,55,75,0.045)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(25,55,75,0.08)] sm:p-6">
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">SLA Terlampaui</p>
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#b52e3b] text-lg text-white shadow-sm"><i class="fas fa-triangle-exclamation"></i></span>
+            </div>
+            <p class="mt-1 text-[40px] font-extrabold leading-none tracking-tight text-[#293b49]">{{ number_format($overviewData['sla_terlampaui'] ?? 0) }}</p>
+            <span class="mt-4 inline-flex rounded-full bg-[#faecee] px-3 py-1.5 text-[11px] font-semibold text-[#a82f3c]">Melewati batas waktu</span>
+        </article>
+    </section>
+
+    <!-- Distribusi per Bidang dan Tiket Terbaru -->
+    <section class="grid grid-cols-1 gap-5 2xl:grid-cols-[0.9fr_1.35fr]">
+        <!-- Distribusi Tiket per Bidang -->
+        <article class="flex min-w-0 flex-col rounded-[22px] border border-[#dce4e9] bg-white p-5 shadow-[0_4px_16px_rgba(25,55,75,0.045)] sm:p-6">
+            <div class="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div class="flex min-w-0 items-center gap-3">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#eaf2f7] text-[#397b9d]"><i class="fas fa-layer-group"></i></span>
+                    <h2 class="text-sm font-extrabold text-[#293b49] sm:text-base">Distribusi Tiket per Bidang</h2>
+                </div>
+                <span class="shrink-0 text-[11px] font-semibold text-slate-400">Tujuan Disposisi</span>
+            </div>
+
+            <div class="my-5 flex-1 space-y-5">
+                @forelse($overviewData['bidang_progress'] ?? [] as $item)
                     <div>
-                        <div class="flex justify-between text-xs text-slate-700 mb-1.5">
-                            <span class="font-bold text-slate-800">{{ $item['name'] }}</span>
-                            <span class="font-mono font-bold text-slate-600">{{ $item['count'] }} Tiket</span>
+                        <div class="mb-2 flex items-center justify-between gap-3 text-xs">
+                            <span class="min-w-0 truncate font-bold text-[#34495a]">{{ $item['name'] }}</span>
+                            <span class="shrink-0 font-mono font-semibold text-slate-500">{{ number_format($item['count']) }} Tiket</span>
                         </div>
-                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                            <div class="bg-[#1a3668] h-2.5 rounded-full transition-all duration-500" style="width: {{ $item['percentage'] }}%"></div>
+                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-[#eaf0f4]">
+                            <div class="h-full rounded-full bg-[#2f789e] transition-all duration-700" style="width: {{ min(100, max(0, (float) ($item['percentage'] ?? 0))) }}%"></div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="flex min-h-[180px] items-center justify-center text-center text-xs text-slate-400">Belum ada distribusi tiket per bidang.</div>
+                @endforelse
             </div>
 
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Total Tiket Selesai: <strong>{{ $overviewData['tiket_selesai'] }}</strong></span>
-                <span>Pembaruan otomatis data aktif</span>
+            <div class="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4 text-[11px] text-slate-500">
+                <span>Total Tiket Selesai: <strong class="font-extrabold text-[#293b49]">{{ number_format($overviewData['tiket_selesai'] ?? 0) }}</strong></span>
+                <span class="font-medium text-slate-400">Pembaruan otomatis data aktif</span>
             </div>
-        </div>
+        </article>
 
-        <!-- Right Panel: Tiket Terbaru & Arah Disposisi -->
-        <div class="bg-white rounded-2xl shadow-2xs border border-slate-200 p-6 flex flex-col justify-between min-w-0">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-                <h2 class="text-sm font-bold text-[#1a3668] flex items-center gap-2">
-                    <i class="fas fa-clock-rotate-left"></i>
-                    <span>Permohonan Tiket Terbaru</span>
-                </h2>
-                <span class="text-[11px] text-slate-400">Urutan laporan terbaru</span>
+        <!-- Permohonan Tiket Terbaru -->
+        <article class="flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-[#dce4e9] bg-white p-5 shadow-[0_4px_16px_rgba(25,55,75,0.045)] sm:p-6">
+            <div class="mb-4 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div class="flex min-w-0 items-center gap-3">
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#eaf2f7] text-[#397b9d]"><i class="fas fa-clock-rotate-left"></i></span>
+                    <h2 class="text-sm font-extrabold text-[#293b49] sm:text-base">Permohonan Tiket Terbaru</h2>
+                </div>
+                <span class="shrink-0 text-[11px] font-semibold text-slate-400">Urutan laporan terbaru</span>
             </div>
 
-            <div class="overflow-x-auto w-full">
-                <table class="w-full text-xs text-left whitespace-nowrap">
-                    <thead class="text-[10px] text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+            <div class="-mx-5 min-w-0 flex-1 overflow-x-auto sm:-mx-6">
+                <table class="w-full min-w-[690px] text-left text-xs">
+                    <thead class="border-y border-slate-100 bg-[#f7f9fb] text-[10px] font-bold uppercase tracking-wider text-slate-500">
                         <tr>
-                            <th class="px-4 py-3 font-bold">KODE TIKET</th>
-                            <th class="px-4 py-3 font-bold">DISPOSISI BIDANG</th>
-                            <th class="px-4 py-3 font-bold">TEKNISI / PENANGAN</th>
-                            <th class="px-4 py-3 font-bold text-center">STATUS</th>
+                            <th class="px-4 py-3.5">Kode Tiket</th>
+                            <th class="px-4 py-3.5">Disposisi Bidang</th>
+                            <th class="px-4 py-3.5">Teknisi / Penanganan</th>
+                            <th class="px-4 py-3.5 text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        @forelse($overviewData['latest_tickets'] as $ticket)
-                            <tr class="hover:bg-slate-50/60 transition">
-                                <td class="px-4 py-3 font-mono font-bold text-blue-600">
-                                    {{ $ticket['ticket_number'] }}
-                                </td>
-                                <td class="px-4 py-3 font-semibold text-slate-700">
-                                    {{ $ticket['bidang'] }}
-                                </td>
-                                <td class="px-4 py-3 text-slate-500">
-                                    {{ $ticket['technician'] }}
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $ticket['badge']['border'] }} {{ $ticket['badge']['text'] }} {{ $ticket['badge']['bg'] }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ $ticket['badge']['dot'] }}"></span>
+                        @forelse($overviewData['latest_tickets'] ?? [] as $ticket)
+                            <tr class="transition hover:bg-[#f8fafc]">
+                                <td class="px-4 py-4 font-mono font-bold text-[#397b9d]">{{ $ticket['ticket_number'] }}</td>
+                                <td class="px-4 py-4 font-semibold text-[#34495a]">{{ $ticket['bidang'] }}</td>
+                                <td class="px-4 py-4 text-slate-500">{{ $ticket['technician'] }}</td>
+                                <td class="px-4 py-4 text-center">
+                                    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-[10px] font-bold {{ $ticket['badge']['border'] }} {{ $ticket['badge']['text'] }} {{ $ticket['badge']['bg'] }}">
+                                        <span class="h-1.5 w-1.5 rounded-full {{ $ticket['badge']['dot'] }}"></span>
                                         {{ $ticket['badge']['label'] }}
                                     </span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-slate-400 italic">
-                                    Belum ada permohonan tiket yang masuk.
-                                </td>
+                                <td colspan="4" class="px-4 py-10 text-center text-xs italic text-slate-400">Belum ada permohonan tiket yang masuk.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <div class="pt-3 border-t border-slate-100 text-right">
-                <span class="text-[10px] text-slate-400">Menampilkan hingga 6 permohonan terakhir</span>
+            <div class="mt-3 border-t border-slate-100 pt-3 text-right">
+                <span class="text-[10px] font-medium text-slate-400">Menampilkan hingga 6 permohonan terakhir</span>
             </div>
-        </div>
-
-    </div>
-
+        </article>
+    </section>
 </div>
 @endsection

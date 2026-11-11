@@ -1,133 +1,86 @@
-<aside class="w-[260px] bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex shrink-0">
-    <div class="overflow-y-auto h-full pb-4 [scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:#9ca3af_transparent] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
-    
-        <!-- Bagian Logo -->
-        <div class="h-16 flex items-center justify-between px-6 border-b border-gray-100">
-            <div class="flex items-center gap-2">
-                <img src="{{ asset('img/logofavicon.png') }}" alt="Logo" class="w-10 h-10 object-contain">
-                <div>
-                    <h1 class="text-[16px] font-bold text-[#1e3a8a] leading-tight">SIGELATIK</h1>
-                    <p class="text-[10px] text-gray-500 leading-tight">Sistem Informasi Gangguan<br>Layanan TIK</p>
-                </div>
+<aside class="m-2 hidden h-[calc(100vh-1rem)] w-[280px] min-w-[280px] shrink-0 flex-col justify-between overflow-hidden rounded-[28px] border border-[#315773] bg-gradient-to-b from-[#1b405c] via-[#1a3d58] to-[#173952] text-white shadow-[0_12px_35px_rgba(15,45,65,0.16)] md:flex">
+    <!-- Area navigasi yang dapat discroll -->
+    <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-5 [scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:#63849a_transparent] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-[#63849a]">
+        <!-- Logo SIGELATIK -->
+        <div class="mb-6 flex items-center gap-3 border-b border-white/10 px-2 pb-5">
+            <img src="{{ asset('img/logofavicon.png') }}" alt="Logo SIGELATIK" class="h-10 w-10 shrink-0 object-contain">
+            <div class="min-w-0">
+                <h1 class="text-[16px] font-extrabold leading-tight tracking-wide text-white">SIGELATIK</h1>
+                <p class="mt-0.5 text-[10px] leading-tight text-blue-100/75">Sistem Informasi Gangguan<br>Layanan TIK</p>
             </div>
         </div>
 
-        <nav class="p-4 space-y-1">
-            
-            <!-- Kategori UTAMA -->
-            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Utama</p>
-            <a href="{{ route('bidang.index') }}" class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-semibold {{ request()->routeIs('bidang.index') ? 'bg-[#f4f7fb] text-[#1a3668]' : 'text-[#4b5563] hover:bg-gray-50' }}">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-inbox w-5"></i> Overview
-                </div>
-                @if(request()->routeIs('bidang.index'))
-                    <i class="fas fa-circle text-[6px]"></i>
-                @endif
+        <nav class="space-y-1">
+            <!-- UTAMA -->
+            <p class="px-3 pb-2 pt-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#91b4ca]">Utama</p>
+            <a href="{{ route('bidang.index') }}" class="group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition duration-200 {{ request()->routeIs('bidang.index') ? 'bg-[#3286b077] text-white shadow-[0_5px_14px_rgba(5,25,40,0.16)]' : 'text-blue-50/85 hover:bg-white/10 hover:text-white' }}">
+                <span class="flex items-center gap-3"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl {{ request()->routeIs('bidang.index') ? 'bg-white/15 text-white' : 'bg-white/10 text-blue-100 group-hover:bg-white/15' }}"><i class="fas fa-inbox text-sm"></i></span>Overview</span>
+                @if(request()->routeIs('bidang.index'))<i class="fas fa-circle text-[6px] text-white"></i>@endif
+            </a>
+            <a href="{{ route('bidang.forward') }}" class="group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition duration-200 {{ request()->routeIs('bidang.forward') ? 'bg-[#3286b077] text-white shadow-[0_5px_14px_rgba(5,25,40,0.16)]' : 'text-blue-50/85 hover:bg-white/10 hover:text-white' }}">
+                <span class="flex items-center gap-3"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl {{ request()->routeIs('bidang.forward') ? 'bg-white/15 text-white' : 'bg-white/10 text-blue-100 group-hover:bg-white/15' }}"><i class="fas fa-shuffle text-sm"></i></span>Forward Ticket</span>
+                @if(request()->routeIs('bidang.forward'))<i class="fas fa-circle text-[6px] text-white"></i>@endif
+            </a>
+            <a href="{{ route('bidang.history') }}" class="group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition duration-200 {{ request()->routeIs('bidang.history') ? 'bg-[#3286b077] text-white shadow-[0_5px_14px_rgba(5,25,40,0.16)]' : 'text-blue-50/85 hover:bg-white/10 hover:text-white' }}">
+                <span class="flex items-center gap-3"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl {{ request()->routeIs('bidang.history') ? 'bg-white/15 text-white' : 'bg-white/10 text-blue-100 group-hover:bg-white/15' }}"><i class="fas fa-clock-rotate-left text-sm"></i></span>History Ticket</span>
+                @if(request()->routeIs('bidang.history'))<i class="fas fa-circle text-[6px] text-white"></i>@endif
             </a>
 
-            <a href="{{ route('bidang.forward') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('bidang.forward') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-shuffle w-5"></i> Forward Ticket
-                </div>
-                @if(request()->routeIs('bidang.forward'))
-                    <i class="fas fa-circle text-[6px]"></i>
-                @endif
+            <!-- KATEGORI LAYANAN -->
+            <p class="px-3 pb-2 pt-6 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#91b4ca]">Kategori Layanan</p>
+            <a href="{{ route('bidang.kategori') }}" class="group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition duration-200 {{ request()->routeIs('bidang.kategori') ? 'bg-[#3286b077] text-white shadow-[0_5px_14px_rgba(5,25,40,0.16)]' : 'text-blue-50/85 hover:bg-white/10 hover:text-white' }}">
+                <span class="flex items-center gap-3"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl {{ request()->routeIs('bidang.kategori') ? 'bg-white/15 text-white' : 'bg-white/10 text-blue-100 group-hover:bg-white/15' }}"><i class="fas fa-tag text-sm"></i></span>Kategori Layanan</span>
+                @if(request()->routeIs('bidang.kategori'))<i class="fas fa-circle text-[6px] text-white"></i>@endif
             </a>
 
-            <a href="{{ route('bidang.history') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('bidang.history') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-history w-5"></i> History Ticket
-                </div>
-                @if(request()->routeIs('bidang.history'))
-                    <i class="fas fa-circle text-[6px]"></i>
-                @endif
+            <!-- MANAGEMENT TICKETING -->
+            <p class="px-3 pb-2 pt-6 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#91b4ca]">Management Ticketing</p>
+            <a href="{{ route('bidang.triage') }}" class="group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition duration-200 {{ request()->routeIs('bidang.triage') ? 'bg-[#3286b077] text-white shadow-[0_5px_14px_rgba(5,25,40,0.16)]' : 'text-blue-50/85 hover:bg-white/10 hover:text-white' }}">
+                <span class="flex items-center gap-3"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl {{ request()->routeIs('bidang.triage') ? 'bg-white/15 text-white' : 'bg-white/10 text-blue-100 group-hover:bg-white/15' }}"><i class="fas fa-shuffle text-sm"></i></span>Triage Ticket</span>
+                @if(request()->routeIs('bidang.triage'))<i class="fas fa-circle text-[6px] text-white"></i>@endif
             </a>
 
-            <!-- Kategori MANAGEMENT TICKETING -->
-            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Kategori Layanan</p>
-            <a href="{{ route('bidang.kategori') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('bidang.kategori') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-tag w-5"></i> Kategori Layanan
-                </div>
-                @if(request()->routeIs('bidang.kategori'))
-                    <i class="fas fa-circle text-[6px]"></i>
-                @endif
-            </a>
-
-            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Management Ticketing</p>
-            <a href="{{ route('bidang.triage') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('bidang.triage') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-exchange-alt w-5"></i> Triage Ticket
-                </div>
-                @if(request()->routeIs('bidang.triage'))
-                    <i class="fas fa-circle text-[6px]"></i>
-                @endif
-            </a>
-
-            <p class="pt-2 pb-2 px-4 text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Management Layanan</p>
-            <a href="{{ route('bidang.sop') }}" class="flex items-center justify-between px-4 py-2 rounded-lg text-sm {{ request()->routeIs('bidang.sop') ? 'bg-[#f4f7fb] text-[#1a3668] font-bold' : 'text-[#4b5563] hover:bg-gray-50' }}">
-                <div class="flex items-center gap-3">
-                    <i class="far fa-file-alt w-5"></i> Manajemen SOP
-                </div>
-                @if(request()->routeIs('bidang.sop'))
-                    <i class="fas fa-circle text-[6px]"></i>
-                @endif
+            <!-- MANAGEMENT LAYANAN -->
+            <p class="px-3 pb-2 pt-6 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#91b4ca]">Management Layanan</p>
+            <a href="{{ route('bidang.sop') }}" class="group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition duration-200 {{ request()->routeIs('bidang.sop') ? 'bg-[#3286b077] text-white shadow-[0_5px_14px_rgba(5,25,40,0.16)]' : 'text-blue-50/85 hover:bg-white/10 hover:text-white' }}">
+                <span class="flex items-center gap-3"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl {{ request()->routeIs('bidang.sop') ? 'bg-white/15 text-white' : 'bg-white/10 text-blue-100 group-hover:bg-white/15' }}"><i class="far fa-file-alt text-sm"></i></span>Manajemen SOP</span>
+                @if(request()->routeIs('bidang.sop'))<i class="fas fa-circle text-[6px] text-white"></i>@endif
             </a>
         </nav>
     </div>
 
-    <!-- AREA PROFIL ADMIN (DI LUAR SCROLL) -->
-    <div class="border-t border-gray-100 p-4">
-        <div class="w-full flex flex-col gap-4">
-            
-            <!-- Info Profil Aktif -->
-            <div class="flex items-center gap-3 px-2 pt-2">
-                <!-- Inisial Profil Dinamis -->
-                <div class="w-10 h-10 rounded-full bg-[#0d9488] flex items-center justify-center text-white font-bold text-sm uppercase shrink-0">
-                    {{ auth()->check() ? substr(auth()->user()->name, 0, 2) : '' }}
-                </div>
-                
-                <div class="text-left overflow-hidden">
-                    <!-- Nama Admin Dinamis -->
-                    <p class="text-sm font-bold text-[#1e3a8a] leading-none mb-1 truncate">
-                        {{ auth()->check() ? auth()->user()->name : '' }}
-                    </p>
-                    <!-- Role Dinamis -->
-                    <p class="text-xs text-[#64748b] leading-none truncate capitalize">
-                        {{ auth()->check() ? str_replace('_', ' ', auth()->user()->role) : '' }}
-                    </p>
-                </div>
+    <!-- Profil dan logout -->
+    <div class="shrink-0 border-t border-white/10 p-4">
+        <div class="mb-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#347d9f] text-xs font-extrabold uppercase text-white shadow-sm">
+                {{ auth()->check() ? strtoupper(substr(auth()->user()->name, 0, 2)) : '' }}
             </div>
-            
-            <!-- Tombol Keluar (Logout) -->
-            <form action="{{ route('logout') }}" method="POST" class="m-0 p-0 border-t border-gray-200 pt-3">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-4 text-gray-500 hover:text-red-500 transition-colors group cursor-pointer bg-transparent border-0 p-0">
-                    <i class="fas fa-sign-out-alt text-gray-400 group-hover:text-red-500 transition-colors"></i> 
-                    <span class="text-sm font-medium group-hover:text-red-500 transition-colors">Log out</span>
-                </button>
-            </form>
-            
+            <div class="min-w-0 flex-1">
+                <p class="truncate text-xs font-bold text-white">{{ auth()->check() ? auth()->user()->name : '' }}</p>
+                <p class="mt-0.5 truncate text-[10px] capitalize text-blue-100/70">{{ auth()->check() ? str_replace('_', ' ', auth()->user()->role) : '' }}</p>
+            </div>
         </div>
+        <form action="{{ route('logout') }}" method="POST" class="m-0 border-t border-white/10 pt-3">
+            @csrf
+            <button type="submit" class="group flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[#ff2348] transition-colors duration-200 hover:bg-[#e58b9a]/10 hover:text-[#e4566b]">
+                <i class="fas fa-sign-out-alt text-[15px] transition-transform duration-200 group-hover:-translate-x-0.5"></i>
+                <span class="text-[13px] font-bold">Keluar</span>
+            </button>
+        </form>
     </div>
 </aside>
+
 @include('components.b-js')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // KODE UNTUK NAHAN SCROLL SIDEBAR
-    const sidebarScroll = document.querySelector('aside .overflow-y-auto')
-    
-    if (sidebarScroll) {
-        // pas halaman beres ngeload balikin posisi scroll dari memori
-        const posisiScroll = localStorage.getItem('sidebar_scroll')
-        if (posisiScroll !== null) {
-            sidebarScroll.scrollTop = posisiScroll
-        }
-        
-        // tiap kali discroll simpan posisi angkanya ke memori browser
-        sidebarScroll.addEventListener('scroll', function() {
-            localStorage.setItem('sidebar_scroll', sidebarScroll.scrollTop)
-        })
-    }
-});
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarScroll = document.querySelector('aside .overflow-y-auto');
+        if (!sidebarScroll) return;
+
+        const savedScroll = localStorage.getItem('sidebar_scroll_bidang');
+        if (savedScroll !== null) sidebarScroll.scrollTop = Number(savedScroll);
+
+        sidebarScroll.addEventListener('scroll', function () {
+            localStorage.setItem('sidebar_scroll_bidang', String(sidebarScroll.scrollTop));
+        }, { passive: true });
+    });
 </script>

@@ -10,8 +10,10 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
 
-    <!-- Latar Belakang Ungu di Kiri -->
-    <div class="absolute top-0 -left-[10%] h-full w-[55%] bg-[#4c2a95] [border-top-right-radius:50%] [border-bottom-right-radius:50%] z-0 hidden md:block"></div>
+    <!-- Latar Belakang Ungu di Kiri dengan Animasi Jaringan TIK -->
+    <div class="absolute top-0 -left-[10%] h-full w-[55%] bg-[#4c2a95] [border-top-right-radius:50%] [border-bottom-right-radius:50%] z-0 hidden md:block overflow-hidden">
+        <canvas id="networkCanvas" class="absolute inset-0 w-full h-full opacity-60 pointer-events-none" aria-hidden="true"></canvas>
+    </div>
     
     <!-- Container Utama -->
     <div class="relative z-10 flex flex-col md:flex-row w-full max-w-5xl bg-white shadow-2xl rounded-xl overflow-hidden mx-4 my-8 min-h-[550px]">
@@ -130,11 +132,19 @@
                         placeholder="Kata Sandi" 
                         required 
                         autocomplete="current-password"
-                        class="w-full px-6 py-3 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
+                        class="w-full px-6 pr-12 py-3 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-400"
                     >
-                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        <i class="fas fa-lock"></i>
-                    </div>
+                    <button
+                        type="button"
+                        id="togglePasswordBtn"
+                        disabled
+                        aria-label="Masukkan kata sandi terlebih dahulu"
+                        aria-pressed="false"
+                        title="Masukkan kata sandi terlebih dahulu"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors disabled:cursor-not-allowed enabled:cursor-pointer enabled:hover:text-[#4c2a95] focus:outline-none focus:ring-2 focus:ring-blue-500/30 rounded-full p-1"
+                    >
+                        <i id="passwordIcon" class="fas fa-lock"></i>
+                    </button>
                 </div>
 
                 <p class="text-[11px] text-gray-400 leading-relaxed text-center px-2">
@@ -174,7 +184,7 @@
                 
                 alertBox.classList.add('hidden');
                 btnSubmit.disabled = true;
-                btnSubmit.innerText = 'MEMPROSES...';
+                btnSubmit.innerText = 'MEMVERIFIKASI...';
 
                 const formData = new FormData(form);
 
@@ -206,5 +216,160 @@
             });
         });
     </script>
+    <!-- Intip Password: tahan ikon mata untuk melihat, lepaskan untuk menyembunyikan -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('togglePasswordBtn');
+            const passwordIcon = document.getElementById('passwordIcon');
+            if (!passwordInput || !toggleButton || !passwordIcon) return;
+
+            function hidePassword() {
+                passwordInput.type = 'password';
+                toggleButton.setAttribute('aria-pressed', 'false');
+            }
+
+            function updatePasswordIcon() {
+                const hasValue = passwordInput.value.length > 0;
+                if (!hasValue) hidePassword();
+                toggleButton.disabled = !hasValue;
+                passwordIcon.className = hasValue ? 'fas fa-eye' : 'fas fa-lock';
+                toggleButton.setAttribute(
+                    'aria-label',
+                    hasValue ? 'Tahan untuk melihat kata sandi' : 'Masukkan kata sandi terlebih dahulu'
+                );
+                toggleButton.title = hasValue ? 'Tahan untuk melihat kata sandi' : 'Masukkan kata sandi terlebih dahulu';
+            }
+
+            toggleButton.addEventListener('pointerdown', function (event) {
+                if (toggleButton.disabled || passwordInput.value.length === 0) return;
+                event.preventDefault();
+                passwordInput.type = 'text';
+                toggleButton.setAttribute('aria-pressed', 'true');
+            });
+
+            // Lepas mouse/jari: password langsung disamarkan kembali.
+            window.addEventListener('pointerup', hidePassword);
+            window.addEventListener('pointercancel', hidePassword);
+            window.addEventListener('blur', hidePassword);
+
+            // Dukungan keyboard: tekan Enter/Spasi untuk melihat, lepaskan untuk menyembunyikan.
+            toggleButton.addEventListener('keydown', function (event) {
+                if ((event.key === 'Enter' || event.key === ' ') && !toggleButton.disabled) {
+                    event.preventDefault();
+                    passwordInput.type = 'text';
+                    toggleButton.setAttribute('aria-pressed', 'true');
+                }
+            });
+            toggleButton.addEventListener('keyup', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') hidePassword();
+            });
+
+            passwordInput.addEventListener('input', updatePasswordIcon);
+            updatePasswordIcon();
+        });
+    </script>
+
+    <!-- Animasi Canvas Jaringan TIK: hanya visual, tidak mengubah proses autentikasi/registrasi -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const canvas = document.getElementById('networkCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const container = canvas.parentElement;
+            let width = 0;
+            let height = 0;
+            let particles = [];
+            let animationFrameId = null;
+            let resizeTimer = null;
+
+            function initCanvas() {
+                width = container.clientWidth;
+                height = container.clientHeight;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                canvas.width = Math.max(1, Math.floor(width * dpr));
+                canvas.height = Math.max(1, Math.floor(height * dpr));
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                particles = [];
+
+                const particleCount = 40;
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * 1.2,
+                        vy: (Math.random() - 0.5) * 1.2,
+                        radius: Math.random() * 1.5 + 1
+                    });
+                }
+            }
+
+            function drawNetwork() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+                    ctx.fill();
+
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        const distance = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if (distance < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${(1 - distance / 120) * 0.22})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                animationFrameId = window.requestAnimationFrame(drawNetwork);
+            }
+
+            function startAnimation() {
+                if (window.innerWidth < 768 || animationFrameId !== null) return;
+                initCanvas();
+                drawNetwork();
+            }
+
+            function stopAnimation() {
+                if (animationFrameId !== null) {
+                    window.cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                ctx.clearRect(0, 0, width, height);
+            }
+
+            window.addEventListener('resize', function () {
+                window.clearTimeout(resizeTimer);
+                resizeTimer = window.setTimeout(function () {
+                    if (window.innerWidth >= 768) {
+                        stopAnimation();
+                        startAnimation();
+                    } else {
+                        stopAnimation();
+                    }
+                }, 120);
+            }, { passive: true });
+
+            startAnimation();
+        });
+    </script>
+
 </body>
 </html>
